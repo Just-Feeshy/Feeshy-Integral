@@ -1,0 +1,9 @@
+/Users/diegofonseca/Desktop/GitRepos/Feeshy-Integral/build/CMakeFiles/integrate.dir
+/Users/diegofonseca/Desktop/GitRepos/Feeshy-Integral/build/CMakeFiles/edit_cache.dir
+/Users/diegofonseca/Desktop/GitRepos/Feeshy-Integral/build/CMakeFiles/rebuild_cache.dir
+/Users/diegofonseca/Desktop/GitRepos/Feeshy-Integral/build/benchmark/CMakeFiles/edit_cache.dir
+/Users/diegofonseca/Desktop/GitRepos/Feeshy-Integral/build/benchmark/CMakeFiles/rebuild_cache.dir
+/Users/diegofonseca/Desktop/GitRepos/Feeshy-Integral/build/benchmark/src/CMakeFiles/benchmark.dir
+/Users/diegofonseca/Desktop/GitRepos/Feeshy-Integral/build/benchmark/src/CMakeFiles/benchmark_main.dir
+/Users/diegofonseca/Desktop/GitRepos/Feeshy-Integral/build/benchmark/src/CMakeFiles/edit_cache.dir
+/Users/diegofonseca/Desktop/GitRepos/Feeshy-Integral/build/benchmark/src/CMakeFiles/rebuild_cache.dir
