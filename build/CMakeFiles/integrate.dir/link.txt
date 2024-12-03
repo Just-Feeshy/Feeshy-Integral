@@ -1,1 +1,0 @@
-/opt/homebrew/opt/llvm@17/bin/clang++  -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.1.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/integrate.dir/integral.cpp.o -o integrate  benchmark/src/libbenchmark.a
