@@ -1,4 +1,4 @@
 .DS_Store
 bin/
-noise.make
+program.make
 Makefile
