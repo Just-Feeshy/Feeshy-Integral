@@ -10,6 +10,8 @@ TARGET_DIR = "../bin"
 OPTIMIZE = "Off"
 LIBRARY_DIR = "../third_party/libraries"
 
+ENABLE_VSYNC = true
+
 function solution_config()
     solution(SOLUTION_NAME)
         location(SOLUTION_DIR)
@@ -52,6 +54,10 @@ function project_config()
         location(PROJECT_DIR)
         objdir(OBJ_DIR)
         kind(PROJECT_KIND)
+
+        if ENABLE_VSYNC then
+            defines { "ENABLE_VSYNC=1" }
+        end
 
         files {
             "../include/**.h",
