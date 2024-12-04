@@ -76,6 +76,8 @@ function project_config()
             debugdir(TARGET_DIR)
 
         filter { "system:macosx" }
+            defines { "USE_EGL" }
+
             linkoptions {
                 "-ObjC",
                 "-framework IOKit",
@@ -88,6 +90,7 @@ function project_config()
                 "-framework Carbon",
                 "-framework Cocoa",
                 "-framework CoreServices",
+                "-framework Metal",
             }
 end
 

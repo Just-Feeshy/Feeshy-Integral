@@ -10,13 +10,13 @@ final SDL_OPTIONS = [
     "SDL_SHARED=OFF",
     "SDL_AUDIO=OFF",
     "SDL_ATOMIC=OFF",
+    "SDL_METAL=OFF",
     "SDL_VIDEO=ON",
     "SDL_RENDER=ON",
     "SDL_OPENGL=ON",
     "SDL_OPENGLES=ON",
     "SDL_HAPTIC=OFF",
     "SDL_JOYSTICK=OFF",
-    "SDL_METAL=OFF",
 ];
 
 function main():Void {
@@ -55,13 +55,6 @@ function main():Void {
         final stderrContent = buildProcess.stderr.readAll().toString();
         final ec = buildProcess.exitCode();
         buildProcess.close();
-
-        if(Sys.systemName() == "Mac") {
-            final disableMTLProcess = new Process("nm", [THIRD_PARTY_PATH + "libraries/libSDL2.a | grep MTL"]);
-            final disableMTLContent = disableMTLProcess.stdout.readAll().toString();
-            final disableMTLExitCode = disableMTLProcess.exitCode();
-            disableMTLProcess.close();
-        }
 
         if(ec != 0) {
             trace("Error: " + stderrContent);
