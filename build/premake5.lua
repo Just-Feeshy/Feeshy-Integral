@@ -36,8 +36,8 @@ function solution_config()
         optimize(OPTIMIZE)
 
         filter "system:macosx"
-            buildoptions { "-mmacosx-version-min=10.14" }
-            linkoptions { "-mmacosx-version-min=10.14" }
+            buildoptions { "-mmacosx-version-min=13.1" }
+            linkoptions { "-mmacosx-version-min=13.1" }
 
         filter "configurations:Debug"
             defines { "DEBUG" }
@@ -74,6 +74,21 @@ function project_config()
         filter "configurations:Debug"
             links { "SDL2" }
             debugdir(TARGET_DIR)
+
+        filter { "system:macosx" }
+            linkoptions {
+                "-ObjC",
+                "-framework IOKit",
+                "-framework CoreFoundation",
+                "-framework CoreGraphics",
+                "-framework CoreAudio",
+                "-framework AudioToolbox",
+                "-framework QuartzCore",
+                "-framework AppKit",
+                "-framework Carbon",
+                "-framework Cocoa",
+                "-framework CoreServices",
+            }
 end
 
 solution_config()
