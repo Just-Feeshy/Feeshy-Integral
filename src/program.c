@@ -31,6 +31,10 @@ static void program_handle_event(SDL_Event* event) {
             break;
 
         case SDL_KEYDOWN:
+            inputs_key_down(main_program.in, event->key.keysym.sym);
+            break;
+        case SDL_KEYUP:
+            inputs_key_up(main_program.in, event->key.keysym.sym);
             break;
     }
 
