@@ -1,8 +1,12 @@
-#include <program.h>
-#include <SDL.h>
-#include <opengl.h>
 #include <input.h>
+#include <opengl.h>
+#include <program.h>
+#include <stdlib.h>
 #include <stdbool.h>
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
 
 typedef struct program_package {
     struct inputs* in;
@@ -33,6 +37,7 @@ static void program_handle_event(SDL_Event* event) {
         case SDL_KEYDOWN:
             inputs_key_down(main_program.in, event->key.keysym.sym);
             break;
+
         case SDL_KEYUP:
             inputs_key_up(main_program.in, event->key.keysym.sym);
             break;
@@ -85,6 +90,7 @@ void program_init(const char* name, int w, int h) {
     }
 
     create_window(name, w, h);
+    opengl_init(main_program.window);
 
     main_program.active = true;
     main_program.in = malloc(sizeof(struct inputs));

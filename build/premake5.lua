@@ -97,6 +97,7 @@ function project_config()
                 "-framework Cocoa",
                 "-framework CoreServices",
                 "-framework Metal",
+                "-framework OpenGL"
             }
 end
 
