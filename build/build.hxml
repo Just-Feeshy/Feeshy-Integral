@@ -1,0 +1,4 @@
+# Used for compiling the third party libraries
+
+-cp libraries
+--run RunScript

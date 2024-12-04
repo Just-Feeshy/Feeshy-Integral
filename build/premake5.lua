@@ -8,6 +8,7 @@ PROJECT_KIND = "ConsoleApp"
 OBJ_DIR = "../bin/obj"
 TARGET_DIR = "../bin"
 OPTIMIZE = "Off"
+LIBRARY_DIR = "../third_party/libraries"
 
 function solution_config()
     solution(SOLUTION_NAME)
@@ -58,10 +59,20 @@ function project_config()
             "../src/**.c",
         }
 
-        includedirs { "../include" }
+        includedirs {
+            "../include",
+            "../third_party/SDL/include"
+        }
         targetdir(TARGET_DIR)
 
+        -- Libraries
+        libdirs (LIBRARY_DIR)
+
+        filter "configurations:Release"
+            links { "SDL2" }
+
         filter "configurations:Debug"
+            links { "SDL2" }
             debugdir(TARGET_DIR)
 end
 
