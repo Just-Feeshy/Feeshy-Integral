@@ -99,6 +99,9 @@ function project_config()
                 "-framework Metal",
                 "-framework OpenGL"
             }
+
+        filter { "system:windows" }
+            defines { "WINDOWS" }
 end
 
 solution_config()

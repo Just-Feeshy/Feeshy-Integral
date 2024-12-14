@@ -18,3 +18,5 @@
 #endif
 
 void opengl_init(SDL_Window* window);
+void opengl_begin(SDL_Window* window);
+void opengl_clear();
