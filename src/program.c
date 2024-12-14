@@ -186,7 +186,7 @@ void program_init(const char* name, int w, int h) {
         #endif
     }
 
-    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     main_program.active = true;
     main_program.in = malloc(sizeof(struct inputs));
     inputs_init(main_program.in);
