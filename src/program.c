@@ -36,20 +36,6 @@ typedef struct update_package {
 program_package main_program;
 update_package main_update;
 
-static uint32_t onTimer(uint32_t interval, void* nul) {
-    SDL_Event event;
-    SDL_UserEvent userevent;
-	userevent.type = SDL_USEREVENT;
-	userevent.code = 0;
-	userevent.data1 = 0;
-	userevent.data2 = 0;
-	event.type = SDL_USEREVENT;
-	event.user = userevent;
-
-	SDL_PushEvent(&event);
-	return 0;
-}
-
 static void create_window(const char* title, int w, int h) {
     #ifdef __EMSCRIPTEN__
     SDL_CreateWindowAndRenderer(w, h, 0, &main_program.window, 0);
@@ -77,7 +63,7 @@ static void program_context_flip() {
 }
 
 static void program_update_opengl() {
-    //opengl_begin(main_program.window);
+    opengl_begin(main_program.window);
     opengl_clear();
     program_context_flip();
 }
@@ -186,7 +172,7 @@ void program_init(const char* name, int w, int h) {
         #endif
     }
 
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
     main_program.active = true;
     main_program.in = malloc(sizeof(struct inputs));
     inputs_init(main_program.in);
