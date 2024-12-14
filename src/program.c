@@ -139,8 +139,6 @@ static void program_update() {
         current_time = program_get_time();
     }
 
-    while(current_time < (int64_t)main_update.nextUpdate);
-
     if (current_time >= main_update.nextUpdate) {
         main_update.nextUpdate += frame_period;
         program_update_opengl();
