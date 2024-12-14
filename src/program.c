@@ -116,83 +116,34 @@ static void program_handle_event(SDL_Event* event) {
     }
 }
 
-/*
-static void program_update() {
-    SDL_Event event;
-	event.type = -1;
-
-    #ifndef __EMSCRIPTEN__
-    if(main_program.active && (main_program.dirty_event || SDL_WaitEvent(&event))) {
-        main_program.dirty_event = false;
-        //program_handle_event(&event);
-        event.type = -1;
-
-        if(!main_program.active) {
-            return;
-        }
-    }
-    #endif
-
-    while(SDL_PollEvent(&event)) {
-        printf("Event type: %d\n", event.type);
-        program_handle_event(&event);
-        event.type = -1;
-
-        if(!main_program.active) {
-            return;
-        }
-    }
-
-    main_update.currentUpdate = SDL_GetTicks();
-
-    #ifdef __EMSCRIPTEN__
-    if(main_update.currentUpdate >= main_update.nextUpdate) {
-        event.type = SDL_USEREVENT;
-        program_handle_event(&event);
-        event.type = -1;
-    }
-    #else
-    if(main_update.currentUpdate >= main_update.nextUpdate) {
-        if(main_update.timerActive) {
-            SDL_RemoveTimer(main_update.timer);
-            main_update.timerActive = false;
-        }
-
-        onTimer(0, 0);
-    }else if(!main_update.timerActive) {
-        main_update.timer = SDL_AddTimer(main_update.nextUpdate - main_update.currentUpdate, onTimer, 0);
-        main_update.timerActive = true;
-    }
-    #endif
-}
-*/
-
 static int64_t program_get_time() {
     return SDL_GetTicks() * TIME_RESOLUTION;
 }
 
 static void program_update() {
     SDL_Event event;
+
     while (SDL_PollEvent(&event)) {
         program_handle_event(&event);
     }
 
-    main_update.currentUpdate = SDL_GetTicks();
+    int64_t current_time = program_get_time();
+    main_update.nextUpdate = frame_period + main_update.lastUpdate;
 
-    if (main_update.currentUpdate >= main_update.nextUpdate) {
+    while ((int64_t)main_update.nextUpdate - current_time > frame_period / NAP_DIV) {
+        uint64_t nap_time = max(0, (int64_t)main_update.nextUpdate - current_time);
+        uint32_t nap_sdl = (NAP_MULT * nap_time * 1000) / (TIME_RESOLUTION * 1000ULL * NAP_DIV);
+        nap_sdl = max(nap_sdl, 1);
+        SDL_Delay(nap_sdl);
+
+        current_time = program_get_time();
+    }
+
+    while(current_time < (int64_t)main_update.nextUpdate);
+
+    if (current_time >= main_update.nextUpdate) {
         main_update.nextUpdate += frame_period;
         program_update_opengl();
-    }else {
-        int64_t remaining_time = (int64_t)main_update.nextUpdate - program_get_time();
-
-        while(remaining_time > frame_period / NAP_DIV) {
-            uint64_t nap_time = max(0, remaining_time);
-            uint32_t nap_sdl = (NAP_MULT * nap_time * 1000) / (TIME_RESOLUTION * 1000ULL * NAP_DIV);
-            nap_sdl = max(nap_sdl, 1);
-            SDL_Delay(nap_sdl);
-
-            remaining_time = (int64_t)main_update.nextUpdate - program_get_time();
-        }
     }
 }
 
