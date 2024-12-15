@@ -37,6 +37,17 @@ void apply_shader_type(shader* shader_obj, shader_type type) {
             break;
     }
 
+    if(shader_obj->shader) {
+        printf("Shader already exists\n");
+        free(shader_obj->shader);
+    }
+
+    shader_obj->shader = malloc(sizeof(uint32_t));
+    if (!shader_obj->shader) {
+        fprintf(stderr, "Failed to allocate memory for shader\n");
+        return;
+    }
+
     *shader_obj->shader = glCreateShader(shader_obj->type);
 }
 

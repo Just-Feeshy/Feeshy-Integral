@@ -36,7 +36,7 @@ void pipeline_compile(uint32_t num_shdrs, graphics_pipeline* pipeline, shader* s
         glAttachShader(pipeline->pipeline_core.programId, *current->shader);
 
         for (int j = 0; j < current->num_attrs; j++) {
-            shader_attribute *attr = current->attributes + j;
+            shader_attribute* attr = current->attributes + j;
             glBindAttribLocation(pipeline->pipeline_core.programId, attr->location, attr->name);
         }
     }

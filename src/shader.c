@@ -2,6 +2,7 @@
 #include <util.h>
 #include <SDL_rwops.h>
 #include <SDL_stdinc.h>
+#include <string.h>
 
 // The purpose of goto is to avoid accidental memory leaks.
 // Despite on what some developers say, goto is a good practice for memory management.
@@ -11,9 +12,17 @@ void load_shader(const char* filename, shader* shader_obj, shader_type type, uin
     SDL_RWops *file = SDL_RWFromFile(filename, "rb");
     uint8_t* buffer = NULL;
 
+    if(file == NULL) {
+        char out_filename[strlen(filename) + 4]; // Stack based buffer
+        strcpy(out_filename, "../");
+        strcat(out_filename, filename);
+
+        file = SDL_RWFromFile(out_filename, "rb");
+    }
+
     if (file == NULL) {
         fprintf(stderr, "Failed to open file: %s\n", filename);
-        goto file_error;
+        return;
     }
 
     int64_t size = SDL_RWsize(file);
@@ -37,8 +46,12 @@ void load_shader(const char* filename, shader* shader_obj, shader_type type, uin
     shader_obj->size = size;
     apply_shader_type(shader_obj, type);
 
-    shader_obj->num_attrs = 0;
-    shader_obj->attributes = NULL;
+    shader_obj->num_attrs = num_attrs;
+    shader_obj->attributes = (shader_attribute*)malloc(num_attrs * sizeof(shader_attribute));
+
+    for (int i = 0; i < num_attrs; i++) {
+        shader_obj->attributes[i] = *attributes[i];
+    }
 
 file_error:
     SDL_RWclose(file);

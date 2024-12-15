@@ -145,11 +145,11 @@ void program_init(const char* name, int w, int h) {
 		return;
 	}
 
-    SDL_Init(SDL_INIT_VIDEO);
-
     #ifdef WINDOWS
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    #else
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     #endif
 
     #if !defined(__EMSCRIPTEN__)
@@ -175,6 +175,9 @@ void program_init(const char* name, int w, int h) {
         SDL_GL_SetSwapInterval(0);
         #endif
     }
+
+    printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
+    printf("GLSL Version: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
     main_program.active = true;
