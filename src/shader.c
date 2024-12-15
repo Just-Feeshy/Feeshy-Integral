@@ -18,6 +18,10 @@ void load_shader(const char* filename, shader* shader_obj, shader_type type, uin
 
     int64_t size = SDL_RWsize(file);
     buffer = (uint8_t*)malloc(size);
+    if (buffer == NULL) {
+        fprintf(stderr, "Failed to allocate memory for file: %s\n", filename);
+        goto file_error;
+    }
 
     if (size < 0) {
         fprintf(stderr, "Failed to get file size: %s\n", filename);
