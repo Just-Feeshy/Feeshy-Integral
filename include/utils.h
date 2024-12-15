@@ -3,6 +3,7 @@
 #if defined(_MSC_VER) && !defined(__clang__)
 #include <intrin.h>
 
+#define mem_alloca(size) _alloca(size)
 #define FORCE_INLINE __forceinline
 
 static FORCE_INLINE int __builtin_ctz(unsigned x)
@@ -22,4 +23,5 @@ static FORCE_INLINE int __builtin_ctz(unsigned x)
 #include <stdio.h>
 
 #define FORCE_INLINE __attribute__((always_inline))
+#define mem_alloca(size) alloca(size)
 #endif

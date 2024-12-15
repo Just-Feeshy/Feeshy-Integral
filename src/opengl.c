@@ -1,4 +1,5 @@
 #include <opengl.h>
+#include <shader.h>
 
 void opengl_init(SDL_Window* window) {
     glDisable(GL_DEPTH_TEST);
@@ -15,4 +16,57 @@ void opengl_begin(SDL_Window* window) {
 
 void opengl_clear() {
     glClear(GL_COLOR_BUFFER_BIT);
+}
+
+
+// Shader For OpenGL
+
+void apply_shader_type(shader* shader_obj, shader_type type) {
+    switch(type) {
+        case SHADER_VERTEX:
+            shader_obj->type = GL_VERTEX_SHADER;
+            break;
+        case SHADER_FRAGMENT:
+            shader_obj->type = GL_FRAGMENT_SHADER;
+            break;
+        case SHADER_GEOMETRY:
+            shader_obj->type = GL_GEOMETRY_SHADER;
+            break;
+        default:
+            shader_obj->type = GL_VERTEX_SHADER;
+            break;
+    }
+
+    *shader_obj->shader = glCreateShader(shader_obj->type);
+}
+
+void compile_shader(shader* shader_obj) {
+    glShaderSource(*shader_obj->shader, 1, (const char**)&shader_obj->source, (int*)&shader_obj->size);
+    glCompileShader(*shader_obj->shader);
+    print_shader_log_info(*shader_obj->shader);
+
+    int compile_status;
+    glGetShaderiv(*shader_obj->shader, GL_COMPILE_STATUS, &compile_status);
+
+    if (compile_status == GL_FALSE) {
+        printf("Failed to compile shader\n");
+        exit(1);
+    }
+}
+
+void print_shader_log_info(unsigned shader) {
+    int length = 0;
+    int maxLength = 0;
+
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
+    if(length > 1) {
+        char log[length];
+        glGetShaderInfoLog(shader, length, &maxLength, log);
+
+        fprintf(stderr, "Shader log: %s\n", log);
+    }
+}
+
+void destroy_core_shader(shader* shader_obj) {
+    glDeleteShader(*shader_obj->shader);
 }

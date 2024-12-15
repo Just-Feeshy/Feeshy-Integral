@@ -1,6 +1,7 @@
 #include <input.h>
 #include <opengl.h>
 #include <program.h>
+#include <screen.h>
 #include <more_math.h>
 #include <SDL_render.h>
 #include <stdlib.h>
@@ -65,6 +66,9 @@ static void program_context_flip() {
 static void program_update_opengl() {
     opengl_begin(main_program.window);
     opengl_clear();
+
+    //screen_draw();
+
     program_context_flip();
 }
 
