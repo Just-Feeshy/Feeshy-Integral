@@ -179,7 +179,7 @@ void program_init(const char* name, int w, int h) {
     printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
     printf("GLSL Version: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
-    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     main_program.active = true;
     main_program.in = malloc(sizeof(struct inputs));
     inputs_init(main_program.in);
