@@ -19,6 +19,6 @@ void create_vertex_buffer(unsigned* vao, vertices* v) {
 
 void draw_vertex_buffer(unsigned vao, unsigned num_vertices) {
     glBindVertexArray(vao);
-    glDrawArrays(GL_TRIANGLES, 0, num_vertices);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, num_vertices);
     glBindVertexArray(0);
 }

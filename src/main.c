@@ -6,7 +6,7 @@ const int height = 600;
 
 int main(int argc, char** argv) {
     program_init("Eath", width, height);
-    screen_init(width, height);
+    screen_init(1, 1);
 
     program_loop();
     program_destroy();

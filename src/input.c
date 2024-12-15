@@ -12,6 +12,10 @@ void inputs_init(inputs* in) {
 }
 
 void inputs_key_down(inputs* in, SDL_Keycode key) {
+    if(sizeof(in->mapped_inputs) / sizeof(in->mapped_inputs[0]) < key - INPUT_A) {
+        return;
+    }
+
     if(in->mapped_inputs[key - INPUT_A] == 0) {
         return;
     }
@@ -20,6 +24,10 @@ void inputs_key_down(inputs* in, SDL_Keycode key) {
 }
 
 void inputs_key_up(inputs* in, SDL_Keycode key) {
+    if(sizeof(in->mapped_inputs) / sizeof(in->mapped_inputs[0]) < key - INPUT_A) {
+        return;
+    }
+
     if(in->mapped_inputs[key - SDLK_a] == 0) {
         return;
     }
