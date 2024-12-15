@@ -63,5 +63,8 @@ file_error:
 
 void destroy_shader(shader* shader_obj) {
     free(shader_obj->source);
+    free(shader_obj->attributes);
+    free(shader_obj->shader);
+
     destroy_core_shader(shader_obj);
 }

@@ -67,7 +67,7 @@ static void program_update_opengl() {
     opengl_begin(main_program.window);
     opengl_clear();
 
-    //screen_draw();
+    screen_render();
 
     program_context_flip();
 }

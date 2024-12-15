@@ -52,3 +52,7 @@ void pipeline_compile(uint32_t num_shdrs, graphics_pipeline* pipeline, shader* s
         exit(1);
     }
 }
+
+void pipeline_set(graphics_pipeline* pipeline) {
+    glUseProgram(pipeline->pipeline_core.programId);
+}
