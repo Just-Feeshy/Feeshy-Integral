@@ -4,7 +4,7 @@
 
 typedef struct shader_attribute {
     const char* name;
-    int location;
+    unsigned location;
 } shader_attribute;
 
 typedef enum shader_type {
