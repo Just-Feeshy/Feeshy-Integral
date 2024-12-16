@@ -4,3 +4,9 @@
 [submodule "third_party/SDL"]
 	path = third_party/SDL
 	url = https://github.com/libsdl-org/SDL.git
+[submodule "hashmap"]
+	path = hashmap
+	url = https://github.com/tidwall/hashmap.c.git
+[submodule "third_party/hashmap"]
+	path = third_party/hashmap
+	url = https://github.com/tidwall/hashmap.c.git
