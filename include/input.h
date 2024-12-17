@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <SDL_keycode.h>
 
-// For SDL2
+// For SDL3
 #if SDL_MAJOR_VERSION == 3
 #define INPUT_A SDLK_A
 #define INPUT_W SDLK_W
@@ -30,6 +30,13 @@ enum controls : uint8_t {
     UP = 16,
     DOWN = 32
 };
+
+enum control_status : uint8_t {
+    PRESS_DOWN = 0,
+    PRESS_UP = 1
+};
+
+typedef void (*InputCallback)(controls control, control_status status);
 
 typedef struct inputs {
     uint8_t mapped_inputs[INPUT_W - INPUT_A + 1];

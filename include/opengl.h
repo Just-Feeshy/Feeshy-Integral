@@ -24,6 +24,11 @@ typedef struct pipeline_core_gl {
 	int textureCount;
 } PIPELINE_CORE;
 
+typedef struct constant_location_core_gl {
+    int location;
+    unsigned type;
+} CONSTANT_LOCATION_CORE;
+
 void opengl_init(SDL_Window* window);
 void opengl_begin(SDL_Window* window);
 void opengl_clear();
