@@ -10,3 +10,6 @@
 [submodule "third_party/hashmap"]
 	path = third_party/hashmap
 	url = https://github.com/tidwall/hashmap.c.git
+[submodule "third_party/cglm"]
+	path = third_party/cglm
+	url = https://github.com/recp/cglm.git

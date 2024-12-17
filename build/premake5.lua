@@ -64,13 +64,16 @@ function project_config()
             "../" .. PROJECT_BACKEND .. "_backend/**.c",
             "../src/**.c",
             "../third_party/hashmap/hashmap.c",
-            "../third_party/hashmap/hashmap.h"
+            "../third_party/hashmap/hashmap.h",
+            "../third_party/cglm/src/**.c",
+            "../third_party/cglm/include/**.h",
         }
 
         includedirs {
             "../include",
             "../third_party/SDL/include",
-            "../third_party/hashmap"
+            "../third_party/hashmap",
+            "../third_party/cglm/include",
         }
         targetdir(TARGET_DIR)
 
