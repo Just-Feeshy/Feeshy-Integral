@@ -36,7 +36,7 @@ enum control_status : uint8_t {
     PRESS_UP = 1
 };
 
-typedef void (*InputCallback)(controls control, control_status status);
+typedef void (*InputCallback)(uint64_t control_status);
 
 typedef struct inputs {
     uint8_t mapped_inputs[INPUT_W - INPUT_A + 1];
@@ -44,5 +44,7 @@ typedef struct inputs {
 } inputs;
 
 void inputs_init(inputs* in);
+void inputs_init_callback(InputCallback* callback);
 void inputs_key_down(inputs* in, SDL_Keycode key);
 void inputs_key_up(inputs* in, SDL_Keycode key);
+void inputs_update(inputs* in);

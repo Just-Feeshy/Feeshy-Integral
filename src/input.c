@@ -1,5 +1,7 @@
 #include <input.h>
 
+static InputCallback* input_callback;
+
 void inputs_init(inputs* in) {
     in->mapped_inputs[INPUT_W - INPUT_A] = FORWARD;
     in->mapped_inputs[INPUT_S - INPUT_A] = BACKWARD;
@@ -9,6 +11,11 @@ void inputs_init(inputs* in) {
     in->mapped_inputs[INPUT_E - INPUT_A] = DOWN;
 
     in->control_status = 0;
+}
+
+void inputs_init_callback(InputCallback* callback) {
+    input_callback = callback;
+    printf("Input callback initialized\n");
 }
 
 void inputs_key_down(inputs* in, SDL_Keycode key) {
@@ -21,6 +28,7 @@ void inputs_key_down(inputs* in, SDL_Keycode key) {
     }
 
     in->control_status |= in->mapped_inputs[key - INPUT_A];
+    (*input_callback)(in->control_status);
 }
 
 void inputs_key_up(inputs* in, SDL_Keycode key) {
@@ -33,4 +41,13 @@ void inputs_key_up(inputs* in, SDL_Keycode key) {
     }
 
     in->control_status &= ~in->mapped_inputs[key - INPUT_A];
+    (*input_callback)(in->control_status);
+}
+
+void inputs_update(inputs* in) {
+    if(in->control_status == 0) {
+        return;
+    }
+
+    (*input_callback)(in->control_status);
 }

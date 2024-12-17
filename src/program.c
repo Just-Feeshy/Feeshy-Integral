@@ -77,9 +77,9 @@ static void program_draw_update() {
     main_update.lastUpdate = main_update.currentUpdate;
     main_update.nextUpdate = frame_period;
 
-
     while(main_update.nextUpdate <= main_update.currentUpdate) {
         main_update.nextUpdate += frame_period;
+        inputs_update(main_program.in);
     }
 
     program_update_opengl();
