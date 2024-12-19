@@ -4,6 +4,12 @@
 #include <stdbool.h>
 #include <hash_set.h>
 #include <hashmap.h>
+#include <more_math.h>
+#include <opengl.h>
+#include <utils.h>
+
+#define MAX_GL_BINDINGS \
+    1L << ceil_log2(opengl_get_integerv(GL_MAX_UNIFORM_BUFFER_BINDINGS))
 
 // Uniform Block Object
 
@@ -17,6 +23,8 @@ typedef struct uniform_block {
 
 // Sized Shader Block Object
 
+uintptr_t cur_addr;
+
 typedef struct sized_shader_block {
     uniform_block ubo;
     int binding;
@@ -26,6 +34,7 @@ typedef struct sized_shader_block {
     bool is_dirty;
 } sized_shader_block;
 
+sized_shader_block* create_ssbo(uniform_block* ubo, int binding, uint32_t size);
 void init_ssbo(sized_shader_block* block, uniform_block* ubo, int binding, uint32_t size);
 void bind_ssbo(sized_shader_block* block, int binding);
 void unbind_ssbo(sized_shader_block* block, int binding);

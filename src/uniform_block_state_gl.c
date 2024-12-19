@@ -1,16 +1,9 @@
-#include <utils.h>
 #include <uniform_block_state.h>
 #include <uniform_manager.h>
-#include <more_math.h>
 #include <memory.h>
-#include <opengl.h>
 
 #define DEFAULT_INCLUSIVE_BETWEEN_EX_MESSAGE "Value %d is not between %d and %d (inclusive).\n"
 
-#define MAX_GL_BINDINGS \
-    1L << ceil_log2(opengl_get_integerv(GL_MAX_UNIFORM_BUFFER_BINDINGS))
-
-static uintptr_t cur_addr = 0;
 
 static uint32_t max_gl_bindings(uint32_t target) {
     switch(target) {
@@ -65,6 +58,8 @@ static void free_bindings(uniform_block* block) {
 }
 
 void init_ubo(uniform_block* block) {
+    cur_addr = MAX_GL_BINDINGS;
+
     block->shader_bindings = hashmap_new(sizeof(int), 0, 0, 0, int2str_hash, int2str_compare, NULL, NULL);
     block->bounded_blocks = init_hash_set();
     block->used_bindings = init_hash_set();
@@ -131,6 +126,18 @@ static void inclusive_between(int min, int max, int value) {
 static void serialize(void* data, uint8_t* buffer) {
     memcpy(buffer, data, sizeof(data));
     printf("Serialized data: %d\n", *(int*)buffer);
+}
+
+sized_shader_block* create_ssbo(uniform_block* ubo, int binding, uint32_t size) {
+    sized_shader_block* block = (sized_shader_block*)MIN_ALLOC((void*)cur_addr, sizeof(sized_shader_block));
+
+    if(!block) {
+        fprintf(stderr, "Failed to allocate memory for ssbo\n");
+        return NULL;
+    }
+
+    init_ssbo(block, ubo, binding, size);
+    return block;
 }
 
 void init_ssbo(sized_shader_block* block, uniform_block* ubo, int binding, uint32_t size) {
