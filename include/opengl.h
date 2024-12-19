@@ -32,3 +32,5 @@ typedef struct constant_location_core_gl {
 void opengl_init(SDL_Window* window);
 void opengl_begin(SDL_Window* window);
 void opengl_clear();
+
+const uint32_t opengl_get_integerv(GLenum pname);

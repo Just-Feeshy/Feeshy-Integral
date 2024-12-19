@@ -1,5 +1,8 @@
 #pragma once
 
+#define FOR_EACH(item, array, size) \
+    for (unsigned __i = 0; __i < size && ((item = array[__i]), 1); __i++)
+
 #if defined(_MSC_VER) && !defined(__clang__)
 #include <intrin.h>
 

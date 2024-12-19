@@ -18,6 +18,12 @@ void opengl_clear() {
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
+const uint32_t opengl_get_integerv(GLenum pname) {
+    int value;
+    glGetIntegerv(pname, &value);
+    return value;
+}
+
 
 // Shader For OpenGL
 
