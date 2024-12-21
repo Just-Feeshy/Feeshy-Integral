@@ -112,6 +112,23 @@ void bind_ubo_with_name(uniform_block* block, const char* name, sized_shader_blo
     int binding = bind_ubo(block, ssbo);
 }
 
+void destroy_ubo(uniform_block* block) {
+    if(block->shader_bindings) {
+        hashmap_free(block->shader_bindings);
+    }
+
+    if(block->bounded_blocks) {
+        free(block->bounded_blocks->values);
+    }
+
+    if(block->used_bindings) {
+        free(block->used_bindings->values);
+    }
+
+    free(block->bounded_blocks);
+    free(block->used_bindings);
+}
+
 
 // Sized Shader Block Object
 

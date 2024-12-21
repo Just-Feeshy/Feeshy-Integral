@@ -23,10 +23,10 @@ typedef struct uniform_block {
 
 // Sized Shader Block Object
 
-uintptr_t cur_addr;
+
+static uintptr_t cur_addr;
 
 typedef struct sized_shader_block {
-    uniform_block ubo;
     int binding;
     uint32_t buffer;
     uint32_t size;
@@ -48,3 +48,4 @@ void init_ubo(uniform_block* block);
 void unbind_ubo(uniform_block* block, int binding, sized_shader_block* ssbo);
 int bind_ubo(uniform_block* block, sized_shader_block* ssbo);
 void bind_ubo_with_name(uniform_block* block, const char* name, sized_shader_block* ssbo);
+void destroy_ubo(uniform_block* block);
