@@ -39,7 +39,7 @@ sized_shader_block* create_ssbo(uniform_block* ubo, int binding, uint32_t size);
 void init_ssbo(sized_shader_block* block, uniform_block* ubo, int binding, uint32_t size);
 void bind_ssbo(sized_shader_block* block, int binding);
 void unbind_ssbo(sized_shader_block* block, int binding);
-void set_ssbo_data(sized_shader_block* block, void* data);
+void set_ssbo_data(sized_shader_block* block, void* data, uint32_t size);
 void destroy_ssbo(sized_shader_block* block);
 
 
@@ -51,8 +51,3 @@ void unbind_ubo_just_ssbo(uniform_block* block, sized_shader_block** ssbo, graph
 int bind_ubo(uniform_block* block, sized_shader_block** ssbo, graphics_pipeline* pipe);
 void bind_ubo_with_name(uniform_block* block, const char* name, sized_shader_block** ssbo, graphics_pipeline* pipe);
 void destroy_ubo(uniform_block* block);
-
-
-// Additional Methods
-
-void check_ubo(sized_shader_block* block, int binding);

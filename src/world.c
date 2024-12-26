@@ -14,7 +14,7 @@ static void world_input_callback_impl(uint64_t control_status) {
 static void render_cam() {
     update_rotation(&cam);
     update_view_matrix(&cam);
-    set_ssbo_data(*block, &cam.cam);
+    set_ssbo_data(*block, &cam.cam, sizeof(cam_block));
 }
 
 void world_init() {
@@ -28,13 +28,12 @@ void world_init() {
 
     block = (sized_shader_block**)malloc(sizeof(sized_shader_block*));
     *block = create_ssbo(&ubo, GL_UNIFORM_BUFFER, sizeof(cam_matrices));
-    set_ssbo_data(*block, &cam.cam);
+    set_ssbo_data(*block, &cam.cam, sizeof(cam_block));
 }
 
 void world_begin(graphics_pipeline* pipe) {
     // render_cam();
     bind_ubo_with_name(&ubo, "CamBlock", block, pipe);
-    check_ubo(*block, 0);
 }
 
 void world_end(graphics_pipeline* pipe) {

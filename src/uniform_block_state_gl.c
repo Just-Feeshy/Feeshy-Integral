@@ -227,9 +227,9 @@ void unbind_ssbo(sized_shader_block* block, int index) {
     glBindBufferBase(block->binding, index, 0);
 }
 
-void set_ssbo_data(sized_shader_block* block, void* data) {
+void set_ssbo_data(sized_shader_block* block, void* data, uint32_t size) {
     block->data = data;
-    block->size = sizeof(data);
+    block->size = size;
     block->is_dirty = true;
 }
 
@@ -240,12 +240,4 @@ void destroy_ssbo(sized_shader_block* block) {
         glDeleteBuffers(1, &block->buffer);
         block->buffer = 0;
     }
-}
-
-void check_ubo(sized_shader_block* block, int binding) {
-    char block_name[256];
-    GLsizei length;
-
-    glGetActiveUniformBlockName(block->buffer, binding, sizeof(block_name), &length, block_name);
-    printf("Block name: %s\n", block_name);
 }
