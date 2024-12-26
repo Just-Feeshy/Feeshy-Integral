@@ -107,7 +107,11 @@ static void program_handle_event(SDL_Event* event) {
             break;
 
         case SDL_MOUSEMOTION:
-            if(input_direction_callback)(*input_direction_callback)(event->motion.x, event->motion.y, event->motion.xrel, event->motion.yrel);
+            inputs_motion(0, event->motion.x, event->motion.y, event->motion.xrel, event->motion.yrel);
+            break;
+
+        case SDL_MOUSEBUTTONDOWN:
+            SDL_SetRelativeMouseMode(SDL_TRUE);
             break;
     }
 }
@@ -175,6 +179,9 @@ void program_init(const char* name, int w, int h) {
 
     create_window(name, w, h);
     opengl_init(main_program.window);
+
+    SDL_WarpMouseInWindow(main_program.window, w >> 1, h >> 1);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 
     if(main_program.context && SDL_GL_MakeCurrent(main_program.window, main_program.context) == 0) {
         #ifdef ENABLE_VSYNC

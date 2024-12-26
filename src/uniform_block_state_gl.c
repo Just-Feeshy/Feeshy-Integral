@@ -124,7 +124,7 @@ void bind_ubo_with_name(uniform_block* block, const char* name, sized_shader_blo
         goto set_ubo_block;
     }
 
-    if(strcmp(name, bound_name) != 0) {
+    if(strcmp(name, bound_name) != 0) { // This line is causing the segfault
 set_ubo_block:
         //printf("Binding %d to %s\n", binding, name);
         block->shader_bindings[binding] = name;

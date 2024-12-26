@@ -21,14 +21,21 @@
 #define INPUT_E SDLK_e
 #endif
 
-enum controls : uint8_t {
+enum controls : uint16_t {
     NONE = 0,
     FORWARD = 1,
     BACKWARD = 2,
     RIGHT = 4,
     LEFT = 8,
     UP = 16,
-    DOWN = 32
+    DOWN = 32,
+    ESCAPE = 64,
+
+    // View controls
+    LOOK_UP = 128,
+    LOOK_DOWN = 256,
+    LOOK_LEFT = 512,
+    LOOK_RIGHT = 1024
 };
 
 enum control_status : uint8_t {
@@ -39,7 +46,8 @@ enum control_status : uint8_t {
 typedef void (*InputCallback)(uint64_t control_status);
 typedef void (*InputDirectionCallback)(int x, int y, int dx, int dy);
 
-static InputDirectionCallback* input_direction_callback;
+static volatile InputCallback* input_callback = NULL;
+static volatile InputDirectionCallback* input_direction_callback = NULL;
 
 typedef struct inputs {
     uint8_t mapped_inputs[INPUT_W - INPUT_A + 1];
@@ -51,3 +59,4 @@ void inputs_init_callback(InputCallback* callback, InputDirectionCallback* direc
 void inputs_key_down(inputs* in, SDL_Keycode key);
 void inputs_key_up(inputs* in, SDL_Keycode key);
 void inputs_update(inputs* in);
+void inputs_motion(inputs* in, int x, int y, int dx, int dy);

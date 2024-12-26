@@ -1,7 +1,5 @@
 #include <input.h>
 
-static InputCallback* input_callback;
-
 void inputs_init(inputs* in) {
     in->mapped_inputs[INPUT_W - INPUT_A] = FORWARD;
     in->mapped_inputs[INPUT_S - INPUT_A] = BACKWARD;
@@ -14,11 +12,16 @@ void inputs_init(inputs* in) {
 }
 
 void inputs_init_callback(InputCallback* callback, InputDirectionCallback* direction_callback) {
-    input_callback = callback;
     input_direction_callback = direction_callback;
+    input_callback = callback;
 }
 
 void inputs_key_down(inputs* in, SDL_Keycode key) {
+    if(key == SDLK_ESCAPE) {
+        (*input_callback)(ESCAPE);
+        return;
+    }
+
     if(sizeof(in->mapped_inputs) / sizeof(in->mapped_inputs[0]) < key - INPUT_A) {
         return;
     }
@@ -50,4 +53,22 @@ void inputs_update(inputs* in) {
     }
 
     (*input_callback)(in->control_status);
+}
+
+// The following gotos are used to skip the gamepad input
+// when we can confirm that no gamepad input is present.
+void inputs_motion(inputs* in, int x, int y, int dx, int dy) {
+    if(!in) {
+        goto skip_to_mouse;
+    }
+
+    if(in->control_status < LOOK_UP) {
+        goto skip_to_mouse;
+    }
+
+    // Gamepad Added later
+
+skip_to_mouse: {
+        (*input_direction_callback)(x, y, dx, dy);
+    }
 }
