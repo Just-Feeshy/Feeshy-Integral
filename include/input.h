@@ -51,7 +51,7 @@ static volatile InputDirectionCallback* input_direction_callback = NULL;
 
 typedef struct inputs {
     uint8_t mapped_inputs[INPUT_W - INPUT_A + 1];
-    uint64_t control_status;
+    uint64_t control_status; // In a large game, this would be a u8[128]
 } inputs;
 
 void inputs_init(inputs* in);
@@ -59,4 +59,4 @@ void inputs_init_callback(InputCallback* callback, InputDirectionCallback* direc
 void inputs_key_down(inputs* in, SDL_Keycode key);
 void inputs_key_up(inputs* in, SDL_Keycode key);
 void inputs_update(inputs* in);
-void inputs_motion(inputs* in, int x, int y, int dx, int dy);
+void inputs_motion(uint64_t control_status, int x, int y, int dx, int dy);

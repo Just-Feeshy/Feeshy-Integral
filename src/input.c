@@ -17,8 +17,13 @@ void inputs_init_callback(InputCallback* callback, InputDirectionCallback* direc
 }
 
 void inputs_key_down(inputs* in, SDL_Keycode key) {
+    if(in->control_status & ESCAPE) {
+        return;
+    }
+
     if(key == SDLK_ESCAPE) {
-        (*input_callback)(ESCAPE);
+        in->control_status |= ESCAPE;
+        (*input_callback)(in->control_status);
         return;
     }
 
@@ -35,6 +40,10 @@ void inputs_key_down(inputs* in, SDL_Keycode key) {
 }
 
 void inputs_key_up(inputs* in, SDL_Keycode key) {
+    if(in->control_status & ESCAPE) {
+        return;
+    }
+
     if(sizeof(in->mapped_inputs) / sizeof(in->mapped_inputs[0]) < key - INPUT_A) {
         return;
     }
@@ -57,12 +66,16 @@ void inputs_update(inputs* in) {
 
 // The following gotos are used to skip the gamepad input
 // when we can confirm that no gamepad input is present.
-void inputs_motion(inputs* in, int x, int y, int dx, int dy) {
-    if(!in) {
+void inputs_motion(uint64_t control_status, int x, int y, int dx, int dy) {
+    if(control_status == 0) {
         goto skip_to_mouse;
     }
 
-    if(in->control_status < LOOK_UP) {
+    if(control_status & ESCAPE) {
+        return;
+    }
+
+    if(control_status < LOOK_UP) {
         goto skip_to_mouse;
     }
 

@@ -107,10 +107,11 @@ static void program_handle_event(SDL_Event* event) {
             break;
 
         case SDL_MOUSEMOTION:
-            inputs_motion(0, event->motion.x, event->motion.y, event->motion.xrel, event->motion.yrel);
+            inputs_motion(main_program.in->control_status & ESCAPE, event->motion.x, event->motion.y, event->motion.xrel, event->motion.yrel);
             break;
 
         case SDL_MOUSEBUTTONDOWN:
+            main_program.in->control_status &= ~ESCAPE;
             SDL_SetRelativeMouseMode(SDL_TRUE);
             break;
     }
