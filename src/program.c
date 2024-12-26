@@ -90,8 +90,10 @@ static void program_handle_event(SDL_Event* event) {
         case SDL_USEREVENT:
             program_draw_update();
             break;
+
         case SDL_WINDOWEVENT: // TODO: Implement this
 		    break;
+
         case SDL_QUIT:
             main_program.active = false;
             break;
@@ -102,6 +104,10 @@ static void program_handle_event(SDL_Event* event) {
 
         case SDL_KEYUP:
             inputs_key_up(main_program.in, event->key.keysym.sym);
+            break;
+
+        case SDL_MOUSEMOTION:
+            if(input_direction_callback)(*input_direction_callback)(event->motion.x, event->motion.y, event->motion.xrel, event->motion.yrel);
             break;
     }
 }
@@ -133,6 +139,8 @@ static void program_update() {
         main_update.nextUpdate += frame_period;
         program_update_opengl();
     }
+
+    inputs_update(main_program.in);
 }
 
 void program_init(const char* name, int w, int h) {
@@ -227,4 +235,8 @@ float program_get_pixel_density() {
     SDL_GetWindowSizeInPixels(main_program.window, &pixel_w, &pixel_h);
     pixel_density = (float)pixel_w / window_w;
     return pixel_density;
+}
+
+float program_get_elapsed_time() {
+    return 1.0;
 }

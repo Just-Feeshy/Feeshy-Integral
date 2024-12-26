@@ -13,9 +13,9 @@ void inputs_init(inputs* in) {
     in->control_status = 0;
 }
 
-void inputs_init_callback(InputCallback* callback) {
+void inputs_init_callback(InputCallback* callback, InputDirectionCallback* direction_callback) {
     input_callback = callback;
-    printf("Input callback initialized\n");
+    input_direction_callback = direction_callback;
 }
 
 void inputs_key_down(inputs* in, SDL_Keycode key) {
