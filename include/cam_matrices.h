@@ -5,6 +5,7 @@
 typedef struct {
     mat4 projection;
     mat4 view;
+    vec3 position;
     float far;
     float near;
 } cam_block;
@@ -21,3 +22,4 @@ cam_matrices create_cam_matrices();
 void init_cam_matrices(cam_matrices* cam);
 void update_rotation(cam_matrices* cam);
 void update_view_matrix(cam_matrices* cam);
+void update_projection_matrix(cam_matrices* cam, float aspect_ratio);

@@ -28,6 +28,10 @@ void world_init() {
 
     block = (sized_shader_block**)malloc(sizeof(sized_shader_block*));
     *block = create_ssbo(&ubo, GL_UNIFORM_BUFFER, sizeof(cam_matrices));
+}
+
+void world_aspect_ratio(float width, float height) {
+    update_projection_matrix(&cam, width / height);
     set_ssbo_data(*block, &cam.cam, sizeof(cam_block));
 }
 

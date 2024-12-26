@@ -19,6 +19,8 @@ void screen_init(int w, int h) {
     width = (float)w;
     height = (float)h;
 
+    world_aspect_ratio(width, height);
+
     vertices v = (vertices){
         .bottom_left_x = 0.0f,
         .bottom_left_y = 0.0f,
