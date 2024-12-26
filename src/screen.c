@@ -2,37 +2,36 @@
 #include <shader.h>
 #include <pipeline.h>
 #include <uniform_manager.h>
+#include <program.h>
 #include <screen.h>
 #include <world.h>
 
 static graphics_pipeline pipeline;
 static unsigned VAO;
 
-static float width = 0.0f;
-static float height = 0.0f;
+static int width = 0.0f;
+static int height = 0.0f;
 
 void screen_init(int w, int h) {
     if (w == 0 || h == 0) {
         return;
     }
 
-    width = (float)w;
-    height = (float)h;
-
-    world_aspect_ratio(width, height);
+    width = (float)w * program_get_pixel_density();
+    height = (float)h * program_get_pixel_density();
 
     vertices v = (vertices){
         .bottom_left_x = 0.0f,
         .bottom_left_y = 0.0f,
 
-        .bottom_right_x = w,
+        .bottom_right_x = width,
         .bottom_right_y = 0.0f,
 
-        .top_right_x = w,
-        .top_right_y = h,
+        .top_right_x = width,
+        .top_right_y = height,
 
         .top_left_x = 0.0f,
-        .top_left_y = h,
+        .top_left_y = height,
     };
 
     create_vertex_buffer(&VAO, &v);
@@ -55,11 +54,13 @@ void screen_init(int w, int h) {
 
     uniform_manager_init();
     create_constant_location(&pipeline, "u_resolution");
+    world_aspect_ratio(width, height);
 }
 
 void screen_render() {
     pipeline_set(&pipeline);
     set_uniform_vec2("u_resolution", width, height);
+
     world_begin(&pipeline);
     draw_vertex_buffer(VAO, 6);
     world_end(&pipeline);

@@ -41,7 +41,7 @@ static void create_window(const char* title, int w, int h) {
     #ifdef __EMSCRIPTEN__
     SDL_CreateWindowAndRenderer(w, h, 0, &main_program.window, 0);
     #else
-    main_program.window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    main_program.window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
     #endif
 
     main_program.context = SDL_GL_CreateContext(main_program.window);
@@ -217,4 +217,14 @@ void program_destroy() {
 
     free(main_program.in);
     main_program.active = false;
+}
+
+float program_get_pixel_density() {
+    int window_w, window_h, pixel_w, pixel_h;
+    float pixel_density = 1.0f;
+
+    SDL_GetWindowSize(main_program.window, &window_w, &window_h);
+    SDL_GetWindowSizeInPixels(main_program.window, &pixel_w, &pixel_h);
+    pixel_density = (float)pixel_w / window_w;
+    return pixel_density;
 }
