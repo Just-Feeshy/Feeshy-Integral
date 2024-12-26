@@ -6,7 +6,7 @@
 #define COS_X 0.0
 #define SIN_X 1.0
 
-static void update_rotation(cam_matrices* cam) {
+void update_rotation(cam_matrices* cam) {
     float cos_y = cos(cam->vertical_angle);
     float sin_y = sin(cam->vertical_angle);
 
@@ -15,7 +15,7 @@ static void update_rotation(cam_matrices* cam) {
     cam->look_at[2] = COS_X * cos_y;
 }
 
-static void update_view_matrix(cam_matrices* cam) {
+void update_view_matrix(cam_matrices* cam) {
     vec3 center = {
         cam->position[0] + cam->look_at[0],
         cam->position[1] + cam->look_at[1],
@@ -38,7 +38,7 @@ cam_matrices create_cam_matrices() {
 
     cam_matrices cam = {
         .cam = cam_blck,
-        .look_at = {0.0f, 0.0f, 0.0f},
+        .look_at = {look_at[0], look_at[1], look_at[2]},
         .horizontal_angle = atan2(look_at[0], look_at[2]),
         .vertical_angle = asin(look_at[1]),
         .position = {0.0f, 0.0f, 0.0f}

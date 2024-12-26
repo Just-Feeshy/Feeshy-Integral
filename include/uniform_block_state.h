@@ -5,16 +5,18 @@
 #include <hash_set.h>
 #include <hashmap.h>
 #include <more_math.h>
+#include <pipeline.h>
 #include <opengl.h>
 #include <utils.h>
 
 #define MAX_GL_BINDINGS \
     1L << ceil_log2(opengl_get_integerv(GL_MAX_UNIFORM_BUFFER_BINDINGS))
 
+
 // Uniform Block Object
 
 typedef struct uniform_block {
-    struct hashmap* shader_bindings;
+    const char* shader_bindings[DEFAULT_HASH_SET_CAPACITY];
     hash_set_t* bounded_blocks;
     hash_set_t* used_bindings;
     int next_binding;
@@ -22,7 +24,6 @@ typedef struct uniform_block {
 
 
 // Sized Shader Block Object
-
 
 static uintptr_t cur_addr;
 
@@ -45,7 +46,13 @@ void destroy_ssbo(sized_shader_block* block);
 // Uniform Block Object Methods
 
 void init_ubo(uniform_block* block);
-void unbind_ubo(uniform_block* block, int binding, sized_shader_block* ssbo);
-int bind_ubo(uniform_block* block, sized_shader_block* ssbo);
-void bind_ubo_with_name(uniform_block* block, const char* name, sized_shader_block* ssbo);
+void unbind_ubo(uniform_block* block, int binding, sized_shader_block* ssbo, graphics_pipeline* pipe);
+void unbind_ubo_just_ssbo(uniform_block* block, sized_shader_block** ssbo, graphics_pipeline* pipe);
+int bind_ubo(uniform_block* block, sized_shader_block** ssbo, graphics_pipeline* pipe);
+void bind_ubo_with_name(uniform_block* block, const char* name, sized_shader_block** ssbo, graphics_pipeline* pipe);
 void destroy_ubo(uniform_block* block);
+
+
+// Additional Methods
+
+void check_ubo(sized_shader_block* block, int binding);

@@ -16,5 +16,5 @@
 })
 
 static uint64_t ceil_log2(uint32_t n) {
-    return (n & (n - 1)) == 0 ? 31 - __builtin_clz(n) : 32 - __builtin_clz(n);
+    return 32 - __builtin_clz(n);
 }

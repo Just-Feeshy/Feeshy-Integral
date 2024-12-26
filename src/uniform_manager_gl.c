@@ -1,10 +1,12 @@
 #include <uniform_manager.h>
+#include <utils.h>
 #include <hashmap.h>
 #include <string.h>
 
 static struct hashmap* uniform_map;
+static struct hashmap* uniform_block_map;
 
-int uniform_compare(const void *a, const void *b, void *udata) {
+static int uniform_compare(const void *a, const void *b, void *udata) {
     const constant_location* la = a;
     const constant_location* lb = b;
     return strcmp(la->name, lb->name);
@@ -13,6 +15,17 @@ int uniform_compare(const void *a, const void *b, void *udata) {
 static uint64_t uniform_hash(const void *item, uint64_t seed0, uint64_t seed1) {
     const constant_location* loc = item;
     return hashmap_sip(loc->name, strlen(loc->name), seed0, seed1);
+}
+
+static int uniform_block_compare(const void *a, const void *b, void *udata) {
+    const uniform_block_state* la = a;
+    const uniform_block_state* lb = b;
+    return strcmp(la->name, lb->name);
+}
+
+static uint64_t uniform_block_hash(const void *item, uint64_t seed0, uint64_t seed1) {
+    const uniform_block_state* block = item;
+    return hashmap_sip(block->name, strlen(block->name), seed0, seed1);
 }
 
 static constant_location get_constant_location(graphics_pipeline* pipe, const char* name) {
@@ -55,6 +68,7 @@ void uniform_manager_init() {
 
     // Create the hash maps
     uniform_map = hashmap_new(sizeof(constant_location), 0, 0, 0, uniform_hash, uniform_compare, NULL, NULL);
+    uniform_block_map = hashmap_new(sizeof(uniform_block_state), 0, 0, 0, uniform_block_hash, uniform_block_compare, NULL, NULL);
 }
 
 void create_constant_location(graphics_pipeline* pipe, const char* name) {
@@ -84,13 +98,30 @@ void set_uniform_vec2(const char* name, float x, float y) {
     glUniform2f(loc->core.location, x, y);
 }
 
-void set_uniform_block(const char* name, unsigned int binding) {
-    const constant_location* loc;
+int get_uniform_block(int programIndex, const char* name) {
+    uniform_block_state* block;
 
-    if ((loc = hashmap_get(uniform_map, &(constant_location){.name=name})) == NULL) {
-        fprintf(stderr, "Failed to find uniform %s\n", name);
+    if ((block = (uniform_block_state*)hashmap_get(uniform_block_map, &(uniform_block_state){.name=name})) == NULL) {
+        block = (uniform_block_state*)mem_alloca(sizeof(uniform_block_state));
+        block->name = name;
+        block->binding = glGetUniformBlockIndex(programIndex, name);
+
+        hashmap_set(uniform_block_map, block);
+
+        // This is important since we are allocating on the stack
+        return block->binding;
+    }
+
+    return block->binding;
+}
+
+void set_uniform_block(const char* name, int binding, graphics_pipeline* pipe) {
+    int index = get_uniform_block(pipe->pipeline_core.programId, name);
+
+    if (index == -1) {
+        fprintf(stderr, "Failed to get uniform block index for %s\n", name);
         return;
     }
 
-    glUniformBlockBinding(loc->core.location, binding, loc->core.location);
+    glUniformBlockBinding(pipe->pipeline_core.programId, index, binding);
 }

@@ -4,12 +4,12 @@
 
 #define DEFAULT_INCLUSIVE_BETWEEN_EX_MESSAGE "Value %d is not between %d and %d (inclusive).\n"
 
-
 static uint32_t max_gl_bindings(uint32_t target) {
     switch(target) {
         case GL_UNIFORM_BUFFER: {
             int value;
             glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &value);
+            return value;
         };
         default: fprintf(stderr, "Invalid target\n"); exit(EXIT_FAILURE);
     }
@@ -20,16 +20,7 @@ static uint32_t max_gl_bindings(uint32_t target) {
 
 // Uniform Block Object
 
-static int int2str_compare(const void* a, const void* b, void* udata) {
-    return *(int*)a - *(int*)b;
-}
-
-static uint64_t int2str_hash(const void* item, uint64_t seed0, uint64_t seed1) {
-    const int* str = item;
-    return hashmap_sip(str, sizeof(int), seed0, seed1);
-}
-
-static void free_bindings(uniform_block* block) {
+static void free_bindings(uniform_block* block, graphics_pipeline* pipe) {
     size_t iter = 0;
     uintptr_t raw_item;
     uintptr_t* item_list = (uintptr_t*)block->bounded_blocks->values;
@@ -42,15 +33,19 @@ static void free_bindings(uniform_block* block) {
         }
 
         uintptr_t item = raw_item & ~((MAX_GL_BINDINGS) - 1);
-        unbind_ubo(block, binding, (sized_shader_block*)item);
+        unbind_ubo(block, binding, (sized_shader_block*)item, pipe);
 
-        //unbind_ubo(block, *(int*)item, *(sized_shader_block**)item);
-        //hashmap_delete(block->bounded_blocks, &item);
         delete(block->bounded_blocks, &item);
-        block->next_binding = binding;
+   block->next_binding = binding;
 
         MIN_FREE((void*)item, sizeof(sized_shader_block));
+
         cur_addr = item;
+
+        if(cur_addr < MAX_GL_BINDINGS) {
+            cur_addr = MAX_GL_BINDINGS;
+        }
+
         return;
     }
 
@@ -59,26 +54,25 @@ static void free_bindings(uniform_block* block) {
 
 void init_ubo(uniform_block* block) {
     cur_addr = MAX_GL_BINDINGS;
+    // printf("Cur addr: %p\n", (void*)cur_addr);
 
-    block->shader_bindings = hashmap_new(sizeof(int), 0, 0, 0, int2str_hash, int2str_compare, NULL, NULL);
     block->bounded_blocks = init_hash_set();
     block->used_bindings = init_hash_set();
 }
 
-void unbind_ubo(uniform_block* block, int binding, sized_shader_block* ssbo) {
+void unbind_ubo(uniform_block* block, int binding, sized_shader_block* ssbo, graphics_pipeline* pipe) {
     unbind_ssbo(ssbo, binding);
 
-    const char* name = hashmap_get(block->shader_bindings, &binding);
+    const char* name = block->shader_bindings[binding];
 
     if(name) {
         switch(ssbo->binding) {
             case GL_UNIFORM_BUFFER: {
-                set_uniform_block(name, binding);
+                set_uniform_block(name, binding, pipe);
+                break;
             }
             default: fprintf(stderr, "Invalid binding\n"); exit(EXIT_FAILURE);
         }
-
-        hashmap_delete(block->shader_bindings, &binding);
     }
 
     if(binding < block->next_binding) {
@@ -86,37 +80,66 @@ void unbind_ubo(uniform_block* block, int binding, sized_shader_block* ssbo) {
     }
 }
 
-int bind_ubo(uniform_block* block, sized_shader_block* ssbo) {
-    int binding = (int)((uintptr_t)ssbo & ((MAX_GL_BINDINGS) - 1));
+void unbind_ubo_just_ssbo(uniform_block* block, sized_shader_block** ssbo, graphics_pipeline* pipe) {
+    uintptr_t item = (uintptr_t)ssbo;
+    int binding = item & ((MAX_GL_BINDINGS) - 1);
 
-    if(!contains(block->bounded_blocks, &ssbo) && binding == 0) {
+    if(contains(block->bounded_blocks, ssbo)) {
+        unbind_ubo(block, binding, *ssbo, pipe);
+        delete(block->bounded_blocks, &item);
+    }
+}
+
+int bind_ubo(uniform_block* block, sized_shader_block** ssbo, graphics_pipeline* pipe) {
+    int binding = (int)((uintptr_t)(*ssbo) & ((MAX_GL_BINDINGS) - 1));
+    // printf("Binding: %d, Pointer %p\n", binding, *ssbo);
+    sized_shader_block* ssbo_ptr = (sized_shader_block*)((uintptr_t)(*ssbo) & ~((MAX_GL_BINDINGS) - 1));
+
+    if(!contains(block->bounded_blocks, ssbo) && binding == 0) {
         if(block->next_binding >= max_gl_bindings(GL_UNIFORM_BUFFER)) {
-            free_bindings(block);
+            free_bindings(block, pipe);
         }
 
         binding = block->next_binding;
-        //hashmap_set(block->bounded_blocks, &ssbo, &binding);
-        add(block->bounded_blocks, (void*)((uintptr_t)ssbo | binding));
+        *ssbo = (sized_shader_block*)(binding | (uintptr_t)(*ssbo));
+        add(block->bounded_blocks, ssbo);
 
-        while(hashmap_get(block->shader_bindings, &binding)) {
+        while(block->shader_bindings[block->next_binding]) {
             block->next_binding++;
         }
     }
 
-    bind_ssbo(ssbo, binding);
+    bind_ssbo(ssbo_ptr, binding);
     add(block->used_bindings, &binding);
     return binding;
 }
 
-void bind_ubo_with_name(uniform_block* block, const char* name, sized_shader_block* ssbo) {
-    int binding = bind_ubo(block, ssbo);
+void bind_ubo_with_name(uniform_block* block, const char* name, sized_shader_block** ssbo, graphics_pipeline* pipe) {
+    sized_shader_block* ssbo_ptr = (sized_shader_block*)((uintptr_t)(*ssbo) & ~((MAX_GL_BINDINGS) - 1));
+
+    int binding = bind_ubo(block, ssbo, pipe);
+    const char* bound_name = block->shader_bindings[binding];
+
+    if(!bound_name) { // Simplest way to avoid a segfault
+        goto set_ubo_block;
+    }
+
+    if(strcmp(name, bound_name) != 0) {
+set_ubo_block:
+        //printf("Binding %d to %s\n", binding, name);
+        block->shader_bindings[binding] = name;
+
+        switch(ssbo_ptr->binding) {
+            case GL_UNIFORM_BUFFER: {
+                set_uniform_block(name, binding, pipe);
+                break;
+            }
+            default: fprintf(stderr, "Invalid binding\n"); exit(EXIT_FAILURE);
+        }
+    }
 }
 
 void destroy_ubo(uniform_block* block) {
-    if(block->shader_bindings) {
-        hashmap_free(block->shader_bindings);
-    }
-
     if(block->bounded_blocks) {
         free(block->bounded_blocks->values);
     }
@@ -142,7 +165,7 @@ static void inclusive_between(int min, int max, int value) {
 
 static void serialize(void* data, uint8_t* buffer) {
     memcpy(buffer, data, sizeof(data));
-    printf("Serialized data: %d\n", *(int*)buffer);
+    // printf("Serialized data: %d\n", *(int*)buffer);
 }
 
 sized_shader_block* create_ssbo(uniform_block* ubo, int binding, uint32_t size) {
@@ -167,10 +190,10 @@ void init_ssbo(sized_shader_block* block, uniform_block* ubo, int binding, uint3
 void bind_ssbo(sized_shader_block* block, int index) {
     inclusive_between(0, max_gl_bindings(GL_UNIFORM_BUFFER), index);
 
-    if(!block->buffer) {
+    if(block->buffer == 0) {
         glGenBuffers(1, &block->buffer);
         glBindBuffer(block->binding, block->buffer);
-        glBufferData(block->binding, block->size, block->data, GL_DYNAMIC_DRAW);
+        glBufferData(block->binding, block->size, NULL, GL_DYNAMIC_DRAW);
         glBindBuffer(block->binding, 0);
 
         block->is_dirty = true;
@@ -181,22 +204,13 @@ void bind_ssbo(sized_shader_block* block, int index) {
         glBindBuffer(block->binding, block->buffer);
 
         {
-            void* buffer = mem_alloca(block->size);
-            stack_allocator allocator;
-            stack_init(&allocator, buffer, block->size);
-
             if(block->data) {
-                uint8_t* fixed_buffer = stack_alloc(&allocator, block->size);
-
-                if(!fixed_buffer) {
-                    fprintf(stderr, "Failed to allocate memory for fixed buffer\n");
-                    return;
-                }
-
-                serialize(block->data, fixed_buffer);
-                stack_rewind(&allocator);
-                glBufferSubData(block->binding, 0, block->size, fixed_buffer);
+                glBufferSubData(block->binding, 0, block->size, block->data);
             }else {
+                void* buffer = mem_alloca(block->size);
+                stack_allocator allocator;
+                stack_init(&allocator, buffer, block->size);
+
                 uint8_t* zero_buffer = stack_calloc(&allocator, block->size, sizeof(uint8_t));
                 glBufferSubData(block->binding, 0, block->size, zero_buffer);
             }
@@ -215,6 +229,7 @@ void unbind_ssbo(sized_shader_block* block, int index) {
 
 void set_ssbo_data(sized_shader_block* block, void* data) {
     block->data = data;
+    block->size = sizeof(data);
     block->is_dirty = true;
 }
 
@@ -225,4 +240,12 @@ void destroy_ssbo(sized_shader_block* block) {
         glDeleteBuffers(1, &block->buffer);
         block->buffer = 0;
     }
+}
+
+void check_ubo(sized_shader_block* block, int binding) {
+    char block_name[256];
+    GLsizei length;
+
+    glGetActiveUniformBlockName(block->buffer, binding, sizeof(block_name), &length, block_name);
+    printf("Block name: %s\n", block_name);
 }

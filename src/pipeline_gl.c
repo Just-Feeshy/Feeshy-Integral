@@ -48,7 +48,9 @@ void pipeline_compile(uint32_t num_shdrs, graphics_pipeline* pipeline, shader* s
     glGetProgramiv(pipeline->pipeline_core.programId, GL_LINK_STATUS, &link_status);
 
     if (link_status == GL_FALSE) {
-        printf("Failed to link program\n");
+        char info_log[1024];
+        glGetProgramInfoLog(pipeline->pipeline_core.programId, sizeof(info_log), NULL, info_log);
+        printf("Failed to link program:\n%s\n", info_log);
         exit(1);
     }
 }

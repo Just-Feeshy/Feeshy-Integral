@@ -2,7 +2,7 @@
 
 #include <cglm/vec3.h>
 
-typedef struct cam_block {
+typedef struct {
     mat4 projection;
     mat4 view;
     float far;
@@ -19,3 +19,5 @@ typedef struct cam_matrices {
 
 cam_matrices create_cam_matrices();
 void init_cam_matrices(cam_matrices* cam);
+void update_rotation(cam_matrices* cam);
+void update_view_matrix(cam_matrices* cam);

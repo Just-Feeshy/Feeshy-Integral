@@ -3,6 +3,7 @@
 #include <pipeline.h>
 #include <uniform_manager.h>
 #include <screen.h>
+#include <world.h>
 
 static graphics_pipeline pipeline;
 static unsigned VAO;
@@ -57,5 +58,7 @@ void screen_init(int w, int h) {
 void screen_render() {
     pipeline_set(&pipeline);
     set_uniform_vec2("u_resolution", width, height);
+    world_begin(&pipeline);
     draw_vertex_buffer(VAO, 6);
+    world_end(&pipeline);
 }
