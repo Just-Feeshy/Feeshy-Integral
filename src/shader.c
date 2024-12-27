@@ -32,7 +32,7 @@ void load_shader(const char* filename, shader* shader_obj, shader_type type, uin
         goto file_error;
     }
 
-    if (size < 0) {
+    if (size == -1) {
         fprintf(stderr, "Failed to get file size: %s\n", filename);
         goto file_error;
     }

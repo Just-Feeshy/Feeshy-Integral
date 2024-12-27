@@ -13,6 +13,7 @@ layout(std140) uniform CamBlock {
 } cam_block;
 
 uniform vec2 u_resolution;
+uniform sampler2D u_texture;
 
 float sdfSphere(vec3 p, float radius) {
     return length(p) - radius;
@@ -62,6 +63,8 @@ void main() {
         color = vec4(1.0);
     }
 
+    // Texture
+    vec4 tex_color = texture(u_texture, uv);
 
-    fragColor = color;
+    fragColor = tex_color;
 }

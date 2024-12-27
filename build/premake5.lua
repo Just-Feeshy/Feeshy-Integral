@@ -93,6 +93,7 @@ function project_config()
             "../third_party/SDL/include",
             "../third_party/hashmap",
             "../third_party/cglm/include",
+            "../third_party/stb"
         }
 
         -- Third Party Libraries

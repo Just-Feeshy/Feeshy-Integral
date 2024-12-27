@@ -6,8 +6,8 @@ void inputs_init(inputs* in) {
     in->mapped_inputs[INPUT_S - INPUT_A] = BACKWARD;
     in->mapped_inputs[INPUT_D - INPUT_A] = RIGHT;
     in->mapped_inputs[INPUT_A - INPUT_A] = LEFT;
-    in->mapped_inputs[INPUT_Q - INPUT_A] = UP;
-    in->mapped_inputs[INPUT_E - INPUT_A] = DOWN;
+    in->mapped_inputs[INPUT_E - INPUT_A] = UP;
+    in->mapped_inputs[INPUT_Q - INPUT_A] = DOWN;
 
     in->control_status = 0;
 }
