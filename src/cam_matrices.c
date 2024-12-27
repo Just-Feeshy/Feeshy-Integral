@@ -3,7 +3,7 @@
 #include <cglm/cam.h>
 #include <math.h>
 
-const vec3 UP = {0.0f, 1.0f, 0.0f};
+#define UP (vec3){0.0f, 1.0f, 0.0f}
 
 void update_rotation(cam_matrices* cam) {
     float cos_y = cos(cam->vertical_angle);

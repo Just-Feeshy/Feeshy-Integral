@@ -28,24 +28,6 @@ function third_party_config()
 
         filter "system:windows"
             defines { "_WINDOWS" }
-
-        filter "system:not windows"
-            defines { "HAVE_UNISTD_H" }
-
-    -- STB
-    project "stb-lib"
-        language "C"
-        kind "StaticLib"
-        warnings "off"
-
-        files {
-            "../third_party/stb/stb_image.h"
-        }
-
-        defines {
-            "STB_IMAGE_IMPLEMENTATION",
-            "STBI_SUPPORT_ZLIB"
-        }
 end
 
 function solution_config()
@@ -103,6 +85,7 @@ function project_config()
             "../third_party/hashmap/hashmap.h",
             "../third_party/cglm/src/**.c",
             "../third_party/cglm/include/**.h",
+            "../third_party/stb/stb_image.h"
         }
 
         includedirs {
@@ -114,8 +97,12 @@ function project_config()
 
         -- Third Party Libraries
         links {
-            "zlib-lib",
-            "stb-lib"
+            "zlib-lib"
+        }
+
+        defines {
+            "STB_IMAGE_IMPLEMENTATION",
+            "STBI_SUPPORT_ZLIB"
         }
 
         targetdir(TARGET_DIR)
@@ -127,6 +114,9 @@ function project_config()
         filter "configurations:Debug"
             links { "SDL2" }
             debugdir(TARGET_DIR)
+
+        filter "system:not windows"
+            defines { "HAVE_UNISTD_H" }
 
         filter { "system:macosx" }
             defines { "USE_EGL" }
