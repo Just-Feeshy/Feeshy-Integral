@@ -35,10 +35,10 @@ float sdfSphere(vec3 p, float radius) {
     return length(p) - radius;
 }
 
-bool raymarch(vec2 uv, vec2 ndc, inout vec3 p) {
+bool raymarch(vec2 uv, inout vec3 p) {
 
     // World View Projection
-    vec4 clip = vec4(ndc, -1.0, 1.0);
+    vec4 clip = vec4(uv, -1.0, 1.0);
     vec4 eye = inverse(cam_block.projection) * clip;
     eye /= eye.w;
 
@@ -81,11 +81,10 @@ bool raymarch(vec2 uv, vec2 ndc, inout vec3 p) {
 
 void main() {
     vec3 p = vec3(0.0);
-    vec2 uv = (2.0 * gl_FragCoord.xy - u_resolution.xy) / u_resolution.y;
-    vec2 ndc = (gl_FragCoord.xy / u_resolution.xy) * 2.0 - 1.0;
+    vec2 uv = (gl_FragCoord.xy / u_resolution.xy) * 2.0 - 1.0;
 
     // Apply Raymarching
-    bool hit_obj = raymarch(uv, ndc, p);
+    bool hit_obj = raymarch(uv, p);
     vec4 color = vec4(0.0);
 
     if(hit_obj) {
