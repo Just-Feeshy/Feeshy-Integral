@@ -94,12 +94,7 @@ void screen_init(int w, int h) {
     shader_attribute* frag_attrs[] = {
     };
 
-    image img = {
-        .width = 0,
-        .height = 0,
-        .channels = 0,
-        .data = NULL
-    };
+    image img;
 
     load_image("assets/image0.jpg", &img);
     texture_init(&txt, &img);
