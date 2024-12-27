@@ -1,4 +1,5 @@
 #include <input.h>
+#include <SDL_mouse.h>
 
 void inputs_init(inputs* in) {
     in->mapped_inputs[INPUT_W - INPUT_A] = FORWARD;
@@ -23,7 +24,7 @@ void inputs_key_down(inputs* in, SDL_Keycode key) {
 
     if(key == SDLK_ESCAPE) {
         in->control_status |= ESCAPE;
-        (*input_callback)(in->control_status);
+        SDL_SetRelativeMouseMode(SDL_FALSE);
         return;
     }
 
