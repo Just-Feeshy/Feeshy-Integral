@@ -13,3 +13,9 @@
 [submodule "third_party/cglm"]
 	path = third_party/cglm
 	url = https://github.com/recp/cglm.git
+[submodule "third_party/zlib"]
+	path = third_party/zlib
+	url = https://github.com/madler/zlib.git
+[submodule "third_party/stb"]
+	path = third_party/stb
+	url = https://github.com/nothings/stb.git

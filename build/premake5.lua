@@ -12,6 +12,42 @@ LIBRARY_DIR = "../third_party/libraries"
 
 ENABLE_VSYNC = true
 
+function third_party_config()
+
+    -- ZLIB
+    project "zlib-lib"
+        language "C"
+        kind "StaticLib"
+        defines { "N_FSEEKO" }
+        warnings "off"
+
+        files {
+            "../third_party/zlib/*.c",
+            "../third_party/zlib/*.h"
+        }
+
+        filter "system:windows"
+            defines { "_WINDOWS" }
+
+        filter "system:not windows"
+            defines { "HAVE_UNISTD_H" }
+
+    -- STB
+    project "stb-lib"
+        language "C"
+        kind "StaticLib"
+        warnings "off"
+
+        files {
+            "../third_party/stb/stb_image.h"
+        }
+
+        defines {
+            "STB_IMAGE_IMPLEMENTATION",
+            "STBI_SUPPORT_ZLIB"
+        }
+end
+
 function solution_config()
     solution(SOLUTION_NAME)
         location(SOLUTION_DIR)
@@ -75,9 +111,14 @@ function project_config()
             "../third_party/hashmap",
             "../third_party/cglm/include",
         }
-        targetdir(TARGET_DIR)
 
-        -- Libraries
+        -- Third Party Libraries
+        links {
+            "zlib-lib",
+            "stb-lib"
+        }
+
+        targetdir(TARGET_DIR)
         libdirs (LIBRARY_DIR)
 
         filter "configurations:Release"
@@ -91,11 +132,9 @@ function project_config()
             defines { "USE_EGL" }
 
             linkoptions {
-                "-ObjC",
                 "-framework IOKit",
                 "-framework CoreFoundation",
                 "-framework CoreGraphics",
-                "-framework CoreAudio",
                 "-framework AudioToolbox",
                 "-framework QuartzCore",
                 "-framework AppKit",
@@ -111,4 +150,5 @@ function project_config()
 end
 
 solution_config()
+third_party_config()
 project_config()

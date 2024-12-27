@@ -3,3 +3,5 @@ bin/
 third_party/libraries/
 program.make
 Makefile
+obj/
+*.make
