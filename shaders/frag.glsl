@@ -48,7 +48,7 @@ bool raymarch(vec2 uv, vec2 ndc, inout vec3 p) {
 
     // Summation of Distance
     float t_i = 0.0;
-    float t_j = MAX_STEPS;
+    float t_j = MAX_STEPS - 1.0;
 
     for(int i = 0; i < (MAX_STEPS >> 1); i++) {
         vec3 p_i = ray_origin + t_i * ray_direction;
@@ -67,7 +67,7 @@ bool raymarch(vec2 uv, vec2 ndc, inout vec3 p) {
             return true;
         }
 
-        if((dist_i > cam_block.far || dist_j > cam_block.far)
+        if(min_dist > cam_block.far
         || (length(p_j - p_i) * 0.5 < min_dist)) {
             return false;
         }
