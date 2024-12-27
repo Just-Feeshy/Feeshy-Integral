@@ -3,6 +3,8 @@
 #include <cglm/cam.h>
 #include <math.h>
 
+const vec3 UP = {0.0f, 1.0f, 0.0f};
+
 void update_rotation(cam_matrices* cam) {
     float cos_y = cos(cam->vertical_angle);
     float sin_y = sin(cam->vertical_angle);
@@ -12,7 +14,10 @@ void update_rotation(cam_matrices* cam) {
     cam->look_at[0] = sin_x * cos_y;
     cam->look_at[1] = sin_y;
     cam->look_at[2] = cos_x * cos_y;
-    glm_vec3_normalize(cam->look_at);
+
+    glm_vec3_normalize_to(cam->look_at, cam->front);
+    glm_vec3_crossn(cam->front, UP, cam->right);
+    glm_vec3_crossn(cam->right, cam->front, cam->up);
 }
 
 void update_view_matrix(cam_matrices* cam) {
@@ -45,6 +50,9 @@ cam_matrices create_cam_matrices() {
     cam_matrices cam = {
         .cam = cam_blck,
         .look_at = {look_at[0], look_at[1], look_at[2]},
+        .front = {0.0f, 0.0f, 0.0f},
+        .right = {0.0f, 0.0f, 0.0f},
+        .up = {0.0f, 0.0f, 0.0f},
         .horizontal_angle = atan2(look_at[0], look_at[2]),
         .vertical_angle = asin(look_at[1]),
         .position = {0.0f, 0.0f, 0.0f},

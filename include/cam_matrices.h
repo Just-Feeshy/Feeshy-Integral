@@ -13,6 +13,9 @@ typedef struct {
 typedef struct cam_matrices {
     cam_block cam;
     vec3 look_at;
+    vec3 front;
+    vec3 right;
+    vec3 up;
     float horizontal_angle;
     float vertical_angle;
     vec3 position;
