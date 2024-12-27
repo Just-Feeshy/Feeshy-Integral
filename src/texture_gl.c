@@ -1,12 +1,12 @@
 #include <texture.h>
 #include <opengl.h>
 
-void texture_init(texture* tex, int width, int height, unsigned channels, uint8_t* data) {
-    tex->width = width;
-    tex->height = height;
+void texture_init(texture* tex, image* img) {
+    tex->width = img->width;
+    tex->height = img->height;
     tex->depth = 1;
 
-    switch(channels) {
+    switch(img->channels) {
         case 1: tex->image_format = GL_RED; break;
         case 2: tex->image_format = GL_RG; break;
         case 3: tex->image_format = GL_RGB; break;
@@ -14,7 +14,7 @@ void texture_init(texture* tex, int width, int height, unsigned channels, uint8_
         default: fprintf(stderr, "Invalid number of channels\n"); exit(EXIT_FAILURE);
     }
 
-    if(data == NULL) {
+    if(img->data == NULL) {
         fprintf(stderr, "Invalid data\n");
         exit(EXIT_FAILURE);
     }
@@ -27,7 +27,7 @@ void texture_init(texture* tex, int width, int height, unsigned channels, uint8_
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, tex->image_format, tex->width, tex->height, 0, tex->image_format, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, tex->image_format, tex->width, tex->height, 0, tex->image_format, GL_UNSIGNED_BYTE, img->data);
 }
 
 void texture_bind(texture* tex, unsigned unit) {

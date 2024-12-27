@@ -17,6 +17,8 @@ layout(std140) uniform CamBlock {
 uniform vec2 u_resolution;
 uniform sampler2D u_texture;
 
+const vec3 c = vec3(0.0, 0.0, 3.0);
+
 float atan2(in float y, in float x) {
     return y > 0.0 ? atan(y, x) + PI : -atan(y, -x);
 }
@@ -32,7 +34,7 @@ vec2 sphereUV(vec3 p) {
 }
 
 float sdfSphere(vec3 p, float radius) {
-    return length(p) - radius;
+    return length(p - c) - radius;
 }
 
 bool raymarch(vec2 uv, inout vec3 p) {
@@ -88,7 +90,7 @@ void main() {
     vec4 color = vec4(0.0);
 
     if(hit_obj) {
-        vec2 spTexCoord = sphereUV(normalize(p));
+        vec2 spTexCoord = sphereUV(normalize(p - c));
         color = texture(u_texture, spTexCoord);
     }
 

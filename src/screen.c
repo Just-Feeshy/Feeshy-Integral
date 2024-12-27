@@ -16,7 +16,7 @@ static int width = 0.0f;
 static int height = 0.0f;
 static texture txt;
 
-static void load_image(const char* filename, uint8_t** image, int* w, int* h, int* channels) {
+static void load_image(const char* filename, image* img) {
 
     SDL_RWops* file = SDL_RWFromFile(filename, "rb");
     if(file == NULL) {
@@ -49,8 +49,8 @@ static void load_image(const char* filename, uint8_t** image, int* w, int* h, in
         goto file_error;
     }
 
-    *image = stbi_load_from_memory(buffer, size, w, h, channels, 0);
-    if (image == NULL) {
+    img->data = stbi_load_from_memory(buffer, size, &img->width, &img->height, &img->channels, 0);
+    if (img == NULL) {
         fprintf(stderr, "Failed to load image: %s\n", filename);
         goto file_error;
     }
@@ -94,11 +94,16 @@ void screen_init(int w, int h) {
     shader_attribute* frag_attrs[] = {
     };
 
-    uint8_t* image;
-    int tex_width, tex_height, tex_channels;
-    load_image("assets/image0.jpg", &image, &tex_width, &tex_height, &tex_channels);
-    texture_init(&txt, tex_width, tex_height, tex_channels, image);
-    stbi_image_free(image);
+    image img = {
+        .width = 0,
+        .height = 0,
+        .channels = 0,
+        .data = NULL
+    };
+
+    load_image("assets/image0.jpg", &img);
+    texture_init(&txt, &img);
+    stbi_image_free(img.data);
 
     load_shader("shaders/vert.glsl", &vert_shader, SHADER_VERTEX, 1, vert_attrs);
     load_shader("shaders/frag.glsl", &frag_shader, SHADER_FRAGMENT, 0, frag_attrs);
