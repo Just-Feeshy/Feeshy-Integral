@@ -6,7 +6,7 @@
 #include <program.h>
 #include <input.h>
 
-#define SPEED 0.3f
+#define SPEED 0.1f
 #define TAU 6.28318530718
 
 static const float LIMIT = TAU / 4.01;

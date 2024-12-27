@@ -1,6 +1,8 @@
 #version 410 core
 
 #define MAX_STEPS 100
+#define PI 3.14159265
+#define TAU (2*PI)
 
 out vec4 fragColor;
 
@@ -14,6 +16,20 @@ layout(std140) uniform CamBlock {
 
 uniform vec2 u_resolution;
 uniform sampler2D u_texture;
+
+float atan2(in float y, in float x) {
+    return y > 0.0 ? atan(y, x) + PI : -atan(y, -x);
+}
+
+vec2 sphereUV(vec3 p) {
+    //p = rotateX(p, PI / 4);
+    //p = rotateY(p, 0);
+    //p = rotateZ(p, 0);
+
+    float r = length(p);
+    float phi = atan2(p.z, p.x);
+    return vec2(phi / TAU, acos(p.y / r) / PI);
+}
 
 float sdfSphere(vec3 p, float radius) {
     return length(p) - radius;
@@ -31,20 +47,33 @@ bool raymarch(vec2 uv, vec2 ndc, inout vec3 p) {
     vec3 ray_direction = normalize((inverse(cam_block.view) * vec4(eye.xyz, 0.0)).xyz);
 
     // Summation of Distance
-    float t = 0.0;
+    float t_i = 0.0;
+    float t_j = MAX_STEPS;
 
-    for(int i = 0; i < MAX_STEPS; i++) {
-        p = ray_origin + ray_direction * t;
-        float dist = sdfSphere(p, 1.0);
-        t += dist;
+    for(int i = 0; i < (MAX_STEPS >> 1); i++) {
+        vec3 p_i = ray_origin + t_i * ray_direction;
+        vec3 p_j = ray_origin + t_j * ray_direction;
+        float dist_i = sdfSphere(p_i, 1.0);
+        float dist_j = sdfSphere(p_j, 1.0);
+        float min_dist = min(dist_i, dist_j);
 
-        if(dist < cam_block.near) {
+        if(dist_i < cam_block.near) {
+            p = p_i;
             return true;
         }
 
-        if(dist > cam_block.far) {
+        if(dist_j < cam_block.near) {
+            p = p_j;
+            return true;
+        }
+
+        if((dist_i > cam_block.far || dist_j > cam_block.far)
+        || (length(p_j - p_i) * 0.5 < min_dist)) {
             return false;
         }
+
+        t_i += dist_i;
+        t_j -= dist_j;
     }
 
     return false;
@@ -60,11 +89,9 @@ void main() {
     vec4 color = vec4(0.0);
 
     if(hit_obj) {
-        color = vec4(1.0);
+        vec2 spTexCoord = sphereUV(normalize(p));
+        color = texture(u_texture, spTexCoord);
     }
 
-    // Texture
-    vec4 tex_color = texture(u_texture, uv);
-
-    fragColor = tex_color;
+    fragColor = color;
 }
