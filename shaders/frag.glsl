@@ -4,6 +4,8 @@
 #define PI 3.14159265
 #define TAU (2*PI)
 
+#define NEW_RAYMARCH 1
+
 out vec4 fragColor;
 
 layout(std140) uniform CamBlock {
@@ -48,35 +50,48 @@ bool raymarch(vec2 uv, inout vec3 p) {
     vec3 ray_origin = cam_block.position;
     vec3 ray_direction = normalize((inverse(cam_block.view) * vec4(eye.xyz, 0.0)).xyz);
 
-    // Summation of Distance
+    // Raymarching
+#if NEW_RAYMARCH
     float t_i = 0.0;
     float t_j = MAX_STEPS - 1.0;
 
-    for(int i = 0; i < (MAX_STEPS >> 1); i++) {
+    for(int i = 0; i < MAX_STEPS; i++) {
         vec3 p_i = ray_origin + t_i * ray_direction;
         vec3 p_j = ray_origin + t_j * ray_direction;
         float dist_i = sdfSphere(p_i, 1.0);
         float dist_j = sdfSphere(p_j, 1.0);
         float min_dist = min(dist_i, dist_j);
 
+        if(min_dist > cam_block.far
+        || (length(p_j - p_i) * 0.5 <= min_dist)) {
+            break;
+        }
+
         if(dist_i < cam_block.near) {
             p = p_i;
             return true;
         }
 
-        if(dist_j < cam_block.near) {
-            p = p_j;
-            return true;
-        }
-
-        if(min_dist > cam_block.far
-        || (length(p_j - p_i) * 0.5 < min_dist)) {
-            return false;
-        }
-
         t_i += dist_i;
         t_j -= dist_j;
     }
+#else
+    float t = 0.0;
+
+    for(int i = 0; i < MAX_STEPS; i++) {
+        p = ray_origin + t * ray_direction;
+        float dist = sdfSphere(p, 1.0);
+        if(dist < cam_block.near) {
+            return true;
+        }
+
+        if(dist > cam_block.far) {
+            break;
+        }
+
+        t += dist;
+    }
+#endif
 
     return false;
 }
