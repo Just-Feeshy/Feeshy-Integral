@@ -81,7 +81,6 @@ function project_config()
             "STB_IMAGE_IMPLEMENTATION",
             "STBI_SUPPORT_ZLIB",
             "NK_IMPLEMENTATION",
-            "NK_SDL_GL2_IMPLEMENTATION",
         }
 
         files {

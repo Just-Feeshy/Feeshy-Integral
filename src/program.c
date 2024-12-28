@@ -4,7 +4,7 @@
 #include <screen.h>
 #include <more_math.h>
 #include <SDL_render.h>
-#include <nuklear_sdl_gl2.h>
+#include <nuklear_sdl_gl3.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
@@ -20,6 +20,7 @@
 const double frame_period = 1000.0f / 60.0f;
 
 static struct nk_context* ctx;
+static struct nk_colorf bg;
 
 typedef struct program_package {
     struct inputs* in;
@@ -71,6 +72,7 @@ static void program_update_opengl() {
     opengl_clear();
 
     screen_render();
+    nk_sdl_render(NK_ANTI_ALIASING_ON, MAX_VERTEX_MEMORY, MAX_ELEMENT_MEMORY);
 
     program_context_flip();
 }
@@ -127,9 +129,20 @@ static int64_t program_get_time() {
 static void program_update() {
     SDL_Event event;
 
+    nk_input_begin(ctx);
     while (SDL_PollEvent(&event)) {
         program_handle_event(&event);
+        //nk_sdl_handle_event(&event);
     }
+    nk_sdl_handle_grab();
+    nk_input_end(ctx);
+
+    if (nk_begin(ctx, "Demo", nk_rect(50, 50, 230, 250),
+        NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
+        NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
+    {
+    }
+    nk_end(ctx);
 
     int64_t current_time = program_get_time();
     main_update.nextUpdate = frame_period + main_update.lastUpdate;
@@ -145,9 +158,9 @@ static void program_update() {
 
     if (current_time >= main_update.nextUpdate) {
         main_update.nextUpdate += frame_period;
-        program_update_opengl();
     }
 
+        program_update_opengl();
     inputs_update(main_program.in);
 }
 
@@ -185,11 +198,11 @@ void program_init(const char* name, int w, int h) {
     opengl_init(main_program.window);
     ctx = nk_sdl_init(main_program.window);
 
-    /*
     struct nk_font_atlas *atlas;
     nk_sdl_font_stash_begin(&atlas);
     nk_sdl_font_stash_end();
-    */
+
+    bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.24f, bg.a = 1.0f;
 
     SDL_WarpMouseInWindow(main_program.window, w >> 1, h >> 1);
     SDL_SetRelativeMouseMode(SDL_TRUE);

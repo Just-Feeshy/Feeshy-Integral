@@ -114,6 +114,7 @@ void screen_init(int w, int h) {
 
 void screen_render() {
     pipeline_set(&pipeline);
+    texture_bind(&txt, 0);
     set_uniform_vec2("u_resolution", width, height);
     set_uniform_int("u_texture", 0);
 
