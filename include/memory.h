@@ -12,7 +12,6 @@
 
 #define ALIGN_TO_PAGE(size, page_size) (((size) + (page_size) - 1) & ~((page_size) - 1))
 
-
 typedef struct stack_allocator {
     uint8_t* base;
     size_t size;
@@ -113,4 +112,16 @@ void MIN_FREE(void* addr, size_t size) {
 #else
     munmap(addr, size);
 #endif
+}
+
+// Copy memory from one location to another
+// This is a simpler implementation of memcpy
+void mem_copy(void* dest, void* src, size_t size) {
+    uint8_t* _dest = (uint8_t*)dest;
+    const uint8_t* _end = _dest + size;
+    const uint8_t* _src = (const uint8_t*)src;
+
+    while (_dest != _end) {
+        *_dest++ = *_src++;
+    }
 }

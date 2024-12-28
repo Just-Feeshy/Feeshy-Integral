@@ -22,3 +22,6 @@
 [submodule "third_party/cimgui"]
 	path = third_party/cimgui
 	url = https://github.com/cimgui/cimgui.git
+[submodule "third_party/nuklear"]
+	path = third_party/nuklear
+	url = https://github.com/Immediate-Mode-UI/Nuklear.git

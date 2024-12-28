@@ -77,6 +77,12 @@ function project_config()
             defines { "ENABLE_VSYNC=1" }
         end
 
+        defines {
+            "STB_IMAGE_IMPLEMENTATION",
+            "STBI_SUPPORT_ZLIB",
+            "NK_IMPLEMENTATION",
+        }
+
         files {
             "../include/**.h",
             "../" .. PROJECT_BACKEND .. "_backend/**.c",
@@ -85,7 +91,8 @@ function project_config()
             "../third_party/hashmap/hashmap.h",
             "../third_party/cglm/src/**.c",
             "../third_party/cglm/include/**.h",
-            "../third_party/stb/stb_image.h"
+            "../third_party/stb/stb_image.h",
+            "../third_party/nuklear/nuklear.h",
         }
 
         includedirs {
@@ -93,17 +100,14 @@ function project_config()
             "../third_party/SDL/include",
             "../third_party/hashmap",
             "../third_party/cglm/include",
-            "../third_party/stb"
+            "../third_party/stb",
+            "../third_party/zlib",
+            "../third_party/nuklear",
         }
 
         -- Third Party Libraries
         links {
             "zlib-lib"
-        }
-
-        defines {
-            "STB_IMAGE_IMPLEMENTATION",
-            "STBI_SUPPORT_ZLIB"
         }
 
         targetdir(TARGET_DIR)

@@ -3,6 +3,8 @@
 #include <uniform_manager.h>
 #include <world.h>
 
+#define NK_MEMCPY mem_cpy
+
 const int width = 800;
 const int height = 600;
 
