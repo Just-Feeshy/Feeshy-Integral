@@ -52,12 +52,11 @@ bool raymarch(vec2 uv, inout vec3 p) {
 
     // Raymarching
 #if NEW_RAYMARCH
-    float t_i = 0.0;
-    float t_j = MAX_STEPS - 1.0;
+    float t = 0.0;
 
     for(int i = 0; i < MAX_STEPS; i++) {
-        vec3 p_i = ray_origin + t_i * ray_direction;
-        vec3 p_j = ray_origin + t_j * ray_direction;
+        vec3 p_i = ray_origin + t * ray_direction;
+        vec3 p_j = ray_origin + (MAX_STEPS - 1.0 - t) * ray_direction;
         float dist_i = sdfSphere(p_i, 1.0);
         float dist_j = sdfSphere(p_j, 1.0);
         float min_dist = min(dist_i, dist_j);
@@ -72,8 +71,7 @@ bool raymarch(vec2 uv, inout vec3 p) {
             return true;
         }
 
-        t_i += dist_i;
-        t_j -= dist_j;
+        t += dist_i;
     }
 #else
     float t = 0.0;
