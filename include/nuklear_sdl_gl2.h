@@ -33,6 +33,7 @@ NK_API void                 nk_sdl_shutdown(void);
 NK_API void                 nk_sdl_handle_grab(void);
 
 #endif
+
 /*
  * ==============================================================
  *
