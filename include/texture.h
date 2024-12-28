@@ -19,3 +19,5 @@ typedef struct image {
 
 void texture_init(texture* tex, image* img);
 void texture_bind(texture* tex, unsigned unit);
+void texture_array_init(unsigned layer_count, texture* tex, image images[layer_count]);
+void texture_array_bind(texture* tex, unsigned unit);

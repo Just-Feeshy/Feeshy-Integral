@@ -9,6 +9,8 @@
 #include <screen.h>
 #include <world.h>
 
+#define IMAGES 1
+
 static graphics_pipeline pipeline;
 static unsigned VAO;
 
@@ -94,11 +96,14 @@ void screen_init(int w, int h) {
     shader_attribute* frag_attrs[] = {
     };
 
-    image img;
+    image img[IMAGES];
 
-    load_image("assets/image0.jpg", &img);
-    texture_init(&txt, &img);
-    stbi_image_free(img.data);
+    load_image("assets/image0.jpg", &img[0]);
+    texture_init(&txt, &img[0]);
+
+    for (int i = 0; i < IMAGES; i++) {
+        stbi_image_free(img[i].data);
+    }
 
     load_shader("shaders/vert.glsl", &vert_shader, SHADER_VERTEX, 1, vert_attrs);
     load_shader("shaders/frag.glsl", &frag_shader, SHADER_FRAGMENT, 0, frag_attrs);
