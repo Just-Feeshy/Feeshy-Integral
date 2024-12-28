@@ -4,6 +4,7 @@
 #include <screen.h>
 #include <more_math.h>
 #include <SDL_render.h>
+#include <nuklear_sdl_gl2.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
@@ -17,6 +18,8 @@
 #define NAP_DIV 3
 
 const double frame_period = 1000.0f / 60.0f;
+
+static struct nk_context* ctx;
 
 typedef struct program_package {
     struct inputs* in;
@@ -180,6 +183,13 @@ void program_init(const char* name, int w, int h) {
 
     create_window(name, w, h);
     opengl_init(main_program.window);
+    ctx = nk_sdl_init(main_program.window);
+
+    /*
+    struct nk_font_atlas *atlas;
+    nk_sdl_font_stash_begin(&atlas);
+    nk_sdl_font_stash_end();
+    */
 
     SDL_WarpMouseInWindow(main_program.window, w >> 1, h >> 1);
     SDL_SetRelativeMouseMode(SDL_TRUE);
