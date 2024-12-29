@@ -113,6 +113,7 @@ void screen_init(int w, int h) {
 
     uniform_manager_init();
     create_constant_location(&pipeline, "u_resolution");
+    create_constant_location(&pipeline, "u_time");
     create_constant_location(&pipeline, "u_texture");
     world_aspect_ratio(width, height);
 }
@@ -121,6 +122,7 @@ void screen_render() {
     pipeline_set(&pipeline);
     texture_bind(&txt, 0);
     set_uniform_vec2("u_resolution", width, height);
+    set_uniform_float("u_time", SDL_GetTicks() / 10000.0f);
     set_uniform_int("u_texture", 0);
 
     world_begin(&pipeline);
