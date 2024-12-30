@@ -98,7 +98,7 @@ void screen_init(int w, int h) {
 
     image img[IMAGES];
 
-    load_image("assets/image0.jpg", &img[0]);
+    load_image("assets/8k_saturn.jpg", &img[0]);
     texture_init(&txt, &img[0]);
 
     for (int i = 0; i < IMAGES; i++) {

@@ -150,11 +150,11 @@ static void program_update() {
         static int property = 20;
 
         nk_layout_row_static(ctx, 30, 80, 1);
-        if (nk_button_label(ctx, "button"))
+        if (nk_button_label(ctx, "update"))
             printf("button pressed!\n");
         nk_layout_row_dynamic(ctx, 30, 2);
-        if (nk_option_label(ctx, "easy", op == EASY)) op = EASY;
-        if (nk_option_label(ctx, "hard", op == HARD)) op = HARD;
+        if (nk_option_label(ctx, "low", op == EASY)) op = EASY;
+        if (nk_option_label(ctx, "high", op == HARD)) op = HARD;
         nk_layout_row_dynamic(ctx, 22, 1);
         nk_property_int(ctx, "Compression:", 0, &property, 100, 10, 1);
 
