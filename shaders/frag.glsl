@@ -22,6 +22,56 @@ uniform float u_time;
 
 const vec3 c = vec3(0.0, 0.0, 3.0);
 
+
+// Credits to nimitz (https://www.shadertoy.com/user/nimitz)
+// Original Source: https://www.shadertoy.com/view/fl2Bzd
+vec4 hash43x(vec3 p) {
+    uvec3 x = uvec3(ivec3(p));
+    x = 1103515245U*((x.xyz >> 1U)^(x.yzx));
+    uint h = 1103515245U*((x.x^x.z)^(x.y>>3U));
+    uvec4 rz = uvec4(h, h*16807U, h*48271U, h*69621U);
+    return vec4((rz >> 1) & uvec4(0x7fffffffU))/float(0x7fffffff);
+}
+
+// Credits to nimitz (https://www.shadertoy.com/user/nimitz)
+// Original Source: https://www.shadertoy.com/view/fl2Bzd
+vec3 stars(vec3 p)
+{
+    vec3 col = vec3(0);
+    float rad = .087*u_resolution.y;
+    float dens = 0.15;
+    float id = 0.;
+    float rz = 0.;
+    float z = 1.;
+
+    for (float i = 0.; i < 5.; i++) {
+        p *= mat3(0.86564, -0.28535, 0.41140, 0.50033, 0.46255, -0.73193, 0.01856, 0.83942, 0.54317);
+        vec3 q = abs(p);
+        vec3 p2 = p/max(q.x, max(q.y,q.z));
+        p2 *= rad;
+        vec3 ip = floor(p2 + 1e-5);
+        vec3 fp = fract(p2 + 1e-5);
+        vec4 rand = hash43x(ip*283.1);
+        vec3 q2 = abs(p2);
+        vec3 pl = 1.0- step(max(q2.x, max(q2.y, q2.z)), q2);
+        vec3 pp = fp - ((rand.xyz-0.5)*.6 + 0.5)*pl;
+        float pr = length(ip) - rad;
+        if (rand.w > (dens - dens*pr*0.035)) pp += 1e6;
+
+        float d = dot(pp, pp);
+        d /= pow(fract(rand.w*172.1), 32.) + .25;
+        float bri = dot(rand.xyz*(1.-pl),vec3(1));
+        id = fract(rand.w*101.);
+        col += bri*z*.00009/pow(d + 0.025, 3.0)*(mix(vec3(1.0,0.45,0.1),vec3(0.75,0.85,1.), id)*0.6+0.4);
+
+        rad = floor(rad);
+        dens *= 0.5;
+        p = p.yxz;
+    }
+
+    return col;
+}
+
 float atan2(in float y, in float x) {
     return y > 0.0 ? atan(y, x) + PI : -atan(y, -x);
 }
@@ -68,7 +118,7 @@ vec2 sphere(float r, vec3 rayOrigin, vec3 rayDirection) {
     return vec2(-1.0, 1.0);
 }
 
-bool raymarch(vec2 uv, inout vec3 p) {
+vec4 render(vec2 uv, inout vec3 p) {
 
     // World View Projection
     vec4 clip = vec4(uv, -1.0, 1.0);
@@ -125,24 +175,18 @@ bool raymarch(vec2 uv, inout vec3 p) {
     vec2 sp = sphere(1.0, ray_origin, ray_direction);
     if(sp.x >= cam_block.near) {
         p = ray_origin + sp.x * ray_direction;
-        return true;
+        vec2 spTexCoord = sphereUV(normalize(p - c));
+        return texture(u_texture, spTexCoord);
     }
 
-    return false;
+    return vec4(stars(ray_direction), 1.0);
 }
 
 void main() {
     vec3 p = vec3(0.0);
     vec2 uv = (gl_FragCoord.xy / u_resolution.xy) * 2.0 - 1.0;
 
-    // Apply Raymarching
-    bool hit_obj = raymarch(uv, p);
-    vec4 color = vec4(0.0);
-
-    if(hit_obj) {
-        vec2 spTexCoord = sphereUV(normalize(p - c));
-        color = texture(u_texture, spTexCoord);
-    }
-
+    // Apply Raymarching and other techniques
+    vec4 color = render(uv, p);
     fragColor = color;
 }
