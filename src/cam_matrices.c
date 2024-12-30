@@ -41,7 +41,7 @@ cam_matrices create_cam_matrices() {
         .projection = GLM_MAT4_IDENTITY_INIT,
         .view = GLM_MAT4_IDENTITY_INIT,
         .position = {0.0f, 0.0f, -10.0f},
-        .far = 960.0f,
+        .far = 9600.0f,
         .near = 0.05f
     };
 

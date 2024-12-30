@@ -22,7 +22,22 @@ uniform float u_time;
 
 const vec3 c = vec3(0.0, 0.0, 3.0);
 const vec3 light_pos = vec3(3.0, 6.0, -6.0);
+const vec3 saturn_axis = normalize(vec3(0.1, 0.0, 1.01));
 
+
+// A simple 2D rotation matrix
+mat2 rotation_transform(float t){
+  return mat2(cos(t),sin(t),-sin(t),cos(t));
+}
+
+// Credits to z0rg (https://www.shadertoy.com/user/z0rg)
+// Original Source: https://www.shadertoy.com/view/Nl3SDl#
+// TODO: Create my own version of this
+float mapring(vec3 p) {
+    p.xy *= rotation_transform(0.3);
+    float ring = max(max(length(p.xz)-10.0, -(length(p.xz)-6)), abs(p.y)-.001);
+    return ring;
+}
 
 // Credits to nimitz (https://www.shadertoy.com/user/nimitz)
 // Original Source: https://www.shadertoy.com/view/XsyGWV
@@ -77,12 +92,14 @@ vec2 sphereUV(vec3 p) {
 }
 
 // At the end of the day, it's just a quadratic formula
-vec2 quadratic(float a, float b, float c) {
+vec2 quadratic(float a, float b, float c, inout bool hit) {
     float d = b * b - 4.0 * a * c;
     if(d < 0.0) {
+        hit = false;
         return vec2(-1.0, 1.0);
     }
 
+    hit = true;
     return vec2(
         (-b - sqrt(d)) / (2.0 * a),
         (-b + sqrt(d)) / (2.0 * a)
@@ -91,21 +108,24 @@ vec2 quadratic(float a, float b, float c) {
 
 // Most basic raytracing example on how raytracing actually works
 // TO WRITE: How this works and the basics of raytracing
-vec2 sphere(float r, vec3 rayOrigin, vec3 rayDirection) {
+vec2 sphere(float r, vec3 rayOrigin, vec3 rayDirection, inout bool hit) {
     vec3 oc = rayOrigin - c;
     const float a = 1.0;
 
     float b = 2.0 * dot(oc, rayDirection);
     float c = dot(oc, oc) - r * r;
-    vec2 disc = quadratic(a, b, c);
+    vec2 disc = quadratic(a, b, c, hit);
 
     return disc;
 }
 
-float sdTorus( vec3 p, vec2 t )
-{
+float sdTorus( vec3 p, vec2 t ) {
   vec2 q = vec2(length(p.xz)-t.x,p.y);
   return length(q)-t.y;
+}
+
+float disc_intersect(vec3 p, vec3 normal) {
+    return dot(p, normal);
 }
 
 // Most basic writing for lighting
@@ -120,31 +140,9 @@ float weaking(vec3 p, vec3 n) {
     return diff;
 }
 
-vec4 render(vec2 uv, vec3 p) {
+vec2 raymarch(vec3 ray_origin, vec3 ray_direction) {
+    vec2 trace = vec2(-1.0);
 
-    // World View Projection
-    vec4 clip = vec4(uv, -1.0, 1.0);
-    vec4 eye = inverse(cam_block.projection) * clip;
-    eye /= eye.w;
-
-    // Ray Calculation
-    vec3 ray_origin = cam_block.position;
-    vec3 ray_direction = normalize((inverse(cam_block.view) * vec4(eye.xyz, 0.0)).xyz);
-
-    vec2 sp = sphere(1.0, ray_origin, ray_direction);
-    vec4 color = vec4(stars(ray_direction), 1.0);
-
-    // Sphere Intersection
-    vec3 p_1 = ray_origin + sp.x * ray_direction;
-    if(sp.x >= cam_block.near) {
-        vec2 spTexCoord = sphereUV(normalize(p_1 - c));
-        vec3 normal_sphere = normalize(p_1 - c);
-
-        color = texture(u_texture, spTexCoord) * weaking(p_1, normal_sphere);
-    }
-
-
-    // Raymarching
     #if NEW_RAYMARCH
     float t = 0.0;
 
@@ -171,15 +169,16 @@ vec4 render(vec2 uv, vec3 p) {
     float t = 0.0;
 
     for(int i = 0; i < MAX_STEPS; i++) {
-        p = ray_origin + t * ray_direction;
-        float dist = sdTorus(p - c, vec2(2.0, 0.05));
+        vec3 p = ray_origin + t * ray_direction;
+        //float dist = sdTorus(p - c, vec2(2.0, 0.05));
+        float dist = mapring(p - c);
 
         if(dist < cam_block.near) {
-            color = vec4(0.0, 1.0, 0.0, 1.0);
+            trace = vec2(t, dist);
+            break;
         }
 
-        if(dist > cam_block.far
-        || (sp.x != -1.0 && t >= sp.x)) {
+        if(dist > cam_block.far) {
             break;
         }
 
@@ -187,7 +186,47 @@ vec4 render(vec2 uv, vec3 p) {
     }
     #endif
 
-    return color;
+    return trace;
+}
+
+vec4 render(vec2 uv, vec3 p) {
+
+    // World View Projection
+    vec4 clip = vec4(uv, -1.0, 1.0);
+    vec4 eye = inverse(cam_block.projection) * clip;
+    eye /= eye.w;
+
+    // Ray Calculation
+    vec3 ray_origin = cam_block.position;
+    vec3 ray_direction = normalize((inverse(cam_block.view) * vec4(eye.xyz, 0.0)).xyz);
+
+    bool hit = false;
+    vec2 sp = sphere(1.0, ray_origin, ray_direction, hit);
+    vec3 color = stars(ray_direction);
+
+    // Sphere Intersection
+    vec3 p_1 = ray_origin + sp.x * ray_direction;
+
+    if(sp.x >= cam_block.near) {
+        vec2 spTexCoord = sphereUV(normalize(p_1 - c));
+        vec3 normal_sphere = normalize(p_1 - c);
+
+        color = texture(u_texture, spTexCoord).rgb * weaking(p_1, normal_sphere);
+    }
+
+    // Raymarching
+    vec2 ringTrace = raymarch(ray_origin, ray_direction);
+
+    if(ringTrace.y > 0.0 && ringTrace.y < cam_block.far) {
+        if(sp.x >= cam_block.near && ringTrace.x > sp.x) {
+            return vec4(color, 1.0);
+        }
+
+        //color = mix(color, vec3(1.0), vec3(0.0, 1.0, 0.0));
+        color = vec3(1.0);
+    }
+
+    return vec4(color, 1.0);
 }
 
 void main() {
