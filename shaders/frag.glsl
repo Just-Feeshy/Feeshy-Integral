@@ -4,7 +4,7 @@
 #define PI 3.14159265
 #define TAU (2*PI)
 
-#define NEW_RAYMARCH 1
+#define NEW_RAYMARCH 0
 
 out vec4 fragColor;
 
@@ -54,6 +54,7 @@ float atan2(in float y, in float x) {
     return y > 0.0 ? atan(y, x) + PI : -atan(y, -x);
 }
 
+// I don't want to use a mat3x3 for this
 vec3 rotateY(vec3 p, float angle) {
     float cosT = cos(angle);
     float sinT = sin(angle);
@@ -75,6 +76,19 @@ vec2 sphereUV(vec3 p) {
     return vec2(phi / TAU, acos(p.y / r) / PI);
 }
 
+// At the end of the day, it's just a quadratic formula
+vec2 quadratic(float a, float b, float c) {
+    float d = b * b - 4.0 * a * c;
+    if(d < 0.0) {
+        return vec2(-1.0, 1.0);
+    }
+
+    return vec2(
+        (-b - sqrt(d)) / (2.0 * a),
+        (-b + sqrt(d)) / (2.0 * a)
+    );
+}
+
 // Most basic raytracing example on how raytracing actually works
 // TO WRITE: How this works and the basics of raytracing
 vec2 sphere(float r, vec3 rayOrigin, vec3 rayDirection) {
@@ -83,19 +97,15 @@ vec2 sphere(float r, vec3 rayOrigin, vec3 rayDirection) {
 
     float b = 2.0 * dot(oc, rayDirection);
     float c = dot(oc, oc) - r * r;
-    float discriminant = b * b - 4.0 * a * c;
+    vec2 disc = quadratic(a, b, c);
 
-    if(discriminant > 0.0) {
-        float s = sqrt(discriminant);
-        float t0 = max(cam_block.near, (-b - s) / (2.0 * a));
-        float t1 = (-b + s) / (2.0 * a);
+    return disc;
+}
 
-        if(t1 >= cam_block.near) {
-            return vec2(t0, t1);
-        }
-    }
-
-    return vec2(-1.0, 1.0);
+float sdTorus( vec3 p, vec2 t )
+{
+  vec2 q = vec2(length(p.xz)-t.x,p.y);
+  return length(q)-t.y;
 }
 
 // Most basic writing for lighting
@@ -110,7 +120,7 @@ float weaking(vec3 p, vec3 n) {
     return diff;
 }
 
-vec4 render(vec2 uv, inout vec3 p) {
+vec4 render(vec2 uv, vec3 p) {
 
     // World View Projection
     vec4 clip = vec4(uv, -1.0, 1.0);
@@ -121,16 +131,28 @@ vec4 render(vec2 uv, inout vec3 p) {
     vec3 ray_origin = cam_block.position;
     vec3 ray_direction = normalize((inverse(cam_block.view) * vec4(eye.xyz, 0.0)).xyz);
 
+    vec2 sp = sphere(1.0, ray_origin, ray_direction);
+    vec4 color = vec4(stars(ray_direction), 1.0);
+
+    // Sphere Intersection
+    vec3 p_1 = ray_origin + sp.x * ray_direction;
+    if(sp.x >= cam_block.near) {
+        vec2 spTexCoord = sphereUV(normalize(p_1 - c));
+        vec3 normal_sphere = normalize(p_1 - c);
+
+        color = texture(u_texture, spTexCoord) * weaking(p_1, normal_sphere);
+    }
+
+
     // Raymarching
-/*
-#if NEW_RAYMARCH
+    #if NEW_RAYMARCH
     float t = 0.0;
 
     for(int i = 0; i < MAX_STEPS; i++) {
         vec3 p_i = ray_origin + t * ray_direction;
         vec3 p_j = ray_origin + (MAX_STEPS - 1.0 - t) * ray_direction;
-        float dist_i = sdfSphere(p_i, 1.0);
-        float dist_j = sdfSphere(p_j, 1.0);
+        float dist_i = sdfRing(p_i, 1.0);
+        float dist_j = sdfRing(p_j, 1.0);
         float min_dist = min(dist_i, dist_j);
 
         if(min_dist > cam_block.far
@@ -145,36 +167,27 @@ vec4 render(vec2 uv, inout vec3 p) {
 
         t += dist_i;
     }
-#else
+    #else
     float t = 0.0;
 
     for(int i = 0; i < MAX_STEPS; i++) {
         p = ray_origin + t * ray_direction;
-        float dist = sdfSphere(p, 1.0);
+        float dist = sdTorus(p - c, vec2(2.0, 0.05));
 
         if(dist < cam_block.near) {
-            return true;
+            color = vec4(0.0, 1.0, 0.0, 1.0);
         }
 
-        if(dist > cam_block.far) {
+        if(dist > cam_block.far
+        || (sp.x != -1.0 && t >= sp.x)) {
             break;
         }
 
         t += dist;
     }
-#endif
-*/
+    #endif
 
-    vec2 sp = sphere(1.0, ray_origin, ray_direction);
-    if(sp.x >= cam_block.near) {
-        p = ray_origin + sp.x * ray_direction;
-        vec2 spTexCoord = sphereUV(normalize(p - c));
-        vec3 normal_sphere = normalize(p - c);
-
-        return texture(u_texture, spTexCoord) * weaking(p, normal_sphere);
-    }
-
-    return vec4(stars(ray_direction), 1.0);
+    return color;
 }
 
 void main() {
