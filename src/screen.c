@@ -9,14 +9,14 @@
 #include <screen.h>
 #include <world.h>
 
-#define IMAGES 1
+#define IMAGES 2
 
 static graphics_pipeline pipeline;
 static unsigned VAO;
 
 static int width = 0.0f;
 static int height = 0.0f;
-static texture txt;
+static texture txt[IMAGES];
 
 static void load_image(const char* filename, image* img) {
 
@@ -99,7 +99,9 @@ void screen_init(int w, int h) {
     image img[IMAGES];
 
     load_image("assets/8k_saturn.jpg", &img[0]);
-    texture_init(&txt, &img[0]);
+    load_image("assets/rings.png", &img[1]);
+    texture_init(&txt[0], &img[0]);
+    texture_init(&txt[1], &img[1]);
 
     for (int i = 0; i < IMAGES; i++) {
         stbi_image_free(img[i].data);
@@ -114,16 +116,19 @@ void screen_init(int w, int h) {
     uniform_manager_init();
     create_constant_location(&pipeline, "u_resolution");
     create_constant_location(&pipeline, "u_time");
-    create_constant_location(&pipeline, "u_texture");
+    create_constant_location(&pipeline, "u_texture0");
+    create_constant_location(&pipeline, "u_texture1");
     world_aspect_ratio(width, height);
 }
 
 void screen_render() {
     pipeline_set(&pipeline);
-    texture_bind(&txt, 0);
+    texture_bind(&txt[0], 0);
+    texture_bind(&txt[1], 1);
     set_uniform_vec2("u_resolution", width, height);
     set_uniform_float("u_time", SDL_GetTicks() / 10000.0f);
-    set_uniform_int("u_texture", 0);
+    set_uniform_int("u_texture0", 0);
+    set_uniform_int("u_texture1", 1);
 
     world_begin(&pipeline);
     draw_vertex_buffer(VAO, 6);

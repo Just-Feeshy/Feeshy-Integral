@@ -17,26 +17,18 @@ layout(std140) uniform CamBlock {
 } cam_block;
 
 uniform vec2 u_resolution;
-uniform sampler2D u_texture;
+uniform sampler2D u_texture0;
+uniform sampler2D u_texture1;
 uniform float u_time;
 
 const vec3 c = vec3(0.0, 0.0, 3.0);
-const vec3 light_pos = vec3(3.0, 6.0, -6.0);
-const vec3 saturn_axis = normalize(vec3(0.1, 0.0, 1.01));
+const vec3 light_pos = vec3(3.0, 60.0, -60.0);
 
-
-// A simple 2D rotation matrix
-mat2 rotation_transform(float t){
-  return mat2(cos(t),sin(t),-sin(t),cos(t));
-}
-
-// Credits to z0rg (https://www.shadertoy.com/user/z0rg)
-// Original Source: https://www.shadertoy.com/view/Nl3SDl#
-// TODO: Create my own version of this
-float mapring(vec3 p) {
-    p.xy *= rotation_transform(0.3);
-    float ring = max(max(length(p.xz)-10.0, -(length(p.xz)-6)), abs(p.y)-.001);
-    return ring;
+float sdfRing(vec3 p) {
+    float r = sqrt(p.x * p.x + p.z * p.z);
+    float h = abs(p.y) - 0.01;
+    float outer = max(r - 10.0, -(r - 6.0));
+    return max(outer, h);
 }
 
 // Credits to nimitz (https://www.shadertoy.com/user/nimitz)
@@ -171,7 +163,7 @@ vec2 raymarch(vec3 ray_origin, vec3 ray_direction) {
     for(int i = 0; i < MAX_STEPS; i++) {
         vec3 p = ray_origin + t * ray_direction;
         //float dist = sdTorus(p - c, vec2(2.0, 0.05));
-        float dist = mapring(p - c);
+        float dist = sdfRing(p - c);
 
         if(dist < cam_block.near) {
             trace = vec2(t, dist);
@@ -201,7 +193,7 @@ vec4 render(vec2 uv, vec3 p) {
     vec3 ray_direction = normalize((inverse(cam_block.view) * vec4(eye.xyz, 0.0)).xyz);
 
     bool hit = false;
-    vec2 sp = sphere(1.0, ray_origin, ray_direction, hit);
+    vec2 sp = sphere(4, ray_origin, ray_direction, hit);
     vec3 color = stars(ray_direction);
 
     // Sphere Intersection
@@ -211,7 +203,7 @@ vec4 render(vec2 uv, vec3 p) {
         vec2 spTexCoord = sphereUV(normalize(p_1 - c));
         vec3 normal_sphere = normalize(p_1 - c);
 
-        color = texture(u_texture, spTexCoord).rgb * weaking(p_1, normal_sphere);
+        color = texture(u_texture0, spTexCoord).rgb * weaking(p_1, normal_sphere);
     }
 
     // Raymarching
@@ -223,7 +215,9 @@ vec4 render(vec2 uv, vec3 p) {
         }
 
         //color = mix(color, vec3(1.0), vec3(0.0, 1.0, 0.0));
-        color = vec3(1.0);
+        float ringUV = atan2(p.z, p.x);
+        //vec4 ringTex = texture(u_texture1, vec2(abs(ringUV * 0.1), length(pring.xz)));
+        color = vec3(0.0, 1.0, 0.0);
     }
 
     return vec4(color, 1.0);
