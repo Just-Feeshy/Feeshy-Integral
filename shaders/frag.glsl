@@ -3,6 +3,7 @@
 #define MAX_STEPS 100
 #define PI 3.14159265
 #define TAU (2*PI)
+#define PLANET_RADIUS 2.0
 
 #define NEW_RAYMARCH 0
 
@@ -49,10 +50,10 @@ vec3 rotateY(vec3 p, float angle) {
 }
 
 float sdfRing(vec3 p) {
-    p = rotateX(p, 0.07);
+    //p = rotateX(p, 0.07);
     float r = sqrt(p.x * p.x + p.z * p.z);
-    float h = abs(p.y) - 0.01;
-    float outer = max(r - 10.0, -(r - 6.0));
+    float h = abs(p.y) - 0.001;
+    float outer = max(r - 10.0 * PLANET_RADIUS, -(r - 6.0 * PLANET_RADIUS));
     return max(outer, h);
 }
 
@@ -118,7 +119,7 @@ vec2 sphere(float r, vec3 rayOrigin, vec3 rayDirection, inout bool hit) {
     const float a = 1.0;
 
     float b = 2.0 * dot(oc, rayDirection);
-    float c = dot(oc, oc) - r * r;
+    float c = dot(oc, oc) - r * r * PLANET_RADIUS * PLANET_RADIUS;
     vec2 disc = quadratic(a, b, c, hit);
 
     return disc;
@@ -185,6 +186,24 @@ vec2 raymarch(vec3 ray_origin, vec3 ray_direction) {
     return trace;
 }
 
+// I don't want the ring to interfere with the "relevant" particles
+vec2 march_ring(vec3 ray_origin, vec3 ray_direction) {
+    vec3 p = ray_origin;
+
+    for(int i = 0; i < MAX_STEPS; i++) {
+        float dist = sdfRing(p - c);
+
+        if(dist < cam_block.near) {
+            return vec2(distance(p, ray_origin), dist);
+        }
+
+        p += ray_direction * dist;
+    }
+
+    return vec2(-1.0);
+}
+
+
 vec4 render(vec2 uv, vec3 p) {
 
     // World View Projection
@@ -211,21 +230,27 @@ vec4 render(vec2 uv, vec3 p) {
     }
 
     // Raymarching
-    vec2 ringTrace = raymarch(ray_origin, ray_direction);
+    vec2 ringTrace = march_ring(ray_origin, ray_direction);
 
-    if(ringTrace.y > 0.0 && ringTrace.y < cam_block.far) {
+    if(ringTrace.x > 0.0 && ringTrace.x < cam_block.far) {
         if(sp.x >= cam_block.near && ringTrace.x > sp.x) {
             return vec4(color, 1.0);
         }
 
         vec3 p_ring = ray_origin + ringTrace.x * ray_direction;
-        float ringCol = mix(0.25, 1.0, clamp(length(p_ring-c)-6.0, 0.0, 1.0));
-        ringCol *= smoothstep(0.0, 0.2, mix(0.0, 0.875, clamp(max(length(p_ring-c)-8.2, -length(p_ring-c)+8.15), 0.0, 1.0))) + 0.125;
-        ringCol *= mix(0.5, 1.0, clamp(max(length(p_ring-c)-10.0, -length(p_ring-c)+9.5), 0.0, 1.0));
+        float angle = atan(p_ring.y, p_ring.z);
+        //float ringCol = 1.0;
+        float ringCol = texture(u_texture1, vec2(abs(angle* 0.01), length(p_ring.xz))).x;
+        ringCol *= mix(0.15, 1.0, clamp(length(p_ring-c)-6.5 * PLANET_RADIUS, 0.0, 1.0));
+        ringCol *= mix(0.45, 1.0, clamp(length(p_ring-c)-7.0 * PLANET_RADIUS, 0.0, 1.0));
+        ringCol *= smoothstep(0.0, 0.4, mix(0.0, 0.875, clamp(max(length(p_ring-c)-8.4 * PLANET_RADIUS, -length(p_ring-c)+8.2 * PLANET_RADIUS), 0.0, 1.0))) + 0.125;
+        ringCol *= mix(0.5, 1.0, clamp(max(length(p_ring-c)-10.0 * PLANET_RADIUS, -length(p_ring-c)+9.5 * PLANET_RADIUS), 0.0, 1.0));
 
 
         //color = mix(color, vec3(1.0), vec3(0.0, 1.0, 0.0));
         //vec4 ringTex = texture(u_texture1, vec2(abs(ringUV * 0.1), length(pring.xz)));
+        //color *= clamp(ringCol + 0.5, 0.0, 1.0);
+        //color = mix(color, vec3(0.8), pow(ringCol, 0.5) * 0.6);
         color = vec3(ringCol);
     }
 
@@ -237,7 +262,6 @@ void main() {
     vec2 uv = (gl_FragCoord.xy / u_resolution.xy) * 2.0 - 1.0;
 
     // Apply Raymarching and other techniques
-    //vec4 color = render(uv, p);
-    vec4 color = texture(u_texture1, gl_FragCoord.xy / u_resolution.xy);
+    vec4 color = render(uv, p);
     fragColor = color;
 }

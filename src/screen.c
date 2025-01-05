@@ -99,7 +99,8 @@ void screen_init(int w, int h) {
     image img[IMAGES];
 
     load_image("assets/8k_saturn.jpg", &img[0]);
-    img[1] = *create_simplex_noise(128, 128);
+    img[1] = *create_simplex_noise(1 << 9, 1 << 9);
+
     texture_init(&txt[0], &img[0]);
     texture_init(&txt[1], &img[1]);
 
