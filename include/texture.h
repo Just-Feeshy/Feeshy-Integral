@@ -19,3 +19,4 @@ typedef struct image {
 
 void texture_init(texture* tex, image* img);
 void texture_bind(texture* tex, unsigned unit);
+image* create_simplex_noise(int width, int height);

@@ -99,7 +99,7 @@ void screen_init(int w, int h) {
     image img[IMAGES];
 
     load_image("assets/8k_saturn.jpg", &img[0]);
-    load_image("assets/rings.png", &img[1]);
+    img[1] = *create_simplex_noise(128, 128);
     texture_init(&txt[0], &img[0]);
     texture_init(&txt[1], &img[1]);
 
@@ -126,7 +126,7 @@ void screen_render() {
     texture_bind(&txt[0], 0);
     texture_bind(&txt[1], 1);
     set_uniform_vec2("u_resolution", width, height);
-    set_uniform_float("u_time", SDL_GetTicks() / 10000.0f);
+    set_uniform_float("u_time", SDL_GetTicks() / 5000.0f);
     set_uniform_int("u_texture0", 0);
     set_uniform_int("u_texture1", 1);
 

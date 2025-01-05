@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <utils.h>
 #include <assert.h>
+#include <cglm/cglm.h>
 
 #define min(a, b) ({ \
 	typeof((a)+(b)) _temp_a = (a); \
@@ -15,6 +16,8 @@
 	typeof((a)+(b)) _temp_b = (b); \
 	_temp_a > _temp_b ? _temp_a : _temp_b; \
 })
+
+#define clamp(x, a, b) min(max(x, a), b)
 
 static uint64_t ceil_log2(uint32_t n) {
     return 32 - __builtin_clz(n);
@@ -32,4 +35,9 @@ static float fclamp(float f, float lower, float upper) {
 	}
 
 	return f;
+}
+
+static void glm_vec2_floor(vec2 v, vec2 dest) {
+    dest[0] = floorf(v[0]);
+    dest[1] = floorf(v[1]);
 }

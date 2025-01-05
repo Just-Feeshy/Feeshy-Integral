@@ -24,7 +24,32 @@ uniform float u_time;
 const vec3 c = vec3(0.0, 0.0, 3.0);
 const vec3 light_pos = vec3(3.0, 60.0, -60.0);
 
+// I don't want to use a mat3x3 for this
+vec3 rotateX(vec3 p, float angle) {
+    float cosT = cos(angle);
+    float sinT = sin(angle);
+
+    return vec3(
+        p.x,
+        p.y * cosT - p.z * sinT,
+        p.y * sinT + p.z * cosT
+    );
+}
+
+// I don't want to use a mat3x3 for this
+vec3 rotateY(vec3 p, float angle) {
+    float cosT = cos(angle);
+    float sinT = sin(angle);
+
+    return vec3(
+        p.x * cosT + p.z * sinT,
+        p.y,
+        p.z * cosT - p.x * sinT
+    );
+}
+
 float sdfRing(vec3 p) {
+    p = rotateX(p, 0.07);
     float r = sqrt(p.x * p.x + p.z * p.z);
     float h = abs(p.y) - 0.01;
     float outer = max(r - 10.0, -(r - 6.0));
@@ -59,18 +84,6 @@ vec3 stars(in vec3 p) {
 }
 float atan2(in float y, in float x) {
     return y > 0.0 ? atan(y, x) + PI : -atan(y, -x);
-}
-
-// I don't want to use a mat3x3 for this
-vec3 rotateY(vec3 p, float angle) {
-    float cosT = cos(angle);
-    float sinT = sin(angle);
-
-    return vec3(
-        p.x * cosT + p.z * sinT,
-        p.y,
-        p.z * cosT - p.x * sinT
-    );
 }
 
 vec2 sphereUV(vec3 p) {
@@ -109,15 +122,6 @@ vec2 sphere(float r, vec3 rayOrigin, vec3 rayDirection, inout bool hit) {
     vec2 disc = quadratic(a, b, c, hit);
 
     return disc;
-}
-
-float sdTorus( vec3 p, vec2 t ) {
-  vec2 q = vec2(length(p.xz)-t.x,p.y);
-  return length(q)-t.y;
-}
-
-float disc_intersect(vec3 p, vec3 normal) {
-    return dot(p, normal);
 }
 
 // Most basic writing for lighting
@@ -233,6 +237,7 @@ void main() {
     vec2 uv = (gl_FragCoord.xy / u_resolution.xy) * 2.0 - 1.0;
 
     // Apply Raymarching and other techniques
-    vec4 color = render(uv, p);
+    //vec4 color = render(uv, p);
+    vec4 color = texture(u_texture1, gl_FragCoord.xy / u_resolution.xy);
     fragColor = color;
 }
