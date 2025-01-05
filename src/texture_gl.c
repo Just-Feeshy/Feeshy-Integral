@@ -101,7 +101,8 @@ image* create_simplex_noise(int width, int height) {
     for(int y=0; y<height; y++) {
         for(int x=0; x<width; x++) {
             float n = simplex_noise((vec2){x, y});
-            img->data[y * width + x] = (uint8_t)(n * 255);
+            uint8_t value = (uint8_t)((n + 1.0f) * 127.5f); // Map [-1, 1] to [0, 255
+            img->data[y * width + x] = value;
         }
     }
 
