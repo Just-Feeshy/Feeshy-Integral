@@ -4,7 +4,6 @@
 #define PI 3.14159265
 #define TAU (2*PI)
 #define PLANET_RADIUS 2.0
-
 #define NEW_RAYMARCH 0
 
 out vec4 fragColor;
@@ -21,6 +20,7 @@ uniform vec2 u_resolution;
 uniform sampler2D u_texture0;
 uniform sampler2D u_texture1;
 uniform float u_time;
+uniform int u_quality;
 
 const vec3 c = vec3(0.0, 0.0, 3.0);
 const vec3 light_pos = vec3(3.0, 60.0, -60.0);
@@ -46,6 +46,16 @@ vec3 rotateY(vec3 p, float angle) {
         p.x * cosT + p.z * sinT,
         p.y,
         p.z * cosT - p.x * sinT
+    );
+}
+
+// Function taken from "The Book of Shaders"
+// Credits to Patricio Gonzalez Vivo & Jen Lowe
+// Original Source: https://thebookofshaders.com/10/
+float random(vec2 pos) {
+    return fract(sin(dot(pos.xy,
+        vec2(12.9898,78.233)))*
+        43758.5453123
     );
 }
 
@@ -135,6 +145,10 @@ float weaking(vec3 p, vec3 n) {
     float diff = dot(w_i, n);
 
     return diff;
+}
+
+vec2 opU(vec2 d1, vec2 d2) {
+	return (d1.x<d2.x) ? d1 : d2;
 }
 
 vec2 raymarch(vec3 ray_origin, vec3 ray_direction) {
@@ -239,19 +253,20 @@ vec4 render(vec2 uv, vec3 p) {
 
         vec3 p_ring = ray_origin + ringTrace.x * ray_direction;
         float angle = atan(p_ring.y, p_ring.z);
+
         //float ringCol = 1.0;
         float ringCol = texture(u_texture1, vec2(abs(angle* 0.01), length(p_ring.xz))).x;
         ringCol *= mix(0.15, 1.0, clamp(length(p_ring-c)-6.5 * PLANET_RADIUS, 0.0, 1.0));
         ringCol *= mix(0.45, 1.0, clamp(length(p_ring-c)-7.0 * PLANET_RADIUS, 0.0, 1.0));
         ringCol *= smoothstep(0.0, 0.4, mix(0.0, 0.875, clamp(max(length(p_ring-c)-8.4 * PLANET_RADIUS, -length(p_ring-c)+8.2 * PLANET_RADIUS), 0.0, 1.0))) + 0.125;
-        ringCol *= mix(0.5, 1.0, clamp(max(length(p_ring-c)-10.0 * PLANET_RADIUS, -length(p_ring-c)+9.5 * PLANET_RADIUS), 0.0, 1.0));
+        ringCol *= mix(0.5, 1.0, clamp(-length(p_ring-c)+9.5 * PLANET_RADIUS, 0.0, 1.0));
 
 
         //color = mix(color, vec3(1.0), vec3(0.0, 1.0, 0.0));
         //vec4 ringTex = texture(u_texture1, vec2(abs(ringUV * 0.1), length(pring.xz)));
         //color *= clamp(ringCol + 0.5, 0.0, 1.0);
         //color = mix(color, vec3(0.8), pow(ringCol, 0.5) * 0.6);
-        color = vec3(ringCol);
+        color = ringCol * vec3(0.8, 0.9, 1.0);
     }
 
     return vec4(color, 1.0);
