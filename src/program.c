@@ -23,6 +23,8 @@ const double frame_period = 1000.0f / 60.0f;
 static struct nk_context* ctx;
 static struct nk_colorf bg;
 
+static char FOV_TXT[9] = "FOV (45)";
+
 typedef struct program_package {
     struct inputs* in;
     struct SDL_Window* window;
@@ -149,10 +151,12 @@ static void program_update() {
         static float fov = 45.0f;
 
         nk_layout_row_static(ctx, 20, 80, 1);
-        nk_menu_item_label(ctx, "FOV", NK_TEXT_LEFT);
+        nk_menu_item_label(ctx, FOV_TXT, NK_TEXT_LEFT);
 
         nk_layout_row_static(ctx, 20, 100, 2);
         if(nk_slider_float(ctx, 10, &fov, 90, 1)) {
+            FOV_TXT[5] = (int)fov / 10 + '0';
+            FOV_TXT[6] = (int)fov % 10 + '0';
             world_update_fov(fov);
         }
 

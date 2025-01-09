@@ -115,8 +115,6 @@ void world_reset_camera() {
 }
 
 void world_update_fov(float fov) {
-    printf("Update FOV: %f\n", fov);
-
     update_projection_matrix(&cam, aspect_ratio, fov);
     set_ssbo_data(*block, &cam.cam, sizeof(cam_block));
 }
