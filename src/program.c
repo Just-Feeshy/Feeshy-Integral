@@ -142,18 +142,18 @@ static void program_update() {
     nk_sdl_handle_grab();
     nk_input_end(ctx);
 
-    if (nk_begin(ctx, "Demo", nk_rect(50, 50, 230, 250),
+    if (nk_begin(ctx, "Settings Menu", nk_rect(50, 50, 230, 250),
         NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
         NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
     {
-        static float fov = 45.0f;
+        static float inverse_fov = 45.0f;
 
         nk_layout_row_static(ctx, 20, 80, 1);
         nk_menu_item_label(ctx, "FOV", NK_TEXT_LEFT);
 
         nk_layout_row_static(ctx, 20, 100, 2);
-        if(nk_slider_float(ctx, 10, &fov, 90, 1)) {
-            world_update_fov(fov);
+        if(nk_slider_float(ctx, 0, &inverse_fov, 80, 1)) {
+            world_update_fov(90.0 - inverse_fov);
         }
 
         if (nk_button_label(ctx, "Reset Camera")) {
