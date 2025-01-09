@@ -165,6 +165,7 @@ static void program_update() {
         }
 
         nk_layout_row_dynamic(ctx, 20, 2);
+        nk_menu_item_label(ctx, "Quality:", NK_TEXT_LEFT);
         if (nk_combo_begin_label(ctx, menu_items[selected_menu_item], nk_vec2(nk_widget_width(ctx), 200))) {
             nk_layout_row_dynamic(ctx, 10, 1);
             for (int i = 0; i < 5; ++i) {
