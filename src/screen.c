@@ -5,6 +5,7 @@
 #include <uniform_manager.h>
 #include <SDL_rwops.h>
 #include <stb_image.h>
+#include <menu.h>
 #include <program.h>
 #include <screen.h>
 #include <world.h>
@@ -99,7 +100,7 @@ void screen_init(int w, int h) {
     image img[IMAGES];
 
     load_image("assets/8k_saturn.jpg", &img[0]);
-    img[1] = *create_simplex_noise(1 << 9, 1 << 9);
+    img[1] = *create_simplex_noise(1 << (7 + selected_menu_item), 1 << (7 + selected_menu_item));
 
     texture_init(&txt[0], &img[0]);
     texture_init(&txt[1], &img[1]);
@@ -128,7 +129,7 @@ void screen_render() {
     texture_bind(&txt[0], 0);
     texture_bind(&txt[1], 1);
     set_uniform_vec2("u_resolution", width, height);
-    set_uniform_int("u_quality", 1 << 7);
+    set_uniform_int("u_quality", 1 << (7 + selected_menu_item));
     set_uniform_float("u_time", SDL_GetTicks() / 5000.0f);
     set_uniform_int("u_texture0", 0);
     set_uniform_int("u_texture1", 1);

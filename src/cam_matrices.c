@@ -31,16 +31,16 @@ void update_view_matrix(cam_matrices* cam) {
     glm_lookat(cam->position, center, (vec3){0.0f, 1.0f, 0.0f}, cam->cam.view);
 }
 
-void update_projection_matrix(cam_matrices* cam, float aspect_ratio) {
+void update_projection_matrix(cam_matrices* cam, float aspect_ratio, float fov) {
     glm_mat4_identity(cam->cam.projection);
-    glm_perspective(glm_rad(45.0f), aspect_ratio, cam->cam.near, cam->cam.far, cam->cam.projection);
+    glm_perspective(glm_rad(fov), aspect_ratio, cam->cam.near, cam->cam.far, cam->cam.projection);
 }
 
 cam_matrices create_cam_matrices() {
     cam_block cam_blck = {
         .projection = GLM_MAT4_IDENTITY_INIT,
         .view = GLM_MAT4_IDENTITY_INIT,
-        .position = {0.0f, 0.0f, -10.0f},
+        .position = {0.0f, 5.0f, -20.0f},
         .far = 9600.0f,
         .near = 0.05f
     };

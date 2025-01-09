@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <world.h>
+#include <menu.h>
 #include <cam_matrices.h>
 #include <cglm/vec3.h>
 #include <uniform_block_state.h>
@@ -19,7 +20,6 @@ static float aspect_ratio;
 static void render_cam() {
     update_rotation(&cam);
     update_view_matrix(&cam);
-    update_projection_matrix(&cam, aspect_ratio);
     set_ssbo_data(*block, &cam.cam, sizeof(cam_block));
 }
 
@@ -87,7 +87,7 @@ void world_init() {
 void world_aspect_ratio(float width, float height) {
     aspect_ratio = width / height;
 
-    update_projection_matrix(&cam, aspect_ratio);
+    update_projection_matrix(&cam, aspect_ratio, 45.0f);
     set_ssbo_data(*block, &cam.cam, sizeof(cam_block));
 }
 
@@ -99,4 +99,24 @@ void world_begin(graphics_pipeline* pipe) {
 void world_end(graphics_pipeline* pipe) {
     // unbind_ubo_just_ssbo(&ubo, block, pipe);
     unbind_ubo(&ubo, 0, *block, pipe);
+}
+
+
+// Event Related
+
+void world_reset_camera() {
+    cam.horizontal_angle = 0.0f;
+    cam.vertical_angle = 0.0f;
+
+    cam.cam.position[0] = 0.0f;
+    cam.cam.position[1] = 5.0f;
+    cam.cam.position[2] = -20.0f;
+    render_cam();
+}
+
+void world_update_fov(float fov) {
+    printf("Update FOV: %f\n", fov);
+
+    update_projection_matrix(&cam, aspect_ratio, fov);
+    set_ssbo_data(*block, &cam.cam, sizeof(cam_block));
 }

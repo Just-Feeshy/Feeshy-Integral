@@ -1,3 +1,5 @@
+include "emscripten_gmake.lua"
+
 LANG = "C"
 SOLUTION_NAME = "program"
 SOLUTION_DIR = ".."
@@ -142,6 +144,10 @@ function project_config()
 
         filter { "system:windows" }
             defines { "WINDOWS" }
+
+        filter { "system:emscripten" }
+            defines { "EMSCRIPTEN" }
+            linkoptions { "-s ALLOW_MEMORY_GROWTH=1" }
 end
 
 solution_config()

@@ -6,6 +6,9 @@
 #define PLANET_RADIUS 2.0
 #define NEW_RAYMARCH 0
 
+#define RING_RADIUS_2 6.0
+#define RING_RADIUS_1 10.0
+
 out vec4 fragColor;
 
 layout(std140) uniform CamBlock {
@@ -63,7 +66,7 @@ float sdfRing(vec3 p) {
     //p = rotateX(p, 0.07);
     float r = sqrt(p.x * p.x + p.z * p.z);
     float h = abs(p.y) - 0.001;
-    float outer = max(r - 10.0 * PLANET_RADIUS, -(r - 6.0 * PLANET_RADIUS));
+    float outer = max(r - RING_RADIUS_1 * PLANET_RADIUS, -(r - PLANET_RADIUS * RING_RADIUS_2));
     return max(outer, h);
 }
 
@@ -266,7 +269,7 @@ vec4 render(vec2 uv, vec3 p) {
         //vec4 ringTex = texture(u_texture1, vec2(abs(ringUV * 0.1), length(pring.xz)));
         //color *= clamp(ringCol + 0.5, 0.0, 1.0);
         //color = mix(color, vec3(0.8), pow(ringCol, 0.5) * 0.6);
-        color = ringCol * vec3(0.8, 0.9, 1.0);
+        color = mix(color, vec3(ringCol), smoothstep(40.0, 50.0, ringTrace.x));
     }
 
     return vec4(color, 1.0);

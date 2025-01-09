@@ -25,4 +25,4 @@ cam_matrices create_cam_matrices();
 void init_cam_matrices(cam_matrices* cam);
 void update_rotation(cam_matrices* cam);
 void update_view_matrix(cam_matrices* cam);
-void update_projection_matrix(cam_matrices* cam, float aspect_ratio);
+void update_projection_matrix(cam_matrices* cam, float aspect_ratio, float fov);
