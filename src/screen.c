@@ -9,7 +9,7 @@
 #include <screen.h>
 #include <world.h>
 
-#define IMAGES 2
+#define IMAGES 1
 
 static graphics_pipeline pipeline;
 static unsigned VAO;
@@ -96,18 +96,6 @@ void screen_init(int w, int h) {
     shader_attribute* frag_attrs[] = {
     };
 
-    image img[IMAGES];
-
-    load_image("assets/8k_saturn.jpg", &img[0]);
-    img[1] = *create_simplex_noise(1 << 9, 1 << 9);
-
-    texture_init(&txt[0], &img[0]);
-    texture_init(&txt[1], &img[1]);
-
-    for (int i = 0; i < IMAGES; i++) {
-        stbi_image_free(img[i].data);
-    }
-
     load_shader("shaders/vert.glsl", &vert_shader, SHADER_VERTEX, 1, vert_attrs);
     load_shader("shaders/frag.glsl", &frag_shader, SHADER_FRAGMENT, 0, frag_attrs);
 
@@ -118,8 +106,6 @@ void screen_init(int w, int h) {
     create_constant_location(&pipeline, "u_resolution");
     create_constant_location(&pipeline, "u_time");
     create_constant_location(&pipeline, "u_quality");
-    create_constant_location(&pipeline, "u_texture0");
-    create_constant_location(&pipeline, "u_texture1");
     world_aspect_ratio(width, height);
 }
 
@@ -130,8 +116,6 @@ void screen_render() {
     set_uniform_vec2("u_resolution", width, height);
     set_uniform_int("u_quality", 1 << 7);
     set_uniform_float("u_time", SDL_GetTicks() / 5000.0f);
-    set_uniform_int("u_texture0", 0);
-    set_uniform_int("u_texture1", 1);
 
     world_begin(&pipeline);
     draw_vertex_buffer(VAO, 6);
