@@ -236,8 +236,8 @@ vec4 render(vec2 uv, vec3 p) {
         float angle = atan(p_ring.y, p_ring.z);
         float p_ring_len = length((p_ring - c).xz);
 
-        float ringCol = texture(u_texture1, p_ring.xz).x;
-        ringCol *= mix(0.5, 1.0, noise(p_ring_len * 15.0));
+        //float ringCol = mix(texture(u_texture1, p_ring.xz).x, 1.0, smoothstep(80.0, 100.0, ringTrace));
+        float ringCol = mix(0.5, 1.0, noise(p_ring_len * 15.0));
         ringCol *= mix(0.15, 1.0, clamp(length(p_ring-c)-6.5 * PLANET_RADIUS, 0.0, 1.0));
         ringCol *= mix(0.45, 1.0, clamp(length(p_ring-c)-7.0 * PLANET_RADIUS, 0.0, 1.0));
         ringCol *= smoothstep(0.0, 0.4, mix(0.0, 0.875, clamp(max(length(p_ring-c)-8.8 * PLANET_RADIUS, -length(p_ring-c)+8.6 * PLANET_RADIUS), 0.0, 1.0))) + 0.125;
@@ -245,8 +245,8 @@ vec4 render(vec2 uv, vec3 p) {
 
         //color = mix(color, vec3(ringCol), smoothstep(40.0, 50.0, ringTrace.x));
         if(p_ring_len > RING_RADIUS_2 * PLANET_RADIUS && p_ring_len < RING_RADIUS_1 * PLANET_RADIUS) {
-            //color = mix(color, vec3(ringCol), smoothstep(40.0, 50.0, ringTrace));
-            color = vec3(ringCol);
+            ringCol *= mix(texture(u_texture1, p_ring.xz).x, 1.0, smoothstep(40.0, 50.0, ringTrace));
+            color = mix(color, vec3(ringCol), min(dot(ringCol, ringCol), 1.0));
         }
     }
 
