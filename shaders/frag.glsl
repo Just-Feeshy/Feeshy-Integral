@@ -55,19 +55,19 @@ vec3 rotateY(vec3 p, float angle) {
 // Function taken from "The Book of Shaders"
 // Credits to Patricio Gonzalez Vivo & Jen Lowe
 // Original Source: https://thebookofshaders.com/10/
-float random(vec2 pos) {
-    return fract(sin(dot(pos.xy,
-        vec2(12.9898,78.233)))*
-        43758.5453123
-    );
+float hash( const in float n ) {
+    return fract(sin(n)*43758.5453123);
 }
 
+float noise( const in  float p ) {
+    float i = floor(p);
+    float f = fract(p);
+    return mix( hash( i + 0. ), hash( i + 1. ), f*f*f);
+}
+
+// Intersection of a plane
 float iPlane( in vec3 ro, in vec3 rd, in vec4 pla ) {
     return (-pla.w - dot(pla.xyz,ro)) / dot( pla.xyz, rd );
-}
-
-float sdfPlane( vec3 p, vec3 n, float h ) {
-  return dot(p,n) + h;
 }
 
 // Credits to nimitz (https://www.shadertoy.com/user/nimitz)
@@ -181,23 +181,6 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
     return -1.0;
 }
 
-// I don't want the ring to interfere with the "relevant" particles
-vec2 march_ring(vec3 ray_origin, vec3 ray_direction) {
-    vec3 p = ray_origin;
-
-    for(int i = 0; i < MAX_STEPS; i++) {
-        float dist = sdfPlane(p - c, vec3(0.0, 1.0, 0.0), 0.0);
-
-        if(dist < cam_block.near) {
-            return vec2(distance(p, ray_origin), dist);
-        }
-
-        p += ray_direction * dist;
-    }
-
-    return vec2(-1.0);
-}
-
 vec3 sub_render(vec3 color, vec3 ray_origin, vec3 ray_direction, vec2 sp) {
 
     // Indivudual rings for the planet
@@ -207,7 +190,7 @@ vec3 sub_render(vec3 color, vec3 ray_origin, vec3 ray_direction, vec2 sp) {
             return color;
         }
 
-        color = vec3(1.0, 0.0, 0.0);
+        // color = vec3(1.0, 0.0, 0.0);
     }
 
     return color;
@@ -242,26 +225,27 @@ vec4 render(vec2 uv, vec3 p) {
     // Raymarching
 
     //vec2 ringTrace = march_ring(ray_origin, ray_direction);
-    float ringTrace = iPlane(ray_origin, ray_direction, vec4(0.0, 1.0, 0.0, 0.0));
+    float ringTrace = iPlane(ray_origin, ray_direction, vec4(0.1, 1.0, 0.0, 0.0));
 
-    if(ringTrace > 0.0 && ringTrace < cam_block.far) {
+    if(ringTrace > cam_block.near && ringTrace < cam_block.far) {
         if(sp.x >= cam_block.near && ringTrace > sp.x) {
             return vec4(sub_render(color, ray_origin, ray_direction, sp), 1.0);
         }
 
         vec3 p_ring = (ray_origin + ringTrace * ray_direction);
         float angle = atan(p_ring.y, p_ring.z);
+        float p_ring_len = length((p_ring - c).xz);
 
-        float ringCol = 1.0;
-        //float ringCol = texture(u_texture1, vec2(abs(angle* 0.01), length(p_ring.xz))).x;
-
+        float ringCol = texture(u_texture1, p_ring.xz).x;
+        ringCol *= mix(0.5, 1.0, noise(p_ring_len * 15.0));
         ringCol *= mix(0.15, 1.0, clamp(length(p_ring-c)-6.5 * PLANET_RADIUS, 0.0, 1.0));
         ringCol *= mix(0.45, 1.0, clamp(length(p_ring-c)-7.0 * PLANET_RADIUS, 0.0, 1.0));
-        ringCol *= smoothstep(0.0, 0.4, mix(0.0, 0.875, clamp(max(length(p_ring-c)-8.4 * PLANET_RADIUS, -length(p_ring-c)+8.2 * PLANET_RADIUS), 0.0, 1.0))) + 0.125;
+        ringCol *= smoothstep(0.0, 0.4, mix(0.0, 0.875, clamp(max(length(p_ring-c)-8.8 * PLANET_RADIUS, -length(p_ring-c)+8.6 * PLANET_RADIUS), 0.0, 1.0))) + 0.125;
         ringCol *= mix(0.5, 1.0, clamp(-length(p_ring-c)+9.5 * PLANET_RADIUS, 0.0, 1.0));
 
         //color = mix(color, vec3(ringCol), smoothstep(40.0, 50.0, ringTrace.x));
-        if(length((p_ring - c).xz) > RING_RADIUS_2 * PLANET_RADIUS && length((p_ring - c).xz) < RING_RADIUS_1 * PLANET_RADIUS) {
+        if(p_ring_len > RING_RADIUS_2 * PLANET_RADIUS && p_ring_len < RING_RADIUS_1 * PLANET_RADIUS) {
+            //color = mix(color, vec3(ringCol), smoothstep(40.0, 50.0, ringTrace));
             color = vec3(ringCol);
         }
     }
