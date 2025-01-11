@@ -62,12 +62,12 @@ float random(vec2 pos) {
     );
 }
 
-float sdfRing(vec3 p) {
-    //p = rotateX(p, 0.07);
-    float r = sqrt(p.x * p.x + p.z * p.z);
-    float h = abs(p.y) - 0.001;
-    float outer = max(r - RING_RADIUS_1 * PLANET_RADIUS, -(r - PLANET_RADIUS * RING_RADIUS_2));
-    return max(outer, h);
+float iPlane( in vec3 ro, in vec3 rd, in vec4 pla ) {
+    return (-pla.w - dot(pla.xyz,ro)) / dot( pla.xyz, rd );
+}
+
+float sdfPlane( vec3 p, vec3 n, float h ) {
+  return dot(p,n) + h;
 }
 
 // Credits to nimitz (https://www.shadertoy.com/user/nimitz)
@@ -150,49 +150,27 @@ float weaking(vec3 p, vec3 n) {
     return diff;
 }
 
-vec2 opU(vec2 d1, vec2 d2) {
-	return (d1.x<d2.x) ? d1 : d2;
+float sdfSphere(vec3 p, vec3 d, float r) {
+    p.z = fract(p.z);
+    return length(p - 0.5) - r;
 }
 
-vec2 raymarch(vec3 ray_origin, vec3 ray_direction) {
-    vec2 trace = vec2(-1.0);
+float raymarch(vec3 ray_origin, vec3 ray_direction) {
+    float t = 0.0;
 
     #if NEW_RAYMARCH
-    float t = 0.0;
-
-    for(int i = 0; i < MAX_STEPS; i++) {
-        vec3 p_i = ray_origin + t * ray_direction;
-        vec3 p_j = ray_origin + (MAX_STEPS - 1.0 - t) * ray_direction;
-        float dist_i = sdfRing(p_i, 1.0);
-        float dist_j = sdfRing(p_j, 1.0);
-        float min_dist = min(dist_i, dist_j);
-
-        if(min_dist > cam_block.far
-        || (length(p_j - p_i) * 0.5 <= min_dist)) {
-            break;
-        }
-
-        if(dist_i < cam_block.near) {
-            p = p_i;
-            return true;
-        }
-
-        t += dist_i;
-    }
     #else
-    float t = 0.0;
 
     for(int i = 0; i < MAX_STEPS; i++) {
         vec3 p = ray_origin + t * ray_direction;
         //float dist = sdTorus(p - c, vec2(2.0, 0.05));
-        float dist = sdfRing(p - c);
+        float dist = sdfSphere(p, t * ray_direction, 0.25);
 
         if(dist < cam_block.near) {
-            trace = vec2(t, dist);
-            break;
+            return t;
         }
 
-        if(dist > cam_block.far) {
+        if(t > cam_block.far) {
             break;
         }
 
@@ -200,7 +178,7 @@ vec2 raymarch(vec3 ray_origin, vec3 ray_direction) {
     }
     #endif
 
-    return trace;
+    return -1.0;
 }
 
 // I don't want the ring to interfere with the "relevant" particles
@@ -208,7 +186,7 @@ vec2 march_ring(vec3 ray_origin, vec3 ray_direction) {
     vec3 p = ray_origin;
 
     for(int i = 0; i < MAX_STEPS; i++) {
-        float dist = sdfRing(p - c);
+        float dist = sdfPlane(p - c, vec3(0.0, 1.0, 0.0), 0.0);
 
         if(dist < cam_block.near) {
             return vec2(distance(p, ray_origin), dist);
@@ -220,6 +198,20 @@ vec2 march_ring(vec3 ray_origin, vec3 ray_direction) {
     return vec2(-1.0);
 }
 
+vec3 sub_render(vec3 color, vec3 ray_origin, vec3 ray_direction, vec2 sp) {
+
+    // Indivudual rings for the planet
+    float t_objs = raymarch(ray_origin, ray_direction);
+    if(t_objs > 0.0) {
+        if(sp.x >= cam_block.near && t_objs > sp.x) {
+            return color;
+        }
+
+        color = vec3(1.0, 0.0, 0.0);
+    }
+
+    return color;
+}
 
 vec4 render(vec2 uv, vec3 p) {
 
@@ -246,33 +238,35 @@ vec4 render(vec2 uv, vec3 p) {
         color = texture(u_texture0, spTexCoord).rgb * weaking(p_1, normal_sphere);
     }
 
-    // Raymarching
-    vec2 ringTrace = march_ring(ray_origin, ray_direction);
 
-    if(ringTrace.x > 0.0 && ringTrace.x < cam_block.far) {
-        if(sp.x >= cam_block.near && ringTrace.x > sp.x) {
-            return vec4(color, 1.0);
+    // Raymarching
+
+    //vec2 ringTrace = march_ring(ray_origin, ray_direction);
+    float ringTrace = iPlane(ray_origin, ray_direction, vec4(0.0, 1.0, 0.0, 0.0));
+
+    if(ringTrace > 0.0 && ringTrace < cam_block.far) {
+        if(sp.x >= cam_block.near && ringTrace > sp.x) {
+            return vec4(sub_render(color, ray_origin, ray_direction, sp), 1.0);
         }
 
-        vec3 p_ring = ray_origin + ringTrace.x * ray_direction;
+        vec3 p_ring = (ray_origin + ringTrace * ray_direction);
         float angle = atan(p_ring.y, p_ring.z);
 
-        //float ringCol = 1.0;
-        float ringCol = texture(u_texture1, vec2(abs(angle* 0.01), length(p_ring.xz))).x;
+        float ringCol = 1.0;
+        //float ringCol = texture(u_texture1, vec2(abs(angle* 0.01), length(p_ring.xz))).x;
+
         ringCol *= mix(0.15, 1.0, clamp(length(p_ring-c)-6.5 * PLANET_RADIUS, 0.0, 1.0));
         ringCol *= mix(0.45, 1.0, clamp(length(p_ring-c)-7.0 * PLANET_RADIUS, 0.0, 1.0));
         ringCol *= smoothstep(0.0, 0.4, mix(0.0, 0.875, clamp(max(length(p_ring-c)-8.4 * PLANET_RADIUS, -length(p_ring-c)+8.2 * PLANET_RADIUS), 0.0, 1.0))) + 0.125;
         ringCol *= mix(0.5, 1.0, clamp(-length(p_ring-c)+9.5 * PLANET_RADIUS, 0.0, 1.0));
 
-
-        //color = mix(color, vec3(1.0), vec3(0.0, 1.0, 0.0));
-        //vec4 ringTex = texture(u_texture1, vec2(abs(ringUV * 0.1), length(pring.xz)));
-        //color *= clamp(ringCol + 0.5, 0.0, 1.0);
-        //color = mix(color, vec3(0.8), pow(ringCol, 0.5) * 0.6);
-        color = mix(color, vec3(ringCol), smoothstep(40.0, 50.0, ringTrace.x));
+        //color = mix(color, vec3(ringCol), smoothstep(40.0, 50.0, ringTrace.x));
+        if(length((p_ring - c).xz) > RING_RADIUS_2 * PLANET_RADIUS && length((p_ring - c).xz) < RING_RADIUS_1 * PLANET_RADIUS) {
+            color = vec3(ringCol);
+        }
     }
 
-    return vec4(color, 1.0);
+    return vec4(sub_render(color, ray_origin, ray_direction, sp), 1.0);
 }
 
 void main() {
