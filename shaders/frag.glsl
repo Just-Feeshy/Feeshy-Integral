@@ -7,7 +7,8 @@
 #define NEW_RAYMARCH 0
 
 #define RING_RADIUS_2 6.0
-#define RING_RADIUS_1 10.0
+#define RING_RADIUS_1 11.0
+#define PLANE_TILT 0.1
 
 out vec4 fragColor;
 
@@ -27,6 +28,11 @@ uniform int u_quality;
 
 const vec3 c = vec3(0.0, 0.0, 3.0);
 const vec3 light_pos = vec3(3.0, 60.0, -60.0);
+
+// TO WRITE: In raymarching, we are able to shear, scale, translate the space itself.
+const mat3 raymarch_transform = mat3(1.0, PLANE_TILT, 0.0,
+                                  PLANE_TILT, 1.0, 0.0,
+                                  0.0, 0.0, 1.0);
 
 // I don't want to use a mat3x3 for this
 vec3 rotateX(vec3 p, float angle) {
@@ -151,8 +157,8 @@ float weaking(vec3 p, vec3 n) {
 }
 
 float sdfSphere(vec3 p, vec3 d, float r) {
-    p.z = fract(p.z);
-    return length(p - 0.5) - r;
+    p.xz = fract(min(abs(p.xz), vec2(RING_RADIUS_1 * PLANET_RADIUS))) - 0.5;
+    return length(p) - r * texture(u_texture1, p.xz).r * 0.2;
 }
 
 float raymarch(vec3 ray_origin, vec3 ray_direction) {
@@ -164,7 +170,7 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
     for(int i = 0; i < MAX_STEPS; i++) {
         vec3 p = ray_origin + t * ray_direction;
         //float dist = sdTorus(p - c, vec2(2.0, 0.05));
-        float dist = sdfSphere(p, t * ray_direction, 0.25);
+        float dist = sdfSphere((p - c) * raymarch_transform, t * ray_direction, 0.1);
 
         if(dist < cam_block.near) {
             return t;
@@ -190,7 +196,7 @@ vec3 sub_render(vec3 color, vec3 ray_origin, vec3 ray_direction, vec2 sp) {
             return color;
         }
 
-        // color = vec3(1.0, 0.0, 0.0);
+        color = vec3(1.0, 0.0, 0.0);
     }
 
     return color;
@@ -208,7 +214,7 @@ vec4 render(vec2 uv, vec3 p) {
     vec3 ray_direction = normalize((inverse(cam_block.view) * vec4(eye.xyz, 0.0)).xyz);
 
     bool hit = false;
-    vec2 sp = sphere(4, ray_origin, ray_direction, hit);
+    vec2 sp = sphere(4.5, ray_origin, ray_direction, hit);
     vec3 color = stars(ray_direction);
 
     // Sphere Intersection
@@ -224,8 +230,7 @@ vec4 render(vec2 uv, vec3 p) {
 
     // Raymarching
 
-    //vec2 ringTrace = march_ring(ray_origin, ray_direction);
-    float ringTrace = iPlane(ray_origin, ray_direction, vec4(0.1, 1.0, 0.0, 0.0));
+    float ringTrace = iPlane(ray_origin, ray_direction, vec4(PLANE_TILT, 1.0, 0.0, 0.0));
 
     if(ringTrace > cam_block.near && ringTrace < cam_block.far) {
         if(sp.x >= cam_block.near && ringTrace > sp.x) {
@@ -238,14 +243,14 @@ vec4 render(vec2 uv, vec3 p) {
 
         //float ringCol = mix(texture(u_texture1, p_ring.xz).x, 1.0, smoothstep(80.0, 100.0, ringTrace));
         float ringCol = mix(0.5, 1.0, noise(p_ring_len * 15.0));
-        ringCol *= mix(0.25, 1.0, clamp(length(p_ring-c)-6.5 * PLANET_RADIUS, 0.0, 1.0));
+        ringCol *= mix(0.25, 1.0, clamp(length(p_ring-c) - RING_RADIUS_2 * PLANET_RADIUS, 0.0, 1.0));
         ringCol *= mix(0.45, 1.0, clamp(length(p_ring-c)-7.0 * PLANET_RADIUS, 0.0, 1.0));
-        ringCol *= smoothstep(0.0, 0.4, mix(0.0, 0.875, clamp(max(length(p_ring-c)-8.8 * PLANET_RADIUS, -length(p_ring-c)+8.6 * PLANET_RADIUS), 0.0, 1.0))) + 0.125;
-        ringCol *= mix(0.5, 1.0, clamp(-length(p_ring-c)+9.5 * PLANET_RADIUS, 0.0, 1.0));
+        ringCol *= smoothstep(0.0, 0.4, mix(0.0, 0.875, clamp(max(length(p_ring-c)-9.3 * PLANET_RADIUS, -length(p_ring-c)+9.1 * PLANET_RADIUS), 0.0, 1.0))) + 0.125;
+        ringCol *= mix(0.5, 1.0, clamp(-length(p_ring-c)+10.5 * PLANET_RADIUS, 0.0, 1.0));
 
         //color = mix(color, vec3(ringCol), smoothstep(40.0, 50.0, ringTrace.x));
         if(p_ring_len > RING_RADIUS_2 * PLANET_RADIUS && p_ring_len < RING_RADIUS_1 * PLANET_RADIUS) {
-            ringCol *= mix(texture(u_texture1, p_ring.xz).x, 1.0, smoothstep(40.0, 50.0, ringTrace));
+            //ringCol *= mix(texture(u_texture1, p_ring.xz).x, 1.0, smoothstep(40.0, 50.0, ringTrace));
             ringCol *= mix(0.0, ringCol, smoothstep(20.0, 25.0, ringTrace));
             color = mix(color, vec3(ringCol), min(ringCol * 3.0, 1.0));
         }

@@ -55,14 +55,15 @@ image* create_simplex_noise(int width, int height) {
 
     fnl_state noise = fnlCreateState();
     noise.seed = 1337;
-    noise.octaves = 1;
-    noise.frequency = 0.1f;
-    noise.noise_type = FNL_NOISE_OPENSIMPLEX2;
+    noise.octaves = 6;
+    noise.frequency = 0.01f;
+    noise.noise_type = FNL_NOISE_CELLULAR;
+    noise.fractal_type = FNL_FRACTAL_PINGPONG;
 
     for(int y=0; y<height; y++) {
         for(int x=0; x<width; x++) {
             float n = fnlGetNoise2D(&noise, x, y);
-            uint8_t value = (uint8_t)((n + 1.0f) * 127.5f); // Map [-1, 1] to [0, 255
+            uint8_t value = (uint8_t)fclamp((n - 0.5f) * -170.0f, 0.0f, 255.0f);
             img->data[y * width + x] = value;
         }
     }
