@@ -157,7 +157,8 @@ float weaking(vec3 p, vec3 n) {
 }
 
 float sdfSphere(vec3 p, vec3 d, float r) {
-    p.xz = fract(min(abs(p.xz), vec2(RING_RADIUS_1 * PLANET_RADIUS))) - 0.5;
+    //p.xz = fract(min(abs(p.xz), vec2(RING_RADIUS_1 * PLANET_RADIUS))) - 0.5;
+    p.xz = fract(p.xz) - 0.5;
     return length(p) - r * texture(u_texture1, p.xz).r * 0.2;
 }
 
@@ -242,8 +243,8 @@ vec4 render(vec2 uv, vec3 p) {
         float p_ring_len = length((p_ring - c).xz);
 
         //float ringCol = mix(texture(u_texture1, p_ring.xz).x, 1.0, smoothstep(80.0, 100.0, ringTrace));
-        float ringCol = mix(0.5, 1.0, noise(p_ring_len * 15.0));
-        ringCol *= mix(0.25, 1.0, clamp(length(p_ring-c) - RING_RADIUS_2 * PLANET_RADIUS, 0.0, 1.0));
+        //float ringTexture = mix(0.5, 1.0, noise(p_ring_len * 15.0));
+        float ringCol = mix(0.25, 1.0, clamp(length(p_ring-c) - RING_RADIUS_2 * PLANET_RADIUS, 0.0, 1.0));
         ringCol *= mix(0.45, 1.0, clamp(length(p_ring-c)-7.0 * PLANET_RADIUS, 0.0, 1.0));
         ringCol *= smoothstep(0.0, 0.4, mix(0.0, 0.875, clamp(max(length(p_ring-c)-9.3 * PLANET_RADIUS, -length(p_ring-c)+9.1 * PLANET_RADIUS), 0.0, 1.0))) + 0.125;
         ringCol *= mix(0.5, 1.0, clamp(-length(p_ring-c)+10.5 * PLANET_RADIUS, 0.0, 1.0));
