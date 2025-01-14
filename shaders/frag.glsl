@@ -158,20 +158,24 @@ float weaking(vec3 p, vec3 n) {
 
 float sdfSphere(vec3 p, vec3 d, float r) {
     //p.xz = fract(min(abs(p.xz), vec2(RING_RADIUS_1 * PLANET_RADIUS))) - 0.5;
-    p.xz = fract(p.xz) - 0.5;
-    return length(p) - r * texture(u_texture1, p.xz).r * 0.2;
+
+    p.xz = mod(p.xz, 0.25) - 0.125;
+    return length(p) - r /** texture(u_texture1, p.xz).r * 0.2*/;
 }
 
-float raymarch(vec3 ray_origin, vec3 ray_direction) {
+float raymarch(vec3 ray_origin, vec3 ray_direction, float radius) {
     float t = 0.0;
+
+    if(ceil(radius) == 0.0) {
+        return -1.0;
+    }
 
     #if NEW_RAYMARCH
     #else
 
     for(int i = 0; i < MAX_STEPS; i++) {
         vec3 p = ray_origin + t * ray_direction;
-        //float dist = sdTorus(p - c, vec2(2.0, 0.05));
-        float dist = sdfSphere((p - c) * raymarch_transform, t * ray_direction, 0.1);
+        float dist = sdfSphere((p - c) * raymarch_transform, t * ray_direction, 0.0625);
 
         if(dist < cam_block.near) {
             return t;
@@ -188,10 +192,10 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
     return -1.0;
 }
 
-vec3 sub_render(vec3 color, vec3 ray_origin, vec3 ray_direction, vec2 sp) {
+vec3 sub_render(vec3 color, vec3 ray_origin, vec3 ray_direction, vec2 sp, float radius) {
 
     // Indivudual rings for the planet
-    float t_objs = raymarch(ray_origin, ray_direction);
+    float t_objs = raymarch(ray_origin, ray_direction, radius);
     if(t_objs > 0.0) {
         if(sp.x >= cam_block.near && t_objs > sp.x) {
             return color;
@@ -232,32 +236,36 @@ vec4 render(vec2 uv, vec3 p) {
     // Raymarching
 
     float ringTrace = iPlane(ray_origin, ray_direction, vec4(PLANE_TILT, 1.0, 0.0, 0.0));
+    float maxRing = 0.0;
+    float ringCol = 0.0;
 
     if(ringTrace > cam_block.near && ringTrace < cam_block.far) {
-        if(sp.x >= cam_block.near && ringTrace > sp.x) {
-            return vec4(sub_render(color, ray_origin, ray_direction, sp), 1.0);
-        }
-
         vec3 p_ring = (ray_origin + ringTrace * ray_direction);
         float angle = atan(p_ring.y, p_ring.z);
         float p_ring_len = length((p_ring - c).xz);
 
         //float ringCol = mix(texture(u_texture1, p_ring.xz).x, 1.0, smoothstep(80.0, 100.0, ringTrace));
-        //float ringTexture = mix(0.5, 1.0, noise(p_ring_len * 15.0));
-        float ringCol = mix(0.25, 1.0, clamp(length(p_ring-c) - RING_RADIUS_2 * PLANET_RADIUS, 0.0, 1.0));
+        float ringTexture = mix(0.5, 1.0, noise(p_ring_len * 15.0));
+        ringCol = mix(0.25, 1.0, clamp(length(p_ring-c) - RING_RADIUS_2 * PLANET_RADIUS, 0.0, 1.0));
         ringCol *= mix(0.45, 1.0, clamp(length(p_ring-c)-7.0 * PLANET_RADIUS, 0.0, 1.0));
         ringCol *= smoothstep(0.0, 0.4, mix(0.0, 0.875, clamp(max(length(p_ring-c)-9.3 * PLANET_RADIUS, -length(p_ring-c)+9.1 * PLANET_RADIUS), 0.0, 1.0))) + 0.125;
         ringCol *= mix(0.5, 1.0, clamp(-length(p_ring-c)+10.5 * PLANET_RADIUS, 0.0, 1.0));
 
-        //color = mix(color, vec3(ringCol), smoothstep(40.0, 50.0, ringTrace.x));
-        if(p_ring_len > RING_RADIUS_2 * PLANET_RADIUS && p_ring_len < RING_RADIUS_1 * PLANET_RADIUS) {
-            //ringCol *= mix(texture(u_texture1, p_ring.xz).x, 1.0, smoothstep(40.0, 50.0, ringTrace));
-            ringCol *= mix(0.0, ringCol, smoothstep(20.0, 25.0, ringTrace));
-            color = mix(color, vec3(ringCol), min(ringCol * 3.0, 1.0));
+        if(sp.x >= cam_block.near && ringTrace > sp.x) {
+            return vec4(sub_render(color, ray_origin, ray_direction, sp, 0.0), 1.0);
         }
+
+        if(p_ring_len > RING_RADIUS_2 * PLANET_RADIUS && p_ring_len < RING_RADIUS_1 * PLANET_RADIUS) {
+            float minRing = mix(0.0, ringCol * ringTexture, smoothstep(20.0, 25.0, ringTrace));
+            maxRing = mix(ringCol * ringTexture, 0.0, smoothstep(17, 22, ringTrace));
+            color = mix(color, vec3(minRing), min(minRing * 1.5, 1.0));
+        }else {
+            ringCol = 0.0;
+        }
+
     }
 
-    return vec4(sub_render(color, ray_origin, ray_direction, sp), 1.0);
+    return vec4(sub_render(color, ray_origin, ray_direction, sp, maxRing * ringCol), 1.0);
 }
 
 void main() {
