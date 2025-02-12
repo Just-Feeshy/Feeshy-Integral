@@ -217,6 +217,9 @@ vec4 render(vec2 uv, vec3 p) {
 
 #if SCENE == 2
 
+#define MAX_STEPS 100
+#define NEW_RAYMARCH 1
+
 float raymarch(vec3 ray_origin, vec3 ray_direction, float radius) {
     float t = 0.0;
 
