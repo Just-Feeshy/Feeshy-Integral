@@ -1,15 +1,6 @@
 #version 410 core
 
 #define SCENE 1
-#define MAX_STEPS 100
-#define PI 3.14159265
-#define TAU (2*PI)
-#define PLANET_RADIUS 2.0
-#define NEW_RAYMARCH 0
-
-#define RING_RADIUS_2 6.0
-#define RING_RADIUS_1 11.0
-#define PLANE_TILT 0.1
 
 out vec4 fragColor;
 
@@ -28,6 +19,14 @@ uniform float u_time;
 uniform int u_quality;
 
 #if SCENE == 1
+
+#define PI 3.14159265
+#define TAU (2*PI)
+#define PLANET_RADIUS 2.0
+
+#define RING_RADIUS_2 6.0
+#define RING_RADIUS_1 11.0
+#define PLANE_TILT 0.1
 
 // I don't want to use a mat3x3 for this
 vec3 rotateX(vec3 p, float angle) {
@@ -154,35 +153,6 @@ float weaking(vec3 p, vec3 n) {
     return diff;
 }
 
-float raymarch(vec3 ray_origin, vec3 ray_direction, float radius) {
-    float t = 0.0;
-
-    if(ceil(radius) == 0.0) {
-        return -1.0;
-    }
-
-    #if NEW_RAYMARCH
-    #else
-
-    for(int i = 0; i < MAX_STEPS; i++) {
-        vec3 p = ray_origin + t * ray_direction;
-        float dist = 0.0;
-
-        if(dist < cam_block.near) {
-            return t;
-        }
-
-        if(t > cam_block.far) {
-            break;
-        }
-
-        t += dist;
-    }
-    #endif
-
-    return -1.0;
-}
-
 vec4 render(vec2 uv, vec3 p) {
 
     // World View Projection
@@ -243,6 +213,38 @@ vec4 render(vec2 uv, vec3 p) {
     return vec4(color, 1.0);
 }
 
+#endif
+
+#if SCENE == 2
+
+float raymarch(vec3 ray_origin, vec3 ray_direction, float radius) {
+    float t = 0.0;
+
+    if(ceil(radius) == 0.0) {
+        return -1.0;
+    }
+
+    for(int i = 0; i < MAX_STEPS; i++) {
+        vec3 p = ray_origin + t * ray_direction;
+        float dist = 0.0;
+
+        if(dist < cam_block.near) {
+            return t;
+        }
+
+        if(t > cam_block.far) {
+            break;
+        }
+
+        t += dist;
+    }
+
+    return -1.0;
+}
+
+vec4 render(vec2 uv, vec3 p) {
+    return vec4(1.0, 0.0, 0.0, 1.0);
+}
 #endif
 
 void main() {
