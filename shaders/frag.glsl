@@ -18,6 +18,9 @@ uniform sampler2D u_texture1;
 uniform float u_time;
 uniform int u_quality;
 
+const vec3 c = vec3(0.0, 0.0, 3.0);
+const vec3 light_pos = vec3(3.0, 60.0, -60.0);
+
 #if SCENE == 1
 
 #define PI 3.14159265
@@ -51,9 +54,6 @@ vec3 rotateY(vec3 p, float angle) {
         p.z * cosT - p.x * sinT
     );
 }
-
-const vec3 c = vec3(0.0, 0.0, 3.0);
-const vec3 light_pos = vec3(3.0, 60.0, -60.0);
 
 // Function taken from "The Book of Shaders"
 // Credits to Patricio Gonzalez Vivo & Jen Lowe
@@ -141,6 +141,65 @@ vec2 sphere(float r, vec3 rayOrigin, vec3 rayDirection, inout bool hit) {
     return disc;
 }
 
+
+#endif
+
+#if SCENE == 2
+
+#define MAX_STEPS 1000
+#define NEW_RAYMARCH 1
+#define FRACTAL 64
+
+float sdfFractal(vec3 p) {
+    vec2 q = vec2(8.0, 3.5);
+    vec2 v = vec2(length(p.xz) - q.x, p.y);
+
+    float w_lt = 1e6; // Large value to find the minimum distance
+
+    for (int i = 0; i < FRACTAL; i++) {
+        float s = pow(2.0, -float(i));
+        vec3 w_t = mod(p - s, s * 4.0) - s;
+        float w_l = length(w_t) - s;
+
+        w_lt = min(w_lt, w_l);
+    }
+
+    return max(length(v) - q.y, -w_lt);
+}
+
+
+vec3 calcNormal(in vec3 p) {
+    const float h = 0.0001;
+    const vec2 k = vec2(1,-1);
+    return normalize( k.xyy*sdfFractal( p + k.xyy*h ) +
+                      k.yyx*sdfFractal( p + k.yyx*h ) +
+                      k.yxy*sdfFractal( p + k.yxy*h ) +
+                      k.xxx*sdfFractal( p + k.xxx*h ) );
+}
+
+float raymarch(vec3 ray_origin, vec3 ray_direction) {
+    float t = 0.0;
+
+    for(int i = 0; i < MAX_STEPS; i++) {
+        vec3 p = ray_origin + t * ray_direction;
+        float dist = sdfFractal(p);
+
+        if(dist < cam_block.near) {
+            return t;
+        }
+
+        if(t > cam_block.far) {
+            break;
+        }
+
+        t += dist;
+    }
+
+    return -1.0;
+}
+
+#endif
+
 // Most basic writing for lighting
 // TO WRITE: How this works and the basics of lighting
 // @param n - The normal of the surface
@@ -163,6 +222,8 @@ vec4 render(vec2 uv, vec3 p) {
     // Ray Calculation
     vec3 ray_origin = cam_block.position;
     vec3 ray_direction = normalize((inverse(cam_block.view) * vec4(eye.xyz, 0.0)).xyz);
+
+    #if SCENE == 1
 
     bool hit = false;
     vec2 sp = sphere(4.5, ray_origin, ray_direction, hit);
@@ -203,53 +264,29 @@ vec4 render(vec2 uv, vec3 p) {
 
         if(p_ring_len > RING_RADIUS_2 * PLANET_RADIUS && p_ring_len < RING_RADIUS_1 * PLANET_RADIUS) {
             float minRing = ringCol * ringTexture;
-            color = mix(color, vec3(minRing), min(minRing * 1.5, 1.0));
+            // color = mix(color, vec3(minRing), min(minRing * 1.5, 1.0));
         }else {
             ringCol = 0.0;
         }
 
     }
 
+    #endif
+
+    #if SCENE == 2
+
+    float t = raymarch(ray_origin, ray_direction);
+    vec3 color = vec3(0.0);
+
+    if(t != -1.0) {
+        color = vec3(1.0, 0.0, 0.0) * weaking(ray_origin + t * ray_direction, calcNormal(ray_origin + t * ray_direction));
+        //color = vec3(1.0, 0.0, 0.0);
+    }
+
+    #endif
+
     return vec4(color, 1.0);
 }
-
-#endif
-
-#if SCENE == 2
-
-#define MAX_STEPS 100
-#define NEW_RAYMARCH 1
-
-float raymarch(vec3 ray_origin, vec3 ray_direction, float radius) {
-    float t = 0.0;
-
-    if(ceil(radius) == 0.0) {
-        return -1.0;
-    }
-
-    for(int i = 0; i < MAX_STEPS; i++) {
-        vec3 p = ray_origin + t * ray_direction;
-        float dist = 0.0;
-
-        if(dist < cam_block.near) {
-            return t;
-        }
-
-        if(t > cam_block.far) {
-            break;
-        }
-
-        t += dist;
-    }
-
-    return -1.0;
-}
-
-vec4 render(vec2 uv, vec3 p) {
-    return vec4(1.0, 0.0, 0.0, 1.0);
-}
-
-#endif
 
 void main() {
     vec3 p = vec3(0.0);
