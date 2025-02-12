@@ -245,6 +245,7 @@ float raymarch(vec3 ray_origin, vec3 ray_direction, float radius) {
 vec4 render(vec2 uv, vec3 p) {
     return vec4(1.0, 0.0, 0.0, 1.0);
 }
+
 #endif
 
 void main() {
