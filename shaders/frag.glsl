@@ -1,5 +1,6 @@
 #version 410 core
 
+#define SCENE 1
 #define MAX_STEPS 100
 #define PI 3.14159265
 #define TAU (2*PI)
@@ -26,13 +27,7 @@ uniform sampler2D u_texture1;
 uniform float u_time;
 uniform int u_quality;
 
-const vec3 c = vec3(0.0, 0.0, 3.0);
-const vec3 light_pos = vec3(3.0, 60.0, -60.0);
-
-// TO WRITE: In raymarching, we are able to shear, scale, translate the space itself.
-const mat3 raymarch_transform = mat3(1.0, PLANE_TILT, 0.0,
-                                  PLANE_TILT, 1.0, 0.0,
-                                  0.0, 0.0, 1.0);
+#if SCENE == 1
 
 // I don't want to use a mat3x3 for this
 vec3 rotateX(vec3 p, float angle) {
@@ -57,6 +52,9 @@ vec3 rotateY(vec3 p, float angle) {
         p.z * cosT - p.x * sinT
     );
 }
+
+const vec3 c = vec3(0.0, 0.0, 3.0);
+const vec3 light_pos = vec3(3.0, 60.0, -60.0);
 
 // Function taken from "The Book of Shaders"
 // Credits to Patricio Gonzalez Vivo & Jen Lowe
@@ -156,13 +154,6 @@ float weaking(vec3 p, vec3 n) {
     return diff;
 }
 
-float sdfSphere(vec3 p, vec3 d, float r) {
-    //p.xz = fract(min(abs(p.xz), vec2(RING_RADIUS_1 * PLANET_RADIUS))) - 0.5;
-
-    p.xz = mod(p.xz, 0.25) - 0.125;
-    return length(p) - r /** texture(u_texture1, p.xz).r * 0.2*/;
-}
-
 float raymarch(vec3 ray_origin, vec3 ray_direction, float radius) {
     float t = 0.0;
 
@@ -175,7 +166,7 @@ float raymarch(vec3 ray_origin, vec3 ray_direction, float radius) {
 
     for(int i = 0; i < MAX_STEPS; i++) {
         vec3 p = ray_origin + t * ray_direction;
-        float dist = sdfSphere((p - c) * raymarch_transform, t * ray_direction, 0.0625);
+        float dist = 0.0;
 
         if(dist < cam_block.near) {
             return t;
@@ -190,21 +181,6 @@ float raymarch(vec3 ray_origin, vec3 ray_direction, float radius) {
     #endif
 
     return -1.0;
-}
-
-vec3 sub_render(vec3 color, vec3 ray_origin, vec3 ray_direction, vec2 sp, float radius) {
-
-    // Indivudual rings for the planet
-    float t_objs = raymarch(ray_origin, ray_direction, radius);
-    if(t_objs > 0.0) {
-        if(sp.x >= cam_block.near && t_objs > sp.x) {
-            return color;
-        }
-
-        color = vec3(1.0, 0.0, 0.0);
-    }
-
-    return color;
 }
 
 vec4 render(vec2 uv, vec3 p) {
@@ -252,12 +228,11 @@ vec4 render(vec2 uv, vec3 p) {
         ringCol *= mix(0.5, 1.0, clamp(-length(p_ring-c)+10.5 * PLANET_RADIUS, 0.0, 1.0));
 
         if(sp.x >= cam_block.near && ringTrace > sp.x) {
-            return vec4(sub_render(color, ray_origin, ray_direction, sp, 0.0), 1.0);
+            return vec4(color, 1.0);
         }
 
         if(p_ring_len > RING_RADIUS_2 * PLANET_RADIUS && p_ring_len < RING_RADIUS_1 * PLANET_RADIUS) {
-            float minRing = mix(0.0, ringCol * ringTexture, smoothstep(20.0, 25.0, ringTrace));
-            maxRing = mix(ringCol * ringTexture, 0.0, smoothstep(17, 22, ringTrace));
+            float minRing = ringCol * ringTexture;
             color = mix(color, vec3(minRing), min(minRing * 1.5, 1.0));
         }else {
             ringCol = 0.0;
@@ -265,8 +240,10 @@ vec4 render(vec2 uv, vec3 p) {
 
     }
 
-    return vec4(sub_render(color, ray_origin, ray_direction, sp, maxRing * ringCol), 1.0);
+    return vec4(color, 1.0);
 }
+
+#endif
 
 void main() {
     vec3 p = vec3(0.0);
