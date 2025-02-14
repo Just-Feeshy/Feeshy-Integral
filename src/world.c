@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <world.h>
+#include <light.h>
 #include <menu.h>
 #include <cam_matrices.h>
 #include <cglm/vec3.h>
@@ -12,15 +13,23 @@
 
 static const float LIMIT = TAU / 4.01;
 
+
+// Camera
+
 static cam_matrices cam;
 static uniform_block ubo;
-static sized_shader_block** block;
+static sized_shader_block*** block; // This is so ugly, but it works and I'm tired, got only 2 hours of sleep last night
 static float aspect_ratio;
+
+
+// Light
+
+static brdf_light_block light_brdf;
 
 static void render_cam() {
     update_rotation(&cam);
     update_view_matrix(&cam);
-    set_ssbo_data(*block, &cam.cam, sizeof(cam_block));
+    set_ssbo_data(**block, &cam.cam, sizeof(cam_block));
 }
 
 static void world_input_callback_impl(uint64_t control_status) {
@@ -80,25 +89,27 @@ void world_init() {
     cam = create_cam_matrices();
     init_cam_matrices(&cam);
 
-    block = (sized_shader_block**)malloc(sizeof(sized_shader_block*));
-    *block = create_ssbo(&ubo, GL_UNIFORM_BUFFER, sizeof(cam_matrices));
+    block = (sized_shader_block***)malloc(sizeof(sized_shader_block**) * 2);
+    *block = (sized_shader_block**)malloc(sizeof(sized_shader_block*));
+    *(block + 1) = (sized_shader_block**)malloc(sizeof(sized_shader_block*));
+    **block = create_ssbo(&ubo, GL_UNIFORM_BUFFER, sizeof(cam_matrices));
 }
 
 void world_aspect_ratio(float width, float height) {
     aspect_ratio = width / height;
 
     update_projection_matrix(&cam, aspect_ratio, 45.0f);
-    set_ssbo_data(*block, &cam.cam, sizeof(cam_block));
+    set_ssbo_data(**block, &cam.cam, sizeof(cam_block));
 }
 
 void world_begin(graphics_pipeline* pipe) {
     // render_cam();
-    bind_ubo_with_name(&ubo, "CamBlock", block, pipe);
+    bind_ubo_with_name(&ubo, "CamBlock", *block, pipe);
 }
 
 void world_end(graphics_pipeline* pipe) {
     // unbind_ubo_just_ssbo(&ubo, block, pipe);
-    unbind_ubo(&ubo, 0, *block, pipe);
+    unbind_ubo(&ubo, 0, **block, pipe);
 }
 
 
@@ -116,5 +127,5 @@ void world_reset_camera() {
 
 void world_update_fov(float fov) {
     update_projection_matrix(&cam, aspect_ratio, fov);
-    set_ssbo_data(*block, &cam.cam, sizeof(cam_block));
+    set_ssbo_data(**block, &cam.cam, sizeof(cam_block));
 }

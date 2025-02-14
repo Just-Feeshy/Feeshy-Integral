@@ -264,7 +264,7 @@ vec4 render(vec2 uv, vec3 p) {
 
         if(p_ring_len > RING_RADIUS_2 * PLANET_RADIUS && p_ring_len < RING_RADIUS_1 * PLANET_RADIUS) {
             float minRing = ringCol * ringTexture;
-            // color = mix(color, vec3(minRing), min(minRing * 1.5, 1.0));
+            color = mix(color, vec3(minRing), min(minRing * 1.5, 1.0));
         }else {
             ringCol = 0.0;
         }
