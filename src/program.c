@@ -18,8 +18,6 @@
 #define NAP_MULT 1
 #define NAP_DIV 3
 
-extern double ms_time_elapsed;
-
 
 const double frame_period = 1000.0f / 60.0f;
 
@@ -183,7 +181,7 @@ static void program_update() {
         nk_layout_row_static(ctx, 20, 200, 1);
 
         char buffer[128];
-        snprintf(buffer, sizeof(buffer), "Elapsed Shader Time: %.2f ms", ms_time_elapsed);
+        snprintf(buffer, sizeof(buffer), "Elapsed Shader Time: %llu ms", ms_time_elapsed);
         nk_label(ctx, buffer, NK_TEXT_LEFT);
     }
     nk_end(ctx);

@@ -12,7 +12,7 @@
 
 #define IMAGES 2
 
-double ms_time_elapsed = 0;
+uint64_t ms_time_elapsed = 0;
 
 
 static GLuint query;
