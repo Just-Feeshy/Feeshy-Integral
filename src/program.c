@@ -18,6 +18,9 @@
 #define NAP_MULT 1
 #define NAP_DIV 3
 
+extern double ms_time_elapsed;
+
+
 const double frame_period = 1000.0f / 60.0f;
 
 static struct nk_context* ctx;
@@ -145,7 +148,7 @@ static void program_update() {
     nk_input_end(ctx);
 
     if (nk_begin(ctx, "Settings Menu", nk_rect(50, 50, 230, 250),
-        NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
+        NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|
         NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
     {
         static float fov = 45.0f;
@@ -176,6 +179,12 @@ static void program_update() {
             nk_combo_end(ctx);
         }
         nk_layout_row_static(ctx, 24, 80, 2);
+
+        nk_layout_row_static(ctx, 20, 200, 1);
+
+        char buffer[128];
+        snprintf(buffer, sizeof(buffer), "Elapsed Shader Time: %.2f ms", ms_time_elapsed);
+        nk_label(ctx, buffer, NK_TEXT_LEFT);
     }
     nk_end(ctx);
 
@@ -195,7 +204,7 @@ static void program_update() {
         main_update.nextUpdate += frame_period;
     }
 
-        program_update_opengl();
+    program_update_opengl();
     inputs_update(main_program.in);
 }
 
@@ -303,6 +312,7 @@ float program_get_pixel_density() {
     return pixel_density;
 }
 
+// TODO: Implement this
 float program_get_elapsed_time() {
     return 1.0;
 }

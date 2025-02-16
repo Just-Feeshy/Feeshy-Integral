@@ -7,4 +7,4 @@ typedef struct {
     float g;
 } brdf_light_block;
 
-brdf_light_block create_brdf_light_block();
+void init_brdf_light_block(brdf_light_block* block);

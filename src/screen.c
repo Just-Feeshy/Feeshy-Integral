@@ -12,6 +12,10 @@
 
 #define IMAGES 2
 
+double ms_time_elapsed = 0;
+
+
+static GLuint query;
 static graphics_pipeline pipeline;
 static unsigned VAO;
 
@@ -122,9 +126,14 @@ void screen_init(int w, int h) {
     create_constant_location(&pipeline, "u_texture0");
     create_constant_location(&pipeline, "u_texture1");
     world_aspect_ratio(width, height);
+
+    glGenQueries(1, &query);
 }
 
 void screen_render() {
+    // Start the benchmark timer for fragment shader
+    glBeginQuery(GL_TIME_ELAPSED, query);
+
     pipeline_set(&pipeline);
     texture_bind(&txt[0], 0);
     texture_bind(&txt[1], 1);
@@ -137,4 +146,11 @@ void screen_render() {
     world_begin(&pipeline);
     draw_vertex_buffer(VAO, 6);
     world_end(&pipeline);
+
+    // End the benchmark timer for fragment shader
+    glEndQuery(GL_TIME_ELAPSED);
+    GLuint64 timeElapsed = 1;
+    glGetQueryObjectui64v(query, GL_QUERY_RESULT, &timeElapsed);
+
+    ms_time_elapsed = timeElapsed / 1e6;
 }

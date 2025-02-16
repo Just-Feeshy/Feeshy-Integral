@@ -80,7 +80,7 @@ static void world_direction_callback_impl(int x, int y, int dx, int dy) {
 }
 
 void world_init() {
-    printf("World initialized\n");
+    printf("World Initialized\n");
     static InputCallback world_input_callback = world_input_callback_impl;
     static InputDirectionCallback world_direction_callback = world_direction_callback_impl;
     inputs_init_callback(&world_input_callback, &world_direction_callback);
@@ -91,8 +91,10 @@ void world_init() {
 
     block = (sized_shader_block***)malloc(sizeof(sized_shader_block**) * 2);
     *block = (sized_shader_block**)malloc(sizeof(sized_shader_block*));
-    *(block + 1) = (sized_shader_block**)malloc(sizeof(sized_shader_block*));
     **block = create_ssbo(&ubo, GL_UNIFORM_BUFFER, sizeof(cam_matrices));
+
+    *(block + 1) = (sized_shader_block**)malloc(sizeof(sized_shader_block*));
+    **(block + 1) = create_ssbo(&ubo, GL_UNIFORM_BUFFER, sizeof(brdf_light_block));
 }
 
 void world_aspect_ratio(float width, float height) {
@@ -100,6 +102,9 @@ void world_aspect_ratio(float width, float height) {
 
     update_projection_matrix(&cam, aspect_ratio, 45.0f);
     set_ssbo_data(**block, &cam.cam, sizeof(cam_block));
+
+    init_brdf_light_block(&light_brdf);
+    set_ssbo_data(**(block + 1), &light_brdf, sizeof(brdf_light_block));
 }
 
 void world_begin(graphics_pipeline* pipe) {
