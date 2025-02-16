@@ -1,6 +1,6 @@
 #version 410 core
 
-#define SCENE 1
+#define SCENE 2
 
 out vec4 fragColor;
 
@@ -146,9 +146,9 @@ vec2 sphere(float r, vec3 rayOrigin, vec3 rayDirection, inout bool hit) {
 
 #if SCENE == 2
 
-#define MAX_STEPS 1000
+#define MAX_STEPS 100
 #define NEW_RAYMARCH 1
-#define FRACTAL 64
+#define FRACTAL 128
 
 float sdfFractal(vec3 p) {
     vec2 q = vec2(8.0, 3.5);
@@ -184,7 +184,7 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
         vec3 p = ray_origin + t * ray_direction;
         float dist = sdfFractal(p);
 
-        if(dist < cam_block.near) {
+        if(dist < 0.001) {
             return t;
         }
 
