@@ -184,7 +184,7 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
         vec3 p = ray_origin + t * ray_direction;
         float dist = sdfFractal(p);
 
-        if(dist < 0.001) {
+        if(dist < cam_block.near) {
             return t;
         }
 
