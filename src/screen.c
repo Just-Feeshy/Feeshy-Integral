@@ -152,5 +152,5 @@ void screen_render() {
     GLuint64 timeElapsed = 1;
     glGetQueryObjectui64v(query, GL_QUERY_RESULT, &timeElapsed);
 
-    ms_time_elapsed = timeElapsed / 1e6;
+    ms_time_elapsed = timeElapsed / 1e5;
 }
