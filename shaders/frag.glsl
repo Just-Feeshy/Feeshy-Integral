@@ -226,10 +226,17 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
             }
 
             t_j -= dist_j;
-            i++;
         }else {
             t += dist_i;
             dist_i = sdfFractal(ray_origin + t * ray_direction);
+
+            if(dist_i < cam_block.near) {
+                return t;
+            }
+
+            if(t > cam_block.far) {
+                return -1.0;
+            }
         }
 
         min_dist = min(min_dist, dist_i);
