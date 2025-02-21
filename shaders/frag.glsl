@@ -147,14 +147,14 @@ vec2 sphere(float r, vec3 rayOrigin, vec3 rayDirection, inout bool hit) {
 #if SCENE == 2
 
 #define MAX_STEPS 99
-#define NEW_RAYMARCH 0
+#define NEW_RAYMARCH 1
 
 // Mandelbox Fractal
 float sdfFractal(vec3 p) {
     p = p + vec3(
-        0.2 * sin(4.0 * u_time + p.y * PI),
-        0.2 * cos(2.0 * u_time + p.z * PI),
-        0.2 * sin(4.0 * u_time + p.x * PI)
+        0.2 * sin(8.0 * u_time + p.y * PI),
+        0.2 * cos(4.0 * u_time + p.z * PI),
+        0.2 * sin(8.0 * u_time + p.x * PI) * cos(4.0 * u_time + p.y * PI)
     ) + vec3(0.0, 16.0, -32.0);
 
     vec2 q = vec2(length(p.xz)-8.0,p.y);
@@ -203,6 +203,10 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
 
     #if (MAX_STEPS & 1) == 0
     t = sdfFractal(ray_origin + t * ray_direction);
+
+    if(t < cam_block.near) {
+        return t;
+    }
     #endif
 
     while(i <= (MAX_STEPS >> 1)) {
@@ -221,12 +225,22 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
             vec3 p_j = ray_origin + t_j * ray_direction;
             float dist_j = sdfFractal(p_j);
 
-            if((dist_i + dist_j) >= length(p_j - p_i)) {
+            if((dist_i + dist_j) >= abs(t_j - t)) {
                 return -1.0;
             }
 
             t_j -= dist_j;
-            i--;
+        }else {
+            t += dist_i;
+            dist_i = sdfFractal(ray_origin + t * ray_direction);
+
+            if(dist_i < cam_block.near) {
+                return t;
+            }
+
+            if(t > cam_block.far) {
+                return -1.0;
+            }
         }
 
         min_dist = min(min_dist, dist_i);
