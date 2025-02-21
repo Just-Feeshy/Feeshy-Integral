@@ -234,40 +234,6 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
         i++;
     }
 
-    /*
-    int N = MAX_STEPS - i;
-    i = int((N & 1) == 0);
-
-    if(i == 1) {
-        t = sdfFractal(ray_origin + t * ray_direction);
-    }
-
-    while(i <= (MAX_STEPS >> 1)) {
-        vec3 p_i = ray_origin + t * ray_direction;
-        float dist_i = sdfFractal(p_i);
-        float dist_j = sdfFractal(p_j);
-
-        if(dist_i < cam_block.near) {
-            return t;
-        }
-
-        if(dist_j < cam_block.near) {
-            i *= 2;
-            break;
-        }
-
-        if(t > cam_block.far) {
-            return -1.0;
-        }
-
-        t += dist_i;
-
-        i++;
-    }
-
-    t = SDF_distance(t, i, ray_origin, ray_direction);
-    */
-
     return -1.0;
 
     #else
