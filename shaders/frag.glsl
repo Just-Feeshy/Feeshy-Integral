@@ -1,5 +1,6 @@
 #version 410 core
 
+#define PI 3.14159265
 #define SCENE 2
 
 out vec4 fragColor;
@@ -23,7 +24,6 @@ const vec3 light_pos = vec3(3.0, 60.0, -60.0);
 
 #if SCENE == 1
 
-#define PI 3.14159265
 #define TAU (2*PI)
 #define PLANET_RADIUS 2.0
 
@@ -146,25 +146,19 @@ vec2 sphere(float r, vec3 rayOrigin, vec3 rayDirection, inout bool hit) {
 
 #if SCENE == 2
 
-#define MAX_STEPS 100
-#define NEW_RAYMARCH 1
-#define FRACTAL 128
+#define MAX_STEPS 99
+#define NEW_RAYMARCH 0
 
+// Mandelbox Fractal
 float sdfFractal(vec3 p) {
-    vec2 q = vec2(8.0, 3.5);
-    vec2 v = vec2(length(p.xz) - q.x, p.y);
+    p = p + vec3(
+        0.2 * sin(4.0 * u_time + p.y * PI),
+        0.2 * cos(2.0 * u_time + p.z * PI),
+        0.2 * sin(4.0 * u_time + p.x * PI)
+    ) + vec3(0.0, 16.0, -32.0);
 
-    float w_lt = 1e6; // Large value to find the minimum distance
-
-    for (int i = 0; i < FRACTAL; i++) {
-        float s = pow(2.0, -float(i));
-        vec3 w_t = mod(p - s, s * 4.0) - s;
-        float w_l = length(w_t) - s;
-
-        w_lt = min(w_lt, w_l);
-    }
-
-    return max(length(v) - q.y, -w_lt);
+    vec2 q = vec2(length(p.xz)-8.0,p.y);
+    return length(q)-6.0;
 }
 
 
@@ -177,10 +171,8 @@ vec3 calcNormal(in vec3 p) {
                       k.xxx*sdfFractal( p + k.xxx*h ) );
 }
 
-float raymarch(vec3 ray_origin, vec3 ray_direction) {
-    float t = 0.0;
-
-    for(int i = 0; i < MAX_STEPS; i++) {
+float SDF_distance(float t, inout int iter, vec3 ray_origin, vec3 ray_direction) {
+    while(iter <= MAX_STEPS) {
         vec3 p = ray_origin + t * ray_direction;
         float dist = sdfFractal(p);
 
@@ -193,9 +185,99 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
         }
 
         t += dist;
+        iter++;
     }
 
     return -1.0;
+}
+
+float raymarch(vec3 ray_origin, vec3 ray_direction) {
+    float t = 0.0;
+
+    #if NEW_RAYMARCH == 1
+    #define MIN_GROWTH 0.0076
+
+    float t_j = cam_block.far;
+    float min_dist = cam_block.far;
+    int i = int((MAX_STEPS & 1) == 0);
+
+    #if (MAX_STEPS & 1) == 0
+    t = sdfFractal(ray_origin + t * ray_direction);
+    #endif
+
+    while(i <= (MAX_STEPS >> 1)) {
+        vec3 p_i = ray_origin + t * ray_direction;
+        float dist_i = sdfFractal(p_i);
+
+        if(dist_i < cam_block.near) {
+            return t;
+        }
+
+        if(t > cam_block.far) {
+            return -1.0;
+        }
+
+        if(dist_i - min_dist > MIN_GROWTH) {
+            vec3 p_j = ray_origin + t_j * ray_direction;
+            float dist_j = sdfFractal(p_j);
+
+            if((dist_i + dist_j) >= length(p_j - p_i)) {
+                return -1.0;
+            }
+
+            t_j -= dist_j;
+            i--;
+        }
+
+        min_dist = min(min_dist, dist_i);
+        t += dist_i;
+        i++;
+    }
+
+    /*
+    int N = MAX_STEPS - i;
+    i = int((N & 1) == 0);
+
+    if(i == 1) {
+        t = sdfFractal(ray_origin + t * ray_direction);
+    }
+
+    while(i <= (MAX_STEPS >> 1)) {
+        vec3 p_i = ray_origin + t * ray_direction;
+        float dist_i = sdfFractal(p_i);
+        float dist_j = sdfFractal(p_j);
+
+        if(dist_i < cam_block.near) {
+            return t;
+        }
+
+        if(dist_j < cam_block.near) {
+            i *= 2;
+            break;
+        }
+
+        if(t > cam_block.far) {
+            return -1.0;
+        }
+
+        t += dist_i;
+
+        i++;
+    }
+
+    t = SDF_distance(t, i, ray_origin, ray_direction);
+    */
+
+    return -1.0;
+
+    #else
+
+    int iter = 0;
+    t = SDF_distance(t, iter, ray_origin, ray_direction);
+
+    #endif
+
+    return t;
 }
 
 #endif
