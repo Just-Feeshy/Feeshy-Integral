@@ -20,7 +20,7 @@ function third_party_config()
     project "zlib-lib"
         language "C"
         kind "StaticLib"
-        defines { "N_FSEEKO" }
+        defines { "N_FSEEKO", "_LARGEFILE64_SOURCE" }
         warnings "off"
 
         files {
@@ -30,6 +30,65 @@ function third_party_config()
 
         filter "system:windows"
             defines { "_WINDOWS" }
+
+
+    -- CURL
+    project "curl-lib"
+        language "C"
+        kind "StaticLib"
+        defines { "CURL_STATICLIB", "NEED_THREAD_SAFE=1", "BUILDING_LIBCURL", "HAVE_SOCKET=1" }
+
+        defines {
+            "CURL_STATICLIB",
+            "_FILE_OFFSET_BITS=64",   -- Ensures curl_off_t is 64-bit
+            "_LARGEFILE64_SOURCE",    -- Large file support
+            "SIZEOF_CURL_OFF_T=8",    -- Explicitly define curl_off_t as 64-bit
+            "HAVE_STRUCT_TIMEVAL",    -- Prevents timeval redefinition
+            "HAVE_SYS_SOCKET_H",      -- Ensures sockaddr_in and socket functions
+            "HAVE_NETINET_IN_H",      -- Ensures netinet/in.h is included
+            "HAVE_ARPA_INET_H",       -- Ensures arpa/inet.h is included
+            "HAVE_UNISTD_H",          -- Ensures unistd.h is included (for close())
+            "HAVE_SYS_SELECT_H",      -- Ensures select() is available
+            "HAVE_SYS_TYPES_H",       -- Ensures sys/types.h is included
+            "HAVE_SYS_STAT_H",        -- Ensures sys/stat.h is included
+            "HAVE_FCNTL_H",           -- Ensures fcntl.h is included (for non-blocking sockets)
+            "HAVE_ERRNO_H",           -- Ensures errno.h is included
+            "HAVE_POLL_H",            -- Ensures poll.h is included (alternative to select)
+            "sread=read",
+            "swrite=write"
+        }
+
+
+        warnings "off"
+
+        includedirs {
+            "../third_party/curl/lib",
+            "../third_party/curl/include"
+        }
+
+        files {
+            "../third_party/curl/lib/easy.c",
+            "../third_party/curl/lib/http.c",
+            "../third_party/curl/lib/url.c",
+            "../third_party/curl/lib/connect.c",
+            "../third_party/curl/lib/sendf.c",
+            "../third_party/curl/lib/getinfo.c",
+            "../third_party/curl/lib/transfer.c",
+            -- "../third_party/cjson/cJSON.c",
+            -- "../third_party/liboauth/oauth.c"
+        }
+
+        filter "not system:windows"
+
+        filter "system:windows"
+            defines { "_WINDOWS", "ALLOW_MSVC6_WITHOUT_PSDK", "HAVE_CONFIG_H",  }
+            links { "ws2_32", "wldap32" }
+
+        filter "system:linux"
+            links { "pthread" }
+
+        filter "system:macosx"
+            links { "pthread" }
 end
 
 function solution_config()

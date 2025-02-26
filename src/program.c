@@ -25,6 +25,8 @@ static struct nk_context* ctx;
 static struct nk_colorf bg;
 
 static char FOV_TXT[9] = "FOV (45)";
+static char buffer_url[65536] = {0}; // I really don't care of any buffer overflow here, it's just a simulation
+static int length = 0;
 
 typedef struct program_package {
     struct inputs* in;
@@ -36,7 +38,7 @@ typedef struct program_package {
 
 typedef struct update_package {
     int currentUpdate;
-    int lastUpdate;
+    int64_t lastUpdate;
     int nextUpdate;
     bool timerActive;
     SDL_TimerID timer;
@@ -165,24 +167,17 @@ static void program_update() {
             world_reset_camera();
         }
 
-        nk_layout_row_dynamic(ctx, 20, 2);
-        nk_label(ctx, "Quality:", NK_TEXT_LEFT);
-        if (nk_combo_begin_label(ctx, menu_items[selected_menu_item], nk_vec2(nk_widget_width(ctx), 200))) {
-            nk_layout_row_dynamic(ctx, 10, 1);
-            for (int i = 0; i < 5; ++i) {
-                if (nk_combo_item_label(ctx, menu_items[i], NK_TEXT_LEFT)) {
-                    selected_menu_item = i;
-                }
-            }
-            nk_combo_end(ctx);
-        }
-        nk_layout_row_static(ctx, 24, 80, 2);
-
         nk_layout_row_static(ctx, 20, 200, 1);
 
-        char buffer[128];
-        snprintf(buffer, sizeof(buffer), "Elapsed Shader Time: %llu ms", ms_time_elapsed);
-        nk_label(ctx, buffer, NK_TEXT_LEFT);
+        {
+            char buffer[128];
+            snprintf(buffer, sizeof(buffer), "Elapsed Shader Time: %llu ms", ms_time_elapsed / 1000000);
+            nk_label(ctx, buffer, NK_TEXT_LEFT);
+        }
+
+        nk_layout_row_dynamic(ctx, 30, 2);
+        nk_label(ctx, "Webhook URL: ", NK_TEXT_LEFT);
+        nk_edit_string(ctx, NK_EDIT_FIELD, buffer_url, &length, sizeof(buffer_url), nk_filter_default);
     }
     nk_end(ctx);
 

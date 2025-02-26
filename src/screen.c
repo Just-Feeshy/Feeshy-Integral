@@ -122,7 +122,6 @@ void screen_init(int w, int h) {
     uniform_manager_init();
     create_constant_location(&pipeline, "u_resolution");
     create_constant_location(&pipeline, "u_time");
-    create_constant_location(&pipeline, "u_quality");
     create_constant_location(&pipeline, "u_texture0");
     create_constant_location(&pipeline, "u_texture1");
     world_aspect_ratio(width, height);
@@ -138,7 +137,6 @@ void screen_render() {
     texture_bind(&txt[0], 0);
     texture_bind(&txt[1], 1);
     set_uniform_vec2("u_resolution", width, height);
-    set_uniform_int("u_quality", 1 << (7 + selected_menu_item));
     set_uniform_float("u_time", SDL_GetTicks() / 5000.0f);
     set_uniform_int("u_texture0", 0);
     set_uniform_int("u_texture1", 1);
@@ -152,5 +150,5 @@ void screen_render() {
     GLuint64 timeElapsed = 1;
     glGetQueryObjectui64v(query, GL_QUERY_RESULT, &timeElapsed);
 
-    ms_time_elapsed = timeElapsed / 1e5;
+    ms_time_elapsed = timeElapsed;
 }
