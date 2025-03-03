@@ -8,7 +8,9 @@
 #include <menu.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <time.h>
+#include <curl/curl.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -32,6 +34,7 @@ typedef struct program_package {
     struct inputs* in;
     struct SDL_Window* window;
     struct SDL_GLContext* context;
+    CURL* curl;
     bool active;
     bool dirty_event;
 } program_package;
@@ -205,6 +208,14 @@ void program_init(const char* name, int w, int h) {
     if(main_program.active) {
         return;
     }
+
+    curl_global_init(CURL_GLOBAL_ALL);
+    /*
+    if((main_program.curl = curl_easy_init()) == 0) {
+        printf("Failed to initialize CURL\n");
+        return;
+    }
+    */
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
 		printf("SDL_Init failed: %s\n", SDL_GetError());
