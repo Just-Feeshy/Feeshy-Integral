@@ -21,11 +21,6 @@ static uniform_block ubo;
 static sized_shader_block*** block; // This is so ugly, but it works and I'm tired, got only 2 hours of sleep last night
 static float aspect_ratio;
 
-
-// Light
-
-static brdf_light_block light_brdf;
-
 static void render_cam() {
     update_rotation(&cam);
     update_view_matrix(&cam);
@@ -94,7 +89,6 @@ void world_init() {
     **block = create_ssbo(&ubo, GL_UNIFORM_BUFFER, sizeof(cam_matrices));
 
     *(block + 1) = (sized_shader_block**)malloc(sizeof(sized_shader_block*));
-    **(block + 1) = create_ssbo(&ubo, GL_UNIFORM_BUFFER, sizeof(brdf_light_block));
 }
 
 void world_aspect_ratio(float width, float height) {
@@ -102,9 +96,6 @@ void world_aspect_ratio(float width, float height) {
 
     update_projection_matrix(&cam, aspect_ratio, 45.0f);
     set_ssbo_data(**block, &cam.cam, sizeof(cam_block));
-
-    init_brdf_light_block(&light_brdf);
-    set_ssbo_data(**(block + 1), &light_brdf, sizeof(brdf_light_block));
 }
 
 void world_begin(graphics_pipeline* pipe) {

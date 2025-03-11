@@ -40,7 +40,7 @@ cam_matrices create_cam_matrices() {
     cam_block cam_blck = {
         .projection = GLM_MAT4_IDENTITY_INIT,
         .view = GLM_MAT4_IDENTITY_INIT,
-        .position = {0.0f, 5.0f, -20.0f},
+        .position = {0.0f, 2.5f, -20.0f},
         .far = 9600.0f,
         .near = 0.001f
     };

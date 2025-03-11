@@ -10,9 +10,12 @@
 #include <screen.h>
 #include <world.h>
 
+#define MAX_ITERATIONS 1000
 #define IMAGES 2
 
 uint64_t ms_time_elapsed = 0;
+uint16_t data_update_iteration = 0;
+uint64_t accumulated_time = 0;
 
 
 static GLuint query;
@@ -149,6 +152,11 @@ void screen_render() {
     glEndQuery(GL_TIME_ELAPSED);
     GLuint64 timeElapsed = 1;
     glGetQueryObjectui64v(query, GL_QUERY_RESULT, &timeElapsed);
+
+    if(data_update_iteration < MAX_ITERATIONS) {
+        accumulated_time += timeElapsed;
+        data_update_iteration++;
+    }
 
     ms_time_elapsed = timeElapsed;
 }
