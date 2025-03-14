@@ -322,7 +322,7 @@ function project_config()
                 "EMSCRIPTEN",
             }
 
-            linkoptions { "-s ALLOW_MEMORY_GROWTH=1 -s FULL_ES3" }
+            linkoptions { "-sALLOW_MEMORY_GROWTH=1 -sFULL_ES3" }
 end
 
 solution_config()

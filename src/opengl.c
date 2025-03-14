@@ -1,30 +1,13 @@
 #include <opengl.h>
 #include <shader.h>
 
-#ifdef USE_GLES
-PFNGLGENVERTEXARRAYSOESPROC glGenVertexArrays = NULL;
-PFNGLBINDVERTEXARRAYOESPROC glBindVertexArray = NULL;
-#endif
-
 void opengl_init(SDL_Window* window) {
-    #ifdef USE_GLES
-    glGenVertexArrays = (PFNGLGENVERTEXARRAYSOESPROC)SDL_GL_GetProcAddress("glGenVertexArraysOES");
-    glBindVertexArray = (PFNGLBINDVERTEXARRAYOESPROC)SDL_GL_GetProcAddress("glBindVertexArrayOES");
-    #endif
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 }
 
 void opengl_begin(SDL_Window* window) {
-
-    #if defined(USE_GLES) && defined(EXT_disjoint_timer_query)
-    glGenQueries = (PFNGLGENQUERIESEXTPROC)SDL_GL_GetProcAddress("glGenQueriesEXT");
-    glBeginQuery = (PFNGLBEGINQUERYEXTPROC)SDL_GL_GetProcAddress("glBeginQueryEXT");
-    glEndQuery = (PFNGLENDQUERYEXTPROC)SDL_GL_GetProcAddress("glEndQueryEXT");
-    glGetQueryObjectuiv = (PFNGLGETQUERYOBJECTUIVEXTPROC)SDL_GL_GetProcAddress("glGetQueryObjectuivEXT");
-    #endif
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     int w, h;
