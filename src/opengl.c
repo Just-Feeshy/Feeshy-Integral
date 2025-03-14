@@ -1,15 +1,15 @@
 #include <opengl.h>
 #include <shader.h>
 
-#ifdef USE_EGL2
-PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOES = NULL;
-PFNGLBINDVERTEXARRAYOESPROC glBindVertexArrayOES = NULL;
+#ifdef USE_GLES
+PFNGLGENVERTEXARRAYSOESPROC glGenVertexArrays = NULL;
+PFNGLBINDVERTEXARRAYOESPROC glBindVertexArray = NULL;
 #endif
 
 void opengl_init(SDL_Window* window) {
-    #if defined(USE_EGL2)
-    glGenVertexArraysOES = (PFNGLGENVERTEXARRAYSOESPROC)SDL_GL_GetProcAddress("glGenVertexArraysOES");
-    glBindVertexArrayOES = (PFNGLBINDVERTEXARRAYOESPROC)SDL_GL_GetProcAddress("glBindVertexArrayOES");
+    #ifdef USE_GLES
+    glGenVertexArrays = (PFNGLGENVERTEXARRAYSOESPROC)SDL_GL_GetProcAddress("glGenVertexArraysOES");
+    glBindVertexArray = (PFNGLBINDVERTEXARRAYOESPROC)SDL_GL_GetProcAddress("glBindVertexArrayOES");
     #endif
 
     glDisable(GL_DEPTH_TEST);
@@ -17,6 +17,14 @@ void opengl_init(SDL_Window* window) {
 }
 
 void opengl_begin(SDL_Window* window) {
+
+    #if defined(USE_GLES) && defined(EXT_disjoint_timer_query)
+    glGenQueries = (PFNGLGENQUERIESEXTPROC)SDL_GL_GetProcAddress("glGenQueriesEXT");
+    glBeginQuery = (PFNGLBEGINQUERYEXTPROC)SDL_GL_GetProcAddress("glBeginQueryEXT");
+    glEndQuery = (PFNGLENDQUERYEXTPROC)SDL_GL_GetProcAddress("glEndQueryEXT");
+    glGetQueryObjectuiv = (PFNGLGETQUERYOBJECTUIVEXTPROC)SDL_GL_GetProcAddress("glGetQueryObjectuivEXT");
+    #endif
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     int w, h;
@@ -25,19 +33,11 @@ void opengl_begin(SDL_Window* window) {
 }
 
 void opengl_gen_vertex_arrays(GLsizei n, GLuint* arrays) {
-    #ifndef USE_EGL2
     glGenVertexArrays(n, arrays);
-    #else
-    glGenVertexArraysOES(n, arrays);
-    #endif
 }
 
 void opengl_bind_vertex_array(GLuint array) {
-    #ifndef USE_EGL2
     glBindVertexArray(array);
-    #else
-    glBindVertexArrayOES(array);
-    #endif
 }
 
 void opengl_clear() {
@@ -60,14 +60,6 @@ void apply_shader_type(shader* shader_obj, shader_type type) {
             break;
         case SHADER_FRAGMENT:
             shader_obj->type = GL_FRAGMENT_SHADER;
-            break;
-        case SHADER_GEOMETRY:
-            #ifdef USE_EGL2
-            shader_obj->type = GL_GEOMETRY_SHADER_OES;
-            #else
-            shader_obj->type = GL_GEOMETRY_SHADER;
-            #endif
-
             break;
         default:
             shader_obj->type = GL_VERTEX_SHADER;

@@ -10,7 +10,6 @@ typedef struct shader_attribute {
 typedef enum shader_type {
     SHADER_VERTEX,
     SHADER_FRAGMENT,
-    SHADER_GEOMETRY
 } shader_type;
 
 typedef struct shader {

@@ -328,10 +328,11 @@ function project_config()
             GRAPHICS_API = "OPENGL_ES2"
 
             defines {
+                "USE_GLES",
                 "EMSCRIPTEN",
             }
 
-            linkoptions { "-s ALLOW_MEMORY_GROWTH=1" }
+            linkoptions { "-s ALLOW_MEMORY_GROWTH=1 -s FULL_ES3" }
 end
 
 solution_config()

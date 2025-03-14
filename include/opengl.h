@@ -2,18 +2,24 @@
 
 #include <SDL.h>
 
-
 #ifdef EMSCRIPTEN
-#define USE_EGL2
 #include <emscripten.h>
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+#include <SDL_opengles2.h>
 #elif defined(MACOSX)
 #define GL_GLEXT_PROTOTYPES
 #include <SDL_opengl.h>
 #include <SDL_opengl_glext.h>
 #else
 #include <SDL_opengl.h>
+#endif
+
+#if defined(USE_GLES) && defined(EXT_disjoint_timer_query)
+#define GL_TIME_ELAPSED GL_TIME_ELAPSED_EXT
+
+PFNGLGENQUERIESEXTPROC glGenQueries = NULL;
+PFNGLBEGINQUERYEXTPROC glBeginQuery = NULL;
+PFNGLENDQUERYEXTPROC glEndQuery = NULL;
+PFNGLGETQUERYOBJECTUIVEXTPROC glGetQueryObjectuiv = NULL;
 #endif
 
 typedef struct pipeline_core_gl {

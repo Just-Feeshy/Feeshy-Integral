@@ -13,7 +13,7 @@
 #define MAX_ITERATIONS 1000
 #define IMAGES 2
 
-uint64_t ms_time_elapsed = 0;
+uint32_t ms_time_elapsed = 0;
 uint16_t data_update_iteration = 0;
 uint64_t accumulated_time = 0;
 
@@ -150,8 +150,8 @@ void screen_render() {
 
     // End the benchmark timer for fragment shader
     glEndQuery(GL_TIME_ELAPSED);
-    GLuint64 timeElapsed = 1;
-    glGetQueryObjectui64v(query, GL_QUERY_RESULT, &timeElapsed);
+    GLuint timeElapsed = 1;
+    glGetQueryObjectuiv(query, GL_QUERY_RESULT, &timeElapsed);
 
     if(data_update_iteration < MAX_ITERATIONS) {
         accumulated_time += timeElapsed;

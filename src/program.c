@@ -174,7 +174,7 @@ static void program_update() {
 
         {
             char buffer[128];
-            snprintf(buffer, sizeof(buffer), "Elapsed Shader Time: %llu ms", ms_time_elapsed / 1000000);
+            snprintf(buffer, sizeof(buffer), "Elapsed Shader Time: %u ms", ms_time_elapsed / 1000000);
             nk_label(ctx, buffer, NK_TEXT_LEFT);
         }
 
