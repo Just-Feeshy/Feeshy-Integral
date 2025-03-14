@@ -1,5 +1,3 @@
-include "emscripten_gmake.lua"
-
 LANG = "C"
 SOLUTION_NAME = "program"
 SOLUTION_DIR = ".."
