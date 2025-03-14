@@ -180,9 +180,27 @@ static void program_update() {
 
         nk_layout_row_static(ctx, 20, 200, 1);
 
+<<<<<<< Updated upstream
         char buffer[128];
         snprintf(buffer, sizeof(buffer), "Elapsed Shader Time: %llu ms", ms_time_elapsed);
         nk_label(ctx, buffer, NK_TEXT_LEFT);
+=======
+        {
+            char buffer[128];
+
+            #ifndef EMSCRIPTEN
+            snprintf(buffer, sizeof(buffer), "Elapsed Shader Time: %llu ms", ms_time_elapsed / 1000000);
+            #else
+            snprintf(buffer, sizeof(buffer), "Elapsed Shader Time: %u ms", ms_time_elapsed / 1000000);
+            #endif
+
+            nk_label(ctx, buffer, NK_TEXT_LEFT);
+        }
+
+        nk_layout_row_dynamic(ctx, 30, 2);
+        nk_label(ctx, "Webhook URL: ", NK_TEXT_LEFT);
+        nk_edit_string(ctx, NK_EDIT_FIELD, buffer_url, &length, sizeof(buffer_url), nk_filter_default);
+>>>>>>> Stashed changes
     }
     nk_end(ctx);
 

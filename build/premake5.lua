@@ -10,7 +10,7 @@ PROJECT_KIND = "ConsoleApp"
 OBJ_DIR = "../bin/obj"
 TARGET_DIR = "../bin"
 OPTIMIZE = "Off"
-LIBRARY_DIR = "../third_party/libraries"
+LIBRARY_DIR = "third_party/libraries"
 
 ENABLE_VSYNC = true
 
@@ -79,6 +79,9 @@ function project_config()
             defines { "ENABLE_VSYNC=1" }
         end
 
+        filter "system:emscripten"
+            GRAPHICS_API = "OPENGL_ES"
+
         defines {
             "STB_IMAGE_IMPLEMENTATION",
             "STBI_SUPPORT_ZLIB",
@@ -107,19 +110,42 @@ function project_config()
             "../third_party/nuklear",
         }
 
+<<<<<<< Updated upstream
+=======
+        if GRAPHICS_API == "OPENGL_3" then
+            includedirs {
+                "../nuklear_bindings/gl3"
+            }
+
+        elseif GRAPHICS_API == "OPENGL_ES" then
+            includedirs {
+                "../nuklear_bindings/gles2"
+            }
+
+        end
+
+>>>>>>> Stashed changes
         -- Third Party Libraries
         links {
             "zlib-lib"
         }
 
         targetdir(TARGET_DIR)
+<<<<<<< Updated upstream
         libdirs (LIBRARY_DIR)
+=======
+        libdirs ("../third_party/curl/lib")
+>>>>>>> Stashed changes
 
         filter "configurations:Release"
             links { "SDL2" }
+            libdirs ("../" .. LIBRARY_DIR)
+            linkoptions { LIBRARY_DIR .. "/libSDL2.a" }
 
         filter "configurations:Debug"
             links { "SDL2" }
+            libdirs ("../" .. LIBRARY_DIR)
+            linkoption LIBRARY_DIR .. "/libSDL2.a" }
             debugdir(TARGET_DIR)
 
         filter "system:not windows"
@@ -146,8 +172,17 @@ function project_config()
             defines { "WINDOWS" }
 
         filter { "system:emscripten" }
+<<<<<<< Updated upstream
             defines { "EMSCRIPTEN" }
             linkoptions { "-s ALLOW_MEMORY_GROWTH=1" }
+=======
+            defines {
+                "USE_EGL3",
+                "EMSCRIPTEN",
+            }
+
+            linkoptions { "-s ALLOW_MEMORY_GROWTH=1 -s FULL_ES3" }
+>>>>>>> Stashed changes
 end
 
 solution_config()

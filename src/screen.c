@@ -12,7 +12,18 @@
 
 #define IMAGES 2
 
+#ifdef EMSCRIPTEN
+uint32_t ms_time_elapsed = 0;
+#else
 uint64_t ms_time_elapsed = 0;
+<<<<<<< Updated upstream
+=======
+#endif
+
+
+uint16_t data_update_iteration = 0;
+uint64_t accumulated_time = 0;
+>>>>>>> Stashed changes
 
 
 static GLuint query;
@@ -127,12 +138,12 @@ void screen_init(int w, int h) {
     create_constant_location(&pipeline, "u_texture1");
     world_aspect_ratio(width, height);
 
-    glGenQueries(1, &query);
+    opengl_gen_queries(1, &query);
 }
 
 void screen_render() {
     // Start the benchmark timer for fragment shader
-    glBeginQuery(GL_TIME_ELAPSED, query);
+    opengl_begin_query(GL_TIME_ELAPSED, query);
 
     pipeline_set(&pipeline);
     texture_bind(&txt[0], 0);
@@ -148,9 +159,9 @@ void screen_render() {
     world_end(&pipeline);
 
     // End the benchmark timer for fragment shader
-    glEndQuery(GL_TIME_ELAPSED);
+    opengl_end_query(GL_TIME_ELAPSED);
     GLuint64 timeElapsed = 1;
-    glGetQueryObjectui64v(query, GL_QUERY_RESULT, &timeElapsed);
+    opengl_get_query_objectuiv(query, GL_QUERY_RESULT, &timeElapsed);
 
     ms_time_elapsed = timeElapsed / 1e5;
 }

@@ -14,8 +14,8 @@ void texture_init(texture* tex, image* img) {
     tex->depth = 1;
 
     switch(img->channels) {
-        case 1: tex->image_format = GL_RED; break;
-        case 2: tex->image_format = GL_RG; break;
+        case 1: tex->image_format = GL_RED_FORMAT; break;
+        case 2: tex->image_format = GL_RG_FORMAT; break;
         case 3: tex->image_format = GL_RGB; break;
         case 4: tex->image_format = GL_RGBA; break;
         default: fprintf(stderr, "Invalid number of channels\n"); exit(EXIT_FAILURE);

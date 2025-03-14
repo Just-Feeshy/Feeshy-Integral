@@ -1,5 +1,5 @@
 #include <shader.h>
-#include <util.h>
+#include <utils.h>
 #include <SDL_rwops.h>
 #include <SDL_stdinc.h>
 #include <string.h>
