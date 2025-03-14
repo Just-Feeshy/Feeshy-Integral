@@ -4,6 +4,7 @@
 
 #ifdef EMSCRIPTEN
 #include <GLES3/gl3.h>
+#define GL_TIME_ELAPSED 0x88BF
 #elif defined(MACOSX)
 #define GL_GLEXT_PROTOTYPES
 #include <SDL_opengl.h>
