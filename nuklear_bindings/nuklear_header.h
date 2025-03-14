@@ -13,7 +13,7 @@
 
 #include <SDL.h>
 
-#ifdef USE_EGL2
+#ifdef USE_GLES
 #define NK_SDL_GLES2_IMPLEMENTATION 1
 #include <SDL_opengles2.h>
 #else

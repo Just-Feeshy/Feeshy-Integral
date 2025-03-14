@@ -269,19 +269,9 @@ function project_config()
             "../third_party/zlib",
             "../third_party/curl/include",
             "../third_party/nuklear",
+            "../nuklear_bindings/gl3",
+            "../nuklear_bindings/gles2"
         }
-
-        if GRAPHICS_API == "OPENGL_3" then
-            includedirs {
-                "../nuklear_bindings/gl3"
-            }
-
-        elseif GRAPHICS_API == "OPENGL_ES2" then
-            includedirs {
-                "../nuklear_bindings/gles2"
-            }
-
-        end
 
         -- Third Party Libraries
         links {
