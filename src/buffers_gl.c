@@ -2,8 +2,8 @@
 #include <opengl.h>
 
 void create_vertex_buffer(unsigned* vao, vertices* v) {
-    glGenVertexArrays(1, vao);
-    glBindVertexArray(*vao);
+    opengl_gen_vertex_arrays(1, vao);
+    opengl_bind_vertex_array(*vao);
 
     unsigned vbo;
     glGenBuffers(1, &vbo);
@@ -12,13 +12,13 @@ void create_vertex_buffer(unsigned* vao, vertices* v) {
 
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+
+    opengl_bind_vertex_array(0);
 }
 
 void draw_vertex_buffer(unsigned vao, unsigned num_vertices) {
-    glBindVertexArray(vao);
+    opengl_bind_vertex_array(vao);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, num_vertices);
-    glBindVertexArray(0);
+    opengl_bind_vertex_array(0);
 }

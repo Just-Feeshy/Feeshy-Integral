@@ -4,7 +4,7 @@
 #include <screen.h>
 #include <more_math.h>
 #include <SDL_render.h>
-#include <nuklear_sdl_gl3.h>
+#include <nuklear_sdl_gl.h>
 #include <menu.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -12,7 +12,7 @@
 #include <time.h>
 #include <curl/curl.h>
 
-#ifdef __EMSCRIPTEN__
+#ifdef EMSCRIPTEN
 #include <emscripten.h>
 #endif
 

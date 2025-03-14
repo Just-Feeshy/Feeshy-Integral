@@ -13,21 +13,7 @@
 #ifndef NK_SDL_GL3_H_
 #define NK_SDL_GL3_H_
 
-#define NK_INCLUDE_FIXED_TYPES
-#define NK_INCLUDE_STANDARD_IO
-#define NK_INCLUDE_DEFAULT_ALLOCATOR
-#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
-#define NK_INCLUDE_FONT_BAKING
-#define NK_INCLUDE_DEFAULT_FONT
-#define NK_INCLUDE_STANDARD_VARARGS
-#define NK_SDL_GL3_IMPLEMENTATION 1
-
-#define MAX_VERTEX_MEMORY 512 * 1024
-#define MAX_ELEMENT_MEMORY 128 * 1024
-
-#include <SDL.h>
-#include <SDL_opengl.h>
-#include <nuklear.h>
+#include "../nuklear_header.h"
 
 NK_API struct nk_context*   nk_sdl_init(SDL_Window *win);
 NK_API void                 nk_sdl_font_stash_begin(struct nk_font_atlas **atlas);

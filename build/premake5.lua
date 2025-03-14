@@ -10,6 +10,7 @@ TARGET_DIR = "../bin"
 OPTIMIZE = "Off"
 LIBRARY_DIR = "../third_party/libraries"
 
+GRAPHICS_API = "OPENGL_3"
 ENABLE_VSYNC = true
 
 function third_party_config()
@@ -172,8 +173,6 @@ function third_party_config()
             "../third_party/curl/lib/wildcard.c"
         }
 
-        filter "not system:windows"
-
         filter "system:windows"
             defines { "_WINDOWS", "ALLOW_MSVC6_WITHOUT_PSDK", "HAVE_CONFIG_H",  }
             links { "ws2_32", "wldap32" }
@@ -272,6 +271,18 @@ function project_config()
             "../third_party/nuklear",
         }
 
+        if GRAPHICS_API == "OPENGL_3" then
+            includedirs {
+                "../nuklear_bindings/gl3"
+            }
+
+        elseif GRAPHICS_API == "OPENGL_ES2" then
+            includedirs {
+                "../nuklear_bindings/gles2"
+            }
+
+        end
+
         -- Third Party Libraries
         links {
             "zlib-lib",
@@ -293,7 +304,7 @@ function project_config()
             defines { "HAVE_UNISTD_H" }
 
         filter { "system:macosx" }
-            defines { "USE_EGL" }
+            defines { "MACOSX" }
 
             linkoptions {
                 "-framework IOKit",
@@ -314,7 +325,12 @@ function project_config()
             defines { "WINDOWS" }
 
         filter { "system:emscripten" }
-            defines { "EMSCRIPTEN" }
+            GRAPHICS_API = "OPENGL_ES2"
+
+            defines {
+                "EMSCRIPTEN",
+            }
+
             linkoptions { "-s ALLOW_MEMORY_GROWTH=1" }
 end
 
