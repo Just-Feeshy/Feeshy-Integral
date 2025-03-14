@@ -3,7 +3,7 @@
 #include <SDL.h>
 
 #ifdef EMSCRIPTEN
-#include <emscripten.h>
+#define EXT_disjoint_timer_query
 #include <SDL_opengles2.h>
 #elif defined(MACOSX)
 #define GL_GLEXT_PROTOTYPES
@@ -15,6 +15,7 @@
 
 #if defined(USE_GLES) && defined(EXT_disjoint_timer_query)
 #define GL_TIME_ELAPSED GL_TIME_ELAPSED_EXT
+#define GL_QUERY_RESULT GL_QUERY_RESULT_EXT
 
 PFNGLGENQUERIESEXTPROC glGenQueries = NULL;
 PFNGLBEGINQUERYEXTPROC glBeginQuery = NULL;
