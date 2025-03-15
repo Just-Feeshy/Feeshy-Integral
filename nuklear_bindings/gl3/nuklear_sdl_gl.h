@@ -273,6 +273,7 @@ nk_sdl_render(enum nk_anti_aliasing AA, int max_vertex_buffer, int max_element_b
             nk_buffer_init_fixed(&ebuf, elements, (nk_size)max_element_buffer);
             nk_convert(&sdl.ctx, &dev->cmds, &vbuf, &ebuf, &config);
         }
+
         #ifdef EMSCRIPTEN
         glBufferSubData(GL_ARRAY_BUFFER, 0, max_vertex_buffer, vertices);
         glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, max_element_buffer, elements);
