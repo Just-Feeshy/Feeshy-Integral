@@ -1,8 +1,11 @@
 #pragma once
 
+#ifndef EMSCRIPTEN
 #include <SDL.h>
+#endif
 
 #ifdef EMSCRIPTEN
+#include <SDL2/SDL.h>
 #include <GLES3/gl3.h>
 #define GL_TIME_ELAPSED 0x88BF
 #elif defined(MACOSX)

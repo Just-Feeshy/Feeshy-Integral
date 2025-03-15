@@ -1,9 +1,10 @@
+#define NK_SDL_GL3_IMPLEMENTATION 1
+
 #include <input.h>
 #include <opengl.h>
 #include <program.h>
 #include <screen.h>
 #include <more_math.h>
-#include <SDL_render.h>
 #include <nuklear_sdl_gl.h>
 #include <menu.h>
 #include <stdlib.h>
@@ -13,7 +14,10 @@
 #include <curl/curl.h>
 
 #ifdef EMSCRIPTEN
+#include <SDL2/SDL_render.h>
 #include <emscripten.h>
+#else
+#include <SDL_render.h>
 #endif
 
 #define TIME_RESOLUTION UINT64_C(1000000000)

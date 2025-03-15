@@ -10,8 +10,22 @@ TARGET_DIR = "../bin"
 OPTIMIZE = "Off"
 LIBRARY_DIR = "../third_party/libraries"
 
-GRAPHICS_API = "OPENGL_3"
 ENABLE_VSYNC = true
+
+function sdl_config()
+    includedirs {
+        "../third_party/SDL/include"
+    }
+
+    filter "configurations:Release"
+        libdirs (LIBRARY_DIR)
+        links { "SDL2" }
+
+    filter "configurations:Debug"
+        libdirs (LIBRARY_DIR)
+        links { "SDL2" }
+        debugdir(TARGET_DIR)
+end
 
 function third_party_config()
     local curl_config = require("config/curl_config")
@@ -23,9 +37,12 @@ function third_party_config()
         defines { "N_FSEEKO", "_LARGEFILE64_SOURCE" }
         warnings "off"
 
+        includedirs {
+            "../third_party/zlib"
+        }
+
         files {
             "../third_party/zlib/*.c",
-            "../third_party/zlib/*.h"
         }
 
         filter "system:windows"
@@ -173,6 +190,11 @@ function third_party_config()
             "../third_party/curl/lib/wildcard.c"
         }
 
+        filter "system:emscripten"
+            links { "zlib" }
+            buildoptions { "-sUSE_ZLIB=1" }
+            defines { "USE_CURL" }
+
         filter "system:windows"
             defines { "_WINDOWS", "ALLOW_MSVC6_WITHOUT_PSDK", "HAVE_CONFIG_H",  }
             links { "ws2_32", "wldap32" }
@@ -257,20 +279,17 @@ function project_config()
             "../third_party/cglm/src/**.c",
             "../third_party/cglm/include/**.h",
             "../third_party/stb/stb_image.h",
-            "../third_party/nuklear/nuklear.h",
         }
 
         includedirs {
             "../include",
-            "../third_party/SDL/include",
             "../third_party/hashmap",
             "../third_party/cglm/include",
             "../third_party/stb",
             "../third_party/zlib",
             "../third_party/curl/include",
             "../third_party/nuklear",
-            "../nuklear_bindings/gl3",
-            "../nuklear_bindings/gles2"
+            "../nuklear_bindings/gl3"
         }
 
         -- Third Party Libraries
@@ -281,16 +300,12 @@ function project_config()
 
         targetdir(TARGET_DIR)
         libdirs ("../third_party/curl/lib")
-        libdirs (LIBRARY_DIR)
 
-        filter "configurations:Release"
-            links { "SDL2" }
+        if os.target() ~= "emscripten" then
+            sdl_config()
+        end
 
-        filter "configurations:Debug"
-            links { "SDL2" }
-            debugdir(TARGET_DIR)
-
-        filter "system:not windows"
+        filter { "system:not windows" }
             defines { "HAVE_UNISTD_H" }
 
         filter { "system:macosx" }
@@ -315,14 +330,12 @@ function project_config()
             defines { "WINDOWS" }
 
         filter { "system:emscripten" }
-            GRAPHICS_API = "OPENGL_ES2"
-
             defines {
                 "USE_GLES",
                 "EMSCRIPTEN",
             }
 
-            linkoptions { "-sALLOW_MEMORY_GROWTH=1 -sFULL_ES3" }
+            linkoptions { "-sALLOW_MEMORY_GROWTH=1 -sFULL_ES3 -sUSE_SDL=2" }
 end
 
 solution_config()

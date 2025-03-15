@@ -2,7 +2,12 @@
 
 #include <utils.h>
 #include <stdint.h>
+
+#ifdef EMSCRIPTEN
+#include <SDL2/SDL_keycode.h>
+#else
 #include <SDL_keycode.h>
+#endif
 
 // For SDL3
 #if SDL_MAJOR_VERSION == 3

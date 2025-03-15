@@ -1,5 +1,10 @@
 #include <input.h>
+
+#ifdef EMSCRIPTEN
+#include <SDL2/SDL_mouse.h>
+#else
 #include <SDL_mouse.h>
+#endif
 
 void inputs_init(inputs* in) {
     in->mapped_inputs[INPUT_W - INPUT_A] = FORWARD;

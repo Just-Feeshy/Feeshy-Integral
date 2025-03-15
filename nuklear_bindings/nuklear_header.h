@@ -11,13 +11,21 @@
 #define MAX_VERTEX_MEMORY 512 * 1024
 #define MAX_ELEMENT_MEMORY 128 * 1024
 
+#ifdef EMSCRIPTEN
+#include <SDL2/SDL.h>
+#else
 #include <SDL.h>
+#endif
 
 #ifdef USE_GLES
-#define NK_SDL_GLES2_IMPLEMENTATION 1
-#include <SDL_opengles2.h>
+
+#ifdef EMSCRIPTEN
+#include <SDL2/SDL_opengles2.h>
 #else
-#define NK_SDL_GL3_IMPLEMENTATION 1
+#include <SDL_opengles2.h>
+#endif
+
+#else
 #include <SDL_opengl.h>
 #endif
 

@@ -3,12 +3,17 @@
 #include <pipeline.h>
 #include <texture.h>
 #include <uniform_manager.h>
-#include <SDL_rwops.h>
 #include <stb_image.h>
 #include <menu.h>
 #include <program.h>
 #include <screen.h>
 #include <world.h>
+
+#ifdef EMSCRIPTEN
+#include <SDL2/SDL_rwops.h>
+#else
+#include <SDL_rwops.h>
+#endif
 
 #define MAX_ITERATIONS 1000
 #define IMAGES 2

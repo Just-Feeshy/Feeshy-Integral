@@ -1,6 +1,13 @@
 #include <shader.h>
+
+#ifdef EMSCRIPTEN
+#include <SDL2/SDL_rwops.h>
+#include <SDL2/SDL_stdinc.h>
+#else
 #include <SDL_rwops.h>
 #include <SDL_stdinc.h>
+#endif
+
 #include <string.h>
 
 // The purpose of goto is to avoid accidental memory leaks.
