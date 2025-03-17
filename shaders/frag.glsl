@@ -1,4 +1,4 @@
-#version 410 core
+precision mediump float;
 
 #define PI 3.14159265
 #define SCENE 2

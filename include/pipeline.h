@@ -1,6 +1,5 @@
 #pragma once
 
-#include <opengl.h>
 #include <shader.h>
 
 typedef struct graphics_pipeline {

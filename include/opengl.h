@@ -16,6 +16,16 @@
 #include <SDL_opengl.h>
 #endif
 
+#ifdef EMSCRIPTEN
+#define GL_APP_PROFILE_MASK SDL_GL_CONTEXT_PROFILE_ES
+#define GL_APP_MAJOR_VERSION 3
+#define GL_APP_MINOR_VERSION 0
+#else
+#define GL_APP_PROFILE_MASK SDL_GL_CONTEXT_PROFILE_CORE
+#define GL_APP_MAJOR_VERSION 4
+#define GL_APP_MINOR_VERSION 1
+#endif
+
 typedef struct pipeline_core_gl {
     unsigned programId;
 	char **textures;

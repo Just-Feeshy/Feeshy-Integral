@@ -298,10 +298,10 @@ function project_config()
             "curl-lib"
         }
 
-        targetdir(TARGET_DIR)
         libdirs ("../third_party/curl/lib")
 
         if os.target() ~= "emscripten" then
+            targetdir(TARGET_DIR)
             sdl_config()
         end
 
@@ -330,12 +330,15 @@ function project_config()
             defines { "WINDOWS" }
 
         filter { "system:emscripten" }
+            targetdir(TARGET_DIR .. "/Web")
+            targetextension ".html"
+
             defines {
                 "USE_GLES",
                 "EMSCRIPTEN",
             }
 
-            linkoptions { "-sALLOW_MEMORY_GROWTH=1 -sFULL_ES3 -sUSE_SDL=2" }
+            linkoptions { "-sWASM=1 -sFULL_ES3 -sMIN_WEBGL_VERSION=2 -sINITIAL_MEMORY=128MB -sMAXIMUM_MEMORY=512MB -sALLOW_MEMORY_GROWTH=1 -s-sMAX_WEBGL_VERSION=2 -sUSE_SDL=2 -sASSERTIONS=1 --preload-file assets --preload-file shaders" }
 end
 
 solution_config()

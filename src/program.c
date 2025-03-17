@@ -55,11 +55,7 @@ program_package main_program;
 update_package main_update;
 
 static void create_window(const char* title, int w, int h) {
-    #ifdef __EMSCRIPTEN__
-    SDL_CreateWindowAndRenderer(w, h, 0, &main_program.window, 0);
-    #else
     main_program.window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
-    #endif
 
     main_program.context = SDL_GL_CreateContext(main_program.window);
 
@@ -213,27 +209,19 @@ void program_init(const char* name, int w, int h) {
         return;
     }
 
-    curl_global_init(CURL_GLOBAL_ALL);
-    /*
-    if((main_program.curl = curl_easy_init()) == 0) {
-        printf("Failed to initialize CURL\n");
-        return;
-    }
-    */
-
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
 		printf("SDL_Init failed: %s\n", SDL_GetError());
 		return;
 	}
 
     #ifdef WINDOWS
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, GL_APP_MAJOR_VERSION);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, GL_APP_MINOR_VERSION);
     #else
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, GL_APP_PROFILE_MASK);
     #endif
 
-    #if !defined(__EMSCRIPTEN__)
+    #ifndef EMSCRIPTEN
     SDL_SetHint (SDL_HINT_ANDROID_TRAP_BACK_BUTTON, "0");
     SDL_SetHint (SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
     SDL_SetHint (SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
@@ -259,6 +247,7 @@ void program_init(const char* name, int w, int h) {
     SDL_WarpMouseInWindow(main_program.window, w >> 1, h >> 1);
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
+    #ifndef EMSCRIPTEN
     if(main_program.context && SDL_GL_MakeCurrent(main_program.window, main_program.context) == 0) {
         #ifdef ENABLE_VSYNC
         SDL_GL_SetSwapInterval(1);
@@ -266,6 +255,7 @@ void program_init(const char* name, int w, int h) {
         SDL_GL_SetSwapInterval(0);
         #endif
     }
+    #endif
 
     printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
     printf("GLSL Version: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
@@ -282,10 +272,12 @@ void program_init(const char* name, int w, int h) {
 }
 
 void program_loop() {
-    #ifdef __EMSCRIPTEN__
-    emscripten_cancel_main_loop ();
-	emscripten_set_main_loop (program_update, 0, 0);
-	emscripten_set_main_loop_timing (EM_TIMING_RAF, 1);
+    printf("Starting program loop\n");
+
+    #ifdef EMSCRIPTEN
+    emscripten_cancel_main_loop();
+	emscripten_set_main_loop(program_update, 0, 1);
+    emscripten_set_main_loop_timing(EM_TIMING_RAF, 0);
     #else
     while(main_program.active) {
         program_update();

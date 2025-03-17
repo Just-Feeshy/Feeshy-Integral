@@ -1,8 +1,8 @@
 #include <opengl.h>
 #include <shader.h>
+#include <assert.h>
 
 void opengl_init(SDL_Window* window) {
-
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 }
@@ -72,9 +72,12 @@ void compile_shader(shader* shader_obj) {
     glGetShaderiv(*shader_obj->shader, GL_COMPILE_STATUS, &compile_status);
 
     if (compile_status == GL_FALSE) {
-        printf("Failed to compile shader\n");
-        exit(1);
+        char log[512];
+        glGetShaderInfoLog(*shader_obj->shader, 512, NULL, log);
+        printf("Shader compilation failed: %s\n", log);
     }
+
+    assert(compile_status == GL_TRUE);
 }
 
 void print_shader_log_info(unsigned shader) {

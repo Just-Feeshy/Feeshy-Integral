@@ -73,6 +73,7 @@ static struct nk_sdl {
   #define NK_SHADER_VERSION "#version 150\n"
 #else
   #define NK_SHADER_VERSION "#version 300 es\n"
+
 #endif
 NK_API void
 nk_sdl_device_create(void)
@@ -80,6 +81,7 @@ nk_sdl_device_create(void)
     GLint status;
     static const GLchar *vertex_shader =
         NK_SHADER_VERSION
+        "precision mediump float;\n"
         "uniform mat4 ProjMtx;\n"
         "in vec2 Position;\n"
         "in vec2 TexCoord;\n"
@@ -112,6 +114,13 @@ nk_sdl_device_create(void)
     glCompileShader(dev->vert_shdr);
     glCompileShader(dev->frag_shdr);
     glGetShaderiv(dev->vert_shdr, GL_COMPILE_STATUS, &status);
+
+    if (status == GL_FALSE) {
+        char log[512];
+        glGetShaderInfoLog(dev->vert_shdr, 512, NULL, log);
+        printf("Vertex Shader: %s GIVEN: %s\n", log, NK_SHADER_VERSION);
+    }
+
     assert(status == GL_TRUE);
     glGetShaderiv(dev->frag_shdr, GL_COMPILE_STATUS, &status);
     assert(status == GL_TRUE);

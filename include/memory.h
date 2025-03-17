@@ -80,19 +80,34 @@ void* MIN_ALLOC(void* minimum_address, size_t size) {
     }
 #else
     // Get system page size
+    #if defined(_SC_PAGESIZE)
     page_size = getpagesize();
+    #elif defined(_SC_PAGE_SIZE)
+    page_size = sysconf(_SC_PAGE_SIZE);
+    #else
+    page_size = 4096;
+    #endif
 
     // Align size to page boundary
     size = ALIGN_TO_PAGE(size, page_size);
 
+    // Attempt to map memory at or above minimum_address
     void* addr = minimum_address;
 
-    // Attempt to map memory at or above minimum_address
-    void* result = mmap(addr, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    #ifdef EMSCRIPTEN
+    void* result = sbrk(size);
+
+    if(result == (void*)-1) {
+        perror("sbrk failedL OUT OF MEMORY\n");
+        return NULL;
+    }
+    #else
+    void* result = mmap(minimum_address, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (result == MAP_FAILED) {
         perror("mmap failed");
         return NULL;
     }
+    #endif
 
     // Ensure the returned address meets the minimum address condition
     if ((uintptr_t)result < (uintptr_t)minimum_address) {
