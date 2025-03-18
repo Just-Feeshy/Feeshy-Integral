@@ -109,6 +109,12 @@ nk_sdl_device_create(void)
     dev->prog = glCreateProgram();
     dev->vert_shdr = glCreateShader(GL_VERTEX_SHADER);
     dev->frag_shdr = glCreateShader(GL_FRAGMENT_SHADER);
+
+    if (!dev->vert_shdr || !dev->frag_shdr) {
+        fprintf(stdout, "Failed to create shaders\n");
+        exit(EXIT_FAILURE);
+    }
+
     glShaderSource(dev->vert_shdr, 1, &vertex_shader, 0);
     glShaderSource(dev->frag_shdr, 1, &fragment_shader, 0);
     glCompileShader(dev->vert_shdr);

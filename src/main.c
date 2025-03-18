@@ -13,7 +13,6 @@ void init() {
     screen_init(800, 600);
 }
 
-
 int main(int argc, char** argv) {
     init();
 

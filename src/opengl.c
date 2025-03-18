@@ -1,5 +1,6 @@
 #include <opengl.h>
 #include <shader.h>
+#include <utils.h>
 #include <assert.h>
 
 void opengl_init(SDL_Window* window) {
@@ -61,6 +62,12 @@ void apply_shader_type(shader* shader_obj, shader_type type) {
     }
 
     *shader_obj->shader = glCreateShader(shader_obj->type);
+
+    if(!*shader_obj->shader) {
+        fprintf(stderr, "Failed to create shader\n");
+        free(shader_obj->shader);
+        return;
+    }
 }
 
 void compile_shader(shader* shader_obj) {
@@ -81,15 +88,25 @@ void compile_shader(shader* shader_obj) {
 }
 
 void print_shader_log_info(unsigned shader) {
+    if (!shader) {
+        fprintf(stderr, "Invalid Shader ID %u\n", shader);
+        return;
+    }
+
     int length = 0;
-    int maxLength = 0;
-
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
-    if(length > 1) {
-        char log[length];
-        glGetShaderInfoLog(shader, length, &maxLength, log);
 
-        fprintf(stderr, "Shader log: %s\n", log);
+    if (length > 1) {
+        char* log = (char*)mem_alloca(length);
+        if (!log) {
+            fprintf(stderr, "Memory allocation failed!\n");
+            return;
+        }
+
+        glGetShaderInfoLog(shader, length, NULL, log);
+        log[length - 1] = '\0';  // Ensure null termination
+
+        fprintf(stderr, "Shader Log: %s\n", log);
     }
 }
 

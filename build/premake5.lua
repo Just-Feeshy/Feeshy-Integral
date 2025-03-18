@@ -338,7 +338,7 @@ function project_config()
                 "EMSCRIPTEN",
             }
 
-            linkoptions { "-sWASM=1 -sFULL_ES3 -sMIN_WEBGL_VERSION=2 -sINITIAL_MEMORY=128MB -sMAXIMUM_MEMORY=512MB -sALLOW_MEMORY_GROWTH=1 -s-sMAX_WEBGL_VERSION=2 -sUSE_SDL=2 -sASSERTIONS=1 --preload-file assets --preload-file shaders" }
+            linkoptions { "-sWASM=1 -sFULL_ES3 -sMIN_WEBGL_VERSION=2 -sINITIAL_MEMORY=128MB -sMAXIMUM_MEMORY=512MB -sALLOW_MEMORY_GROWTH=1 -s-sMAX_WEBGL_VERSION=2 -sUSE_SDL=2 -sASSERTIONS=1 --preload-file shaders" }
 end
 
 solution_config()
