@@ -1,15 +1,21 @@
 #include <buffers.h>
 #include <opengl.h>
 
-void create_vertex_buffer(unsigned* vao, vertices* v) {
+void create_vertex_buffer(unsigned* vao, vertices v) {
     opengl_gen_vertex_arrays(1, vao);
     opengl_bind_vertex_array(*vao);
 
     unsigned vbo;
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), v, GL_STATIC_DRAW);
 
+    #ifdef EMSCRIPTEN
+    const size_t size_vertices = sizeof(vertices) * 2;
+    #else
+    const size_t size_vertices = sizeof(vertices);
+    #endif
+
+    glBufferData(GL_ARRAY_BUFFER, size_vertices, &v, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);

@@ -14,5 +14,5 @@ typedef struct vertices {
     float top_left_y;
 } vertices;
 
-void create_vertex_buffer(unsigned* VAO, vertices* v);
+void create_vertex_buffer(unsigned* VAO, vertices v);
 void draw_vertex_buffer(unsigned VAO, unsigned num_vertices);

@@ -29,6 +29,8 @@ static unsigned VAO;
 static int width = 0.0f;
 static int height = 0.0f;
 
+static vertices v;
+
 void screen_init(int w, int h) {
     if (w == 0 || h == 0) {
         return;
@@ -37,7 +39,7 @@ void screen_init(int w, int h) {
     width = (float)w * program_get_pixel_density();
     height = (float)h * program_get_pixel_density();
 
-    vertices v = (vertices){
+    v = (vertices){
         .bottom_left_x = 0.0f,
         .bottom_left_y = 0.0f,
 
@@ -51,7 +53,7 @@ void screen_init(int w, int h) {
         .top_left_y = height,
     };
 
-    create_vertex_buffer(&VAO, &v);
+    create_vertex_buffer(&VAO, v);
 
     shader frag_shader;
     shader vert_shader;
