@@ -8,7 +8,12 @@
 #include <program.h>
 #include <input.h>
 
+#ifndef EMSCRIPTEN
 #define SPEED 0.1
+#else
+#define SPEED 0.2
+#endif
+
 #define TAU 6.28318530718
 
 static const float LIMIT = TAU / 4.01;
