@@ -17,7 +17,10 @@
 #define MAX_ITERATIONS 1000
 #define IMAGES 2
 
+#ifndef EMSCRIPTEN
 uint32_t ms_time_elapsed = 0;
+#endif
+
 uint16_t data_update_iteration = 0;
 uint64_t accumulated_time = 0;
 
@@ -80,8 +83,10 @@ void screen_init(int w, int h) {
 }
 
 void screen_render() {
+    #ifndef EMSCRIPTEN
     // Start the benchmark timer for fragment shader
     glBeginQuery(GL_TIME_ELAPSED, query);
+    #endif
 
     pipeline_set(&pipeline);
     set_uniform_vec2("u_resolution", width, height);
@@ -92,6 +97,7 @@ void screen_render() {
     world_end(&pipeline);
 
     // End the benchmark timer for fragment shader
+    #ifndef EMSCRIPTEN
     glEndQuery(GL_TIME_ELAPSED);
     GLuint timeElapsed = 1;
     glGetQueryObjectuiv(query, GL_QUERY_RESULT, &timeElapsed);
@@ -102,4 +108,5 @@ void screen_render() {
     }
 
     ms_time_elapsed = timeElapsed;
+    #endif
 }

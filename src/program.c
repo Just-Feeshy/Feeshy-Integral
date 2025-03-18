@@ -172,15 +172,13 @@ static void program_update() {
 
         nk_layout_row_static(ctx, 20, 200, 1);
 
+        #ifndef EMSCRIPTEN
         {
             char buffer[128];
             snprintf(buffer, sizeof(buffer), "Elapsed Shader Time: %u ms", ms_time_elapsed / 1000000);
             nk_label(ctx, buffer, NK_TEXT_LEFT);
         }
-
-        nk_layout_row_dynamic(ctx, 30, 2);
-        nk_label(ctx, "Webhook URL: ", NK_TEXT_LEFT);
-        nk_edit_string(ctx, NK_EDIT_FIELD, buffer_url, &length, sizeof(buffer_url), nk_filter_default);
+        #endif
     }
     nk_end(ctx);
 
