@@ -23,7 +23,7 @@ const vec3 light_pos = vec3(3.0, 60.0, -60.0);
 #if SCENE == 0
 
 #define MAX_STEPS 99
-#define NEW_RAYMARCH 1
+#define NEW_RAYMARCH 0
 
 // Mandelbox Fractal
 float sdfFractal(vec3 p) {

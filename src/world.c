@@ -19,10 +19,6 @@
 
 static const float LIMIT = TAU / 4.01;
 
-static int _width = 0;
-static int _height = 0;
-
-
 // Camera
 
 static cam_matrices cam;
@@ -73,10 +69,12 @@ static void world_input_callback_impl(uint64_t control_status, input_status inpu
         glm_vec3_sub(cam.cam.position, down_scaled, cam.cam.position);
     }
 
+    #ifndef EMSCRIPTEN
     if(control_status & SCREENSHOT && input == PRESS_DOWN) {
         printf("Screenshot\n");
-        capture_screenshot(_width, _height);
+        capture_screenshot();
     }
+    #endif
 
     render_cam();
 }
@@ -106,9 +104,6 @@ void world_init() {
 }
 
 void world_aspect_ratio(float width, float height) {
-    _width = width;
-    _height = height;
-
     aspect_ratio = width / height;
 
     update_projection_matrix(&cam, aspect_ratio, 45.0f);

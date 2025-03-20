@@ -277,6 +277,7 @@ function project_config()
             "../third_party/hashmap/hashmap.c",
             "../third_party/hashmap/hashmap.h",
             "../third_party/cglm/src/**.c",
+            "../third_party/tinyfiledialogs/tinyfiledialogs.c",
             "../third_party/cglm/include/**.h",
             "../third_party/stb/stb_image.h",
         }
@@ -289,6 +290,7 @@ function project_config()
             "../third_party/zlib",
             "../third_party/curl/include",
             "../third_party/nuklear",
+            "../third_party/tinyfiledialogs",
             "../nuklear_bindings/gl3"
         }
 

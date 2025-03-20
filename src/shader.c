@@ -61,7 +61,7 @@ void load_shader(const char* filename, shader* shader_obj, shader_type type, uin
 
     // Sanatize the shader source (Reverse order)
     for (char* p = buffer + size - 1; p >= buffer; --p) {
-        if (*p < 32 && *p != '\n' && *p != '\t') {
+        if (*p < 32 && *p != '\n' && *p != '\t' && *p != '\0') {
             *p = ' ';
             break;
         }

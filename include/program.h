@@ -1,6 +1,9 @@
 #pragma once
 
+#include <input.h>
+
 void program_init(const char* name, int w, int h);
+void program_set_as_escaped();
 void program_loop();
 void program_destroy();
 float program_get_pixel_density();

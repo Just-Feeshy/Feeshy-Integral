@@ -1,6 +1,5 @@
 #define NK_SDL_GL3_IMPLEMENTATION 1
 
-#include <input.h>
 #include <opengl.h>
 #include <program.h>
 #include <screen.h>
@@ -13,17 +12,16 @@
 #include <time.h>
 #include <curl/curl.h>
 
+#define TIME_RESOLUTION UINT64_C(1000000000)
+#define NAP_MULT 1
+#define NAP_DIV 3
+
 #ifdef EMSCRIPTEN
 #include <SDL2/SDL_render.h>
 #include <emscripten.h>
 #else
 #include <SDL_render.h>
 #endif
-
-#define TIME_RESOLUTION UINT64_C(1000000000)
-#define NAP_MULT 1
-#define NAP_DIV 3
-
 
 const double frame_period = 1000.0f / 60.0f;
 
@@ -267,6 +265,10 @@ void program_init(const char* name, int w, int h) {
     main_update.nextUpdate = main_update.lastUpdate;
     main_update.currentUpdate = SDL_GetTicks();
     main_update.timerActive = false;
+}
+
+void program_set_as_escaped() {
+    main_program.in->control_status |= ESCAPE;
 }
 
 void program_loop() {

@@ -29,3 +29,6 @@
 	path = third_party/curl
 	url = https://github.com/curl/curl.git
 	branch = c12fb3d
+[submodule "third_party/tinyfiledialogs"]
+	path = third_party/tinyfiledialogs
+	url = https://github.com/openfl/libtinyfiledialogs.git
