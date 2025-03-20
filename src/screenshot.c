@@ -32,6 +32,10 @@ static void flipY(int width, int height, uint8_t* data) {
 // Can't believe this worked on the first try
 // Now I can say that I'm a professional C programmer (I'm not)
 // and that this project is multi-threaded
+//
+// Okay, in a seriousness, the reason why it's multi-threaded is because
+// the cursor freezes when the file dialog is open, so I had to make it
+// multi-threaded to avoid that issue.
 static int save_screenshot(void* raw_image) {
     image img = *(image*)raw_image;
     const char* path = tinyfd_saveFileDialog("Save Screenshot", "screenshot.png", 1, (const char*[]){"*.png"}, "PNG Files");
