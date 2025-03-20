@@ -15,7 +15,7 @@
 #include <SDL_rwops.h>
 #endif
 
-#define MAX_ITERATIONS 1000
+#define MAX_ITERATIONS 10000
 #define IMAGES 2
 
 uint32_t ms_time_elapsed = 0;
@@ -99,4 +99,11 @@ void screen_render() {
         accumulated_time += ms_time_elapsed;
         data_update_iteration++;
     }
+
+    #ifndef EMSCRIPTEN
+    if(data_update_iteration == MAX_ITERATIONS) {
+        printf("Average time: %llu\n", accumulated_time);
+        data_update_iteration++;
+    }
+    #endif
 }
