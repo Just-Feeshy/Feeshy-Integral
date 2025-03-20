@@ -230,6 +230,8 @@ void program_init(const char* name, int w, int h) {
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     #endif
 
+    SDL_SetRelativeMouseMode(SDL_FALSE);
+
     create_window(name, w, h);
     opengl_init(main_program.window);
     ctx = nk_sdl_init(main_program.window);
