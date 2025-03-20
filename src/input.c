@@ -30,6 +30,7 @@ void inputs_key_down(inputs* in, SDL_Keycode key) {
     if(key == SDLK_ESCAPE) {
         in->control_status = ESCAPE;
         SDL_SetRelativeMouseMode(SDL_FALSE);
+        SDL_ShowCursor(1);
         return;
     }
 

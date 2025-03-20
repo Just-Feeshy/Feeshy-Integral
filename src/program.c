@@ -172,13 +172,11 @@ static void program_update() {
 
         nk_layout_row_static(ctx, 20, 200, 1);
 
-        #ifndef EMSCRIPTEN
         {
             char buffer[128];
-            snprintf(buffer, sizeof(buffer), "Elapsed Shader Time: %u ms", ms_time_elapsed / 1000000);
+            snprintf(buffer, sizeof(buffer), "Elapsed Shader Time: %u", ms_time_elapsed / 1000000);
             nk_label(ctx, buffer, NK_TEXT_LEFT);
         }
-        #endif
     }
     nk_end(ctx);
 

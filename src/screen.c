@@ -7,6 +7,7 @@
 #include <program.h>
 #include <screen.h>
 #include <world.h>
+#include <timer_query.h>
 
 #ifdef EMSCRIPTEN
 #include <SDL2/SDL_rwops.h>
@@ -17,15 +18,11 @@
 #define MAX_ITERATIONS 1000
 #define IMAGES 2
 
-#ifndef EMSCRIPTEN
 uint32_t ms_time_elapsed = 0;
-#endif
 
 uint16_t data_update_iteration = 0;
 uint64_t accumulated_time = 0;
 
-
-static GLuint query;
 static graphics_pipeline pipeline;
 static unsigned VAO;
 
@@ -79,14 +76,12 @@ void screen_init(int w, int h) {
     create_constant_location(&pipeline, "u_time");
     world_aspect_ratio(width, height);
 
-    glGenQueries(1, &query);
+   gpu_timer_query_init();
 }
 
 void screen_render() {
-    #ifndef EMSCRIPTEN
     // Start the benchmark timer for fragment shader
-    glBeginQuery(GL_TIME_ELAPSED, query);
-    #endif
+    gpu_timer_query_begin();
 
     pipeline_set(&pipeline);
     set_uniform_vec2("u_resolution", width, height);
@@ -97,16 +92,11 @@ void screen_render() {
     world_end(&pipeline);
 
     // End the benchmark timer for fragment shader
-    #ifndef EMSCRIPTEN
-    glEndQuery(GL_TIME_ELAPSED);
-    GLuint timeElapsed = 1;
-    glGetQueryObjectuiv(query, GL_QUERY_RESULT, &timeElapsed);
+    gpu_timer_query_end();
+    ms_time_elapsed = gpu_timer_query_result();
 
     if(data_update_iteration < MAX_ITERATIONS) {
-        accumulated_time += timeElapsed;
+        accumulated_time += ms_time_elapsed;
         data_update_iteration++;
     }
-
-    ms_time_elapsed = timeElapsed;
-    #endif
 }
