@@ -5,6 +5,7 @@
 #include <cam_matrices.h>
 #include <cglm/vec3.h>
 #include <uniform_block_state.h>
+#include <screenshot.h>
 #include <program.h>
 #include <input.h>
 
@@ -17,6 +18,9 @@
 #define TAU 6.28318530718
 
 static const float LIMIT = TAU / 4.01;
+
+static int _width = 0;
+static int _height = 0;
 
 
 // Camera
@@ -32,7 +36,7 @@ static void render_cam() {
     set_ssbo_data(**block, &cam.cam, sizeof(cam_block));
 }
 
-static void world_input_callback_impl(uint64_t control_status) {
+static void world_input_callback_impl(uint64_t control_status, input_status input) {
     if(control_status & FORWARD) {
         vec3 front_scaled;
         glm_vec3_scale(cam.front, SPEED, front_scaled);
@@ -69,6 +73,11 @@ static void world_input_callback_impl(uint64_t control_status) {
         glm_vec3_sub(cam.cam.position, down_scaled, cam.cam.position);
     }
 
+    if(control_status & SCREENSHOT && input == PRESS_DOWN) {
+        printf("Screenshot\n");
+        capture_screenshot(_width, _height);
+    }
+
     render_cam();
 }
 
@@ -97,6 +106,9 @@ void world_init() {
 }
 
 void world_aspect_ratio(float width, float height) {
+    _width = width;
+    _height = height;
+
     aspect_ratio = width / height;
 
     update_projection_matrix(&cam, aspect_ratio, 45.0f);

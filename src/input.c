@@ -1,11 +1,5 @@
 #include <input.h>
 
-#ifdef EMSCRIPTEN
-#include <SDL2/SDL_mouse.h>
-#else
-#include <SDL_mouse.h>
-#endif
-
 void inputs_init(inputs* in) {
     in->mapped_inputs[INPUT_W - INPUT_A] = FORWARD;
     in->mapped_inputs[INPUT_S - INPUT_A] = BACKWARD;
@@ -13,6 +7,7 @@ void inputs_init(inputs* in) {
     in->mapped_inputs[INPUT_A - INPUT_A] = LEFT;
     in->mapped_inputs[INPUT_E - INPUT_A] = UP;
     in->mapped_inputs[INPUT_Q - INPUT_A] = DOWN;
+    in->mapped_inputs[INPUT_F - INPUT_A] = SCREENSHOT;
 
     in->control_status = 0;
 }
@@ -43,7 +38,7 @@ void inputs_key_down(inputs* in, SDL_Keycode key) {
     }
 
     in->control_status |= in->mapped_inputs[key - INPUT_A];
-    (*input_callback)(in->control_status);
+    (*input_callback)(in->control_status, PRESS_DOWN);
 }
 
 void inputs_key_up(inputs* in, SDL_Keycode key) {
@@ -55,12 +50,12 @@ void inputs_key_up(inputs* in, SDL_Keycode key) {
         return;
     }
 
-    if(in->mapped_inputs[key - SDLK_a] == 0) {
+    if(in->mapped_inputs[key - INPUT_A] == 0) {
         return;
     }
 
     in->control_status &= ~in->mapped_inputs[key - INPUT_A];
-    (*input_callback)(in->control_status);
+    (*input_callback)(in->control_status, PRESS_UP);
 }
 
 void inputs_update(inputs* in) {
@@ -68,7 +63,7 @@ void inputs_update(inputs* in) {
         return;
     }
 
-    (*input_callback)(in->control_status);
+    (*input_callback)(in->control_status, PRESS_HOLD);
 }
 
 // The following gotos are used to skip the gamepad input
