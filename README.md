@@ -1,6 +1,6 @@
 # SDF Raymarching Application
 
-A **semi**-cross-platform application made for rendering scenes using raymarching via signed distance fields utilizing OpenGL. If I decide to further my work, I will focus on utilizing on compute shaders instead of purely fragments. However, I don't have a proper PC to do so.
+A **semi**-cross-platform application made for rendering scenes using raymarching via signed distance fields utilizing OpenGL. If I decide to further my work, I will focus on utilizing on compute shaders instead of purely fragments. However, I don't have a proper PC to do so. In this project, we are only focused on distanced based raymarching.
 
 <p align="center">
   <img src="https://github.com/Just-Feeshy/Feeshy-Integral/blob/Init/screenshots/take-1.png" style="width:75%;">
@@ -8,7 +8,9 @@ A **semi**-cross-platform application made for rendering scenes using raymarchin
 
 ## Presentation Slides
 <p align="center">
-  <img src="https://github.com/Just-Feeshy/Feeshy-Integral/blob/Init/screenshots/presentation.png">
+  <a href="https://docs.google.com/presentation/d/1r-cLMqXjYzPNCFv5gTDhlm2inaUlTxu8MPqP6Pjr23E/edit?usp=sharing">
+    <img src="https://github.com/Just-Feeshy/Feeshy-Integral/blob/Init/screenshots/presentation.png">
+  </a>
 </p>
 
 [//]: <> (Add further stuff such as video or paper)
