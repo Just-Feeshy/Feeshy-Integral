@@ -1,7 +1,6 @@
 precision mediump float;
 
 #define PI 3.14159265
-#define SCENE 0
 
 out vec4 fragColor;
 
@@ -15,12 +14,9 @@ layout(std140) uniform CamBlock {
 
 uniform vec2 u_resolution;
 uniform float u_time;
-uniform int u_quality;
 
 const vec3 c = vec3(0.0, 0.0, 3.0);
 const vec3 light_pos = vec3(3.0, 60.0, -60.0);
-
-#if SCENE == 0
 
 #define MAX_STEPS 99
 #define NEW_RAYMARCH 1
@@ -136,8 +132,6 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
     return t;
 }
 
-#endif
-
 // Most basic writing for lighting
 // TO WRITE: How this works and the basics of lighting
 // @param n - The normal of the surface
@@ -161,8 +155,6 @@ vec4 render(vec2 uv, vec3 p) {
     vec3 ray_origin = cam_block.position;
     vec3 ray_direction = normalize((inverse(cam_block.view) * vec4(eye.xyz, 0.0)).xyz);
 
-    #if SCENE == 0
-
     float t = raymarch(ray_origin, ray_direction);
     vec3 color = vec3(0.0);
 
@@ -170,8 +162,6 @@ vec4 render(vec2 uv, vec3 p) {
         color = vec3(1.0, 0.0, 0.0) * weaking(ray_origin + t * ray_direction, calcNormal(ray_origin + t * ray_direction));
         //color = vec3(1.0, 0.0, 0.0);
     }
-
-    #endif
 
     return vec4(color, 1.0);
 }

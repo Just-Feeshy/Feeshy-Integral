@@ -38,29 +38,36 @@ void load_shader(const char* filename, shader* shader_obj, shader_type type, uin
         goto file_error;
     }
 
-
-    snprintf(buffer, 32, "#version %d%d%d %s\n\n", GL_APP_MAJOR_VERSION, GL_APP_MINOR_VERSION, 0, (GL_APP_PROFILE_MASK == SDL_GL_CONTEXT_PROFILE_ES) ? "es" : "core");
+    snprintf(buffer, 32,
+             "#version %d%d%d %s\n\n",
+             GL_APP_MAJOR_VERSION,
+             GL_APP_MINOR_VERSION,
+             0,
+             (GL_APP_PROFILE_MASK == SDL_GL_CONTEXT_PROFILE_ES) ? "es" : "core");
 
     int64_t file_size = SDL_RWsize(file);
-    int64_t size = file_size + strlen(buffer) + 1;
-    buffer = (char*)realloc(buffer, size);
-    if (buffer == NULL) {
-        fprintf(stderr, "Failed to allocate memory for file: %s\n", filename);
-        goto file_error;
-    }
-
-    if (size == -1) {
+    if (file_size == -1) {
         fprintf(stderr, "Failed to get file size: %s\n", filename);
         goto file_error;
     }
+
+    int64_t total_size = file_size + (int64_t)strlen(buffer) + 1;
+    char* new_buf = (char*)realloc(buffer, total_size);
+    if (!new_buf) {
+        fprintf(stderr, "Failed to allocate memory for file: %s\n", filename);
+        goto file_error;
+    }
+    buffer = new_buf;
 
     if (SDL_RWread(file, buffer + strlen(buffer), 1, file_size) != file_size) {
         fprintf(stderr, "Failed to read file: %s\n", filename);
         goto file_error;
     }
+    buffer[total_size - 1] = '\0';
 
-    // Sanatize the shader source (Reverse order)
-    for (char* p = buffer + size - 1; p >= buffer; --p) {
+    // Sanitize: remove (or replace) any non-printable characters
+    // below ASCII 32 (except newline/tab/terminator):
+    for (char* p = buffer; *p; ++p) {
         if (*p < 32 && *p != '\n' && *p != '\t' && *p != '\0') {
             *p = ' ';
             break;
@@ -68,7 +75,7 @@ void load_shader(const char* filename, shader* shader_obj, shader_type type, uin
     }
 
     shader_obj->source = buffer;
-    shader_obj->size = size;
+    shader_obj->size = total_size;
     apply_shader_type(shader_obj, type);
 
     shader_obj->num_attrs = num_attrs;
