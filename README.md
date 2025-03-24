@@ -2,8 +2,10 @@
 
 A **semi**-cross-platform application made for rendering scenes using raymarching via signed distance fields utilizing OpenGL. If I decide to further my work, I will focus on utilizing on compute shaders instead of purely fragments. However, I don't have a proper PC to do so. In this project, we are only focused on distanced based raymarching.
 
-<p align="center">
-  <img src="https://github.com/Just-Feeshy/Feeshy-Integral/blob/Init/screenshots/take-1.png" style="width:75%;">
+## Presentation Slides
+<p float="center">
+  <img src="https://github.com/Just-Feeshy/Feeshy-Integral/blob/Init/screenshots/take-1.png" width="45%" />
+  <img src="https://github.com/Just-Feeshy/Feeshy-Integral/blob/Init/screenshots/take-1k.png" width="45%" />
 </p>
 
 ## Presentation Slides
