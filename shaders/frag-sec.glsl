@@ -5,7 +5,7 @@ precision mediump float;
 #define PI 3.14159265
 #define TAU 6.28318530
 
-#define NEW_RAYMARCH 0
+#define NEW_RAYMARCH 1
 #define MAX_STEPS 99
 
 #define layer1 vec3(0.55686, 0.98824, 0.99216)
