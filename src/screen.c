@@ -66,7 +66,7 @@ void screen_init(int w, int h) {
     };
 
     load_shader("shaders/vert.glsl", &vert_shader, SHADER_VERTEX, 1, vert_attrs);
-    load_shader("shaders/frag-san.glsl", &frag_shader, SHADER_FRAGMENT, 0, frag_attrs);
+    load_shader("shaders/frag-sec.glsl", &frag_shader, SHADER_FRAGMENT, 0, frag_attrs);
 
     pipeline_init(&pipeline);
     pipeline_compile(2, &pipeline, (shader*[]){&vert_shader, &frag_shader});

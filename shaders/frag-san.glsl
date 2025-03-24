@@ -1,3 +1,5 @@
+#line 2
+
 precision mediump float;
 
 #define PI 3.14159265
