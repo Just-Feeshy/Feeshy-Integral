@@ -1,22 +1,24 @@
 #include <cam_matrices.h>
 #include <cglm/mat4.h>
+#include <cglm/quat.h>
 #include <cglm/cam.h>
 #include <math.h>
 
 #define UP (vec3){0.0f, 1.0f, 0.0f}
 
 void update_rotation(cam_matrices* cam) {
-    float cos_y = cos(cam->vertical_angle);
-    float sin_y = sin(cam->vertical_angle);
-    float cos_x = cos(cam->horizontal_angle);
-    float sin_x = sin(cam->horizontal_angle);
+    versor pitch_q;
+    glm_quatv(pitch_q, cam->vertical_angle, (vec3){1.0f, 0.0f, 0.0f});
 
-    cam->look_at[0] = sin_x * cos_y;
-    cam->look_at[1] = sin_y;
-    cam->look_at[2] = cos_x * cos_y;
+    versor yaw_q;
+    glm_quatv(yaw_q, cam->horizontal_angle, (vec3){0.0f, 1.0f, 0.0f});
+
+    versor rotation_q;
+    glm_quat_mul(yaw_q, pitch_q, rotation_q);
+    glm_quat_rotatev(rotation_q, (vec3){0.0f, 0.0f, -1.0f}, cam->look_at);
 
     glm_vec3_normalize_to(cam->look_at, cam->front);
-    glm_vec3_crossn(cam->front, UP, cam->right);
+    glm_vec3_crossn(cam->front, (vec3){0.0f, 1.0f, 0.0f}, cam->right);
     glm_vec3_crossn(cam->right, cam->front, cam->up);
 }
 
@@ -40,7 +42,7 @@ cam_matrices create_cam_matrices() {
     cam_block cam_blck = {
         .projection = GLM_MAT4_IDENTITY_INIT,
         .view = GLM_MAT4_IDENTITY_INIT,
-        .position = {0.0f, 0.0f, -4.0f},
+        .position = {0.0f, 0.0f, -16.0f},
         .far = 9600.0f,
         .near = 0.001f
     };
@@ -62,6 +64,6 @@ cam_matrices create_cam_matrices() {
 }
 
 void init_cam_matrices(cam_matrices* cam) {
-    update_rotation(cam);
     update_view_matrix(cam);
+    update_rotation(cam);
 }
