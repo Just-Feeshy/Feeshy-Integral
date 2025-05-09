@@ -46,6 +46,28 @@ void texture_bind(texture* tex, unsigned unit) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
+void texture_volume(texture* tex, AABB aabb, float* distanceFieldData, vec3 size) {
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glGenTextures(1, (unsigned*)&tex->texture);
+    glBindTexture(GL_TEXTURE_3D, (unsigned)tex->texture);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    // Allocate memory for the 3D texture
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_R32F, size[0], size[1], size[2], 0, GL_RED, GL_FLOAT, NULL);
+
+    // Upload the texture data
+    glTexSubImage3D(GL_TEXTURE_3D, 0,
+        0, 0, 0,
+        size[0], size[1], size[2],
+        GL_RED, GL_FLOAT,
+        distanceFieldData
+    );
+}
+
 image* create_simplex_noise(int width, int height) {
     image* img = (image*)malloc(sizeof(image));
     img->width = width;

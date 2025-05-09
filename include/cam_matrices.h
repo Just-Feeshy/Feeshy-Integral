@@ -19,6 +19,7 @@ typedef struct cam_matrices {
     float horizontal_angle;
     float vertical_angle;
     vec3 position;
+    vec3 init_position;
 } cam_matrices;
 
 cam_matrices create_cam_matrices();

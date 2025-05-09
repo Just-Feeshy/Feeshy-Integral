@@ -101,6 +101,7 @@ void world_init() {
     **block = create_ssbo(&ubo, GL_UNIFORM_BUFFER, sizeof(cam_matrices));
 
     *(block + 1) = (sized_shader_block**)malloc(sizeof(sized_shader_block*));
+    render_cam();
 }
 
 void world_aspect_ratio(float width, float height) {
@@ -111,7 +112,6 @@ void world_aspect_ratio(float width, float height) {
 }
 
 void world_begin(graphics_pipeline* pipe) {
-    // render_cam();
     bind_ubo_with_name(&ubo, "CamBlock", *block, pipe);
 }
 
@@ -127,9 +127,7 @@ void world_reset_camera() {
     cam.horizontal_angle = 0.0f;
     cam.vertical_angle = 0.0f;
 
-    cam.cam.position[0] = 0.0f;
-    cam.cam.position[1] = 5.0f;
-    cam.cam.position[2] = -20.0f;
+    glm_vec3_copy(cam.init_position, cam.cam.position);
     render_cam();
 }
 

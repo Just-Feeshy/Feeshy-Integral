@@ -2,7 +2,6 @@
 #include <cglm/mat4.h>
 #include <cglm/quat.h>
 #include <cglm/cam.h>
-#include <math.h>
 
 #define UP (vec3){0.0f, 1.0f, 0.0f}
 
@@ -42,12 +41,12 @@ cam_matrices create_cam_matrices() {
     cam_block cam_blck = {
         .projection = GLM_MAT4_IDENTITY_INIT,
         .view = GLM_MAT4_IDENTITY_INIT,
-        .position = {0.0f, 0.0f, -16.0f},
+        .position = {0.0f, 0.0f, 0.0f},
         .far = 9600.0f,
         .near = 0.001f
     };
 
-    vec3 look_at = {0.0f, 0.0f, 0.0f};
+    vec3 look_at = {0.0f, 0.0f, -1.0f};
 
     cam_matrices cam = {
         .cam = cam_blck,
@@ -58,7 +57,10 @@ cam_matrices create_cam_matrices() {
         .horizontal_angle = atan2(look_at[0], look_at[2]),
         .vertical_angle = asin(look_at[1]),
         .position = {0.0f, 0.0f, 0.0f},
+        .init_position = {0.0f, 6.0f, 0.0f}
     };
+
+    glm_vec3_copy(cam.position, cam.init_position);
 
     return cam;
 }

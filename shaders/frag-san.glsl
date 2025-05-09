@@ -146,7 +146,7 @@ float weaking(vec3 p, vec3 n) {
     return diff;
 }
 
-vec4 render(vec2 uv, vec3 p) {
+vec4 render(vec2 uv) {
 
     // World View Projection
     vec4 clip = vec4(uv, -1.0, 1.0);
@@ -173,6 +173,6 @@ void main() {
     vec2 uv = (gl_FragCoord.xy / u_resolution.xy) * 2.0 - 1.0;
 
     // Apply Raymarching and other techniques
-    vec4 color = render(uv, p);
+    vec4 color = render(uv);
     fragColor = color;
 }

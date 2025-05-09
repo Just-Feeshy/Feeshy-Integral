@@ -42,6 +42,8 @@ void opengl_init(SDL_Window* window);
 void opengl_begin(SDL_Window* window);
 void opengl_gen_vertex_arrays(GLsizei n, GLuint* arrays);
 void opengl_bind_vertex_array(GLuint array);
+void opengl_destroy_vertex_array(GLuint array);
+void opengl_destroy_vertex_buffer(GLuint buffer);
 void opengl_clear();
 
 const uint32_t opengl_get_integerv(GLenum pname);

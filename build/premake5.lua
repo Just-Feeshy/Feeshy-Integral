@@ -30,6 +30,9 @@ LIBRARY_DIR = "../third_party/libraries"
 
 ENABLE_VSYNC = true
 
+-- Choose the type of fragment shader to use for rendering
+FRAGMENT_SELECTOR = 1
+
 function sdl_config()
     includedirs {
         "../third_party/SDL/include"
@@ -286,6 +289,7 @@ function project_config()
             "STB_IMAGE_IMPLEMENTATION",
             "STBI_SUPPORT_ZLIB",
             "NK_IMPLEMENTATION",
+            "FRAGMENT_SELECTOR=" .. FRAGMENT_SELECTOR,
         }
 
         files {
@@ -298,10 +302,13 @@ function project_config()
             "../third_party/tinyfiledialogs/tinyfiledialogs.c",
             "../third_party/cglm/include/**.h",
             "../third_party/stb/stb_image.h",
+            "../third_party/cgtlf/cgltf.h",
+            "../third_party/cgltf/cgltf_write.h",
         }
 
         includedirs {
             "../include",
+            "../third_party/cgltf",
             "../third_party/hashmap",
             "../third_party/cglm/include",
             "../third_party/stb",

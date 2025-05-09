@@ -32,7 +32,7 @@ void load_shader(const char* filename, shader* shader_obj, shader_type type, uin
         return;
     }
 
-    buffer = (char*)malloc(32);
+    buffer = (char*)SDL_malloc(32);
     if (buffer == NULL) {
         fprintf(stderr, "Failed to allocate memory for file: %s\n", filename);
         goto file_error;

@@ -52,23 +52,31 @@ float snoise(vec3 uv, float res)	// by trisomie21
 // At the end of the day, it's just a quadratic formula
 vec2 quadratic(float a, float b, float c, inout bool hit) {
     float d = b * b - 4.0 * a * c;
-    if(d < 0.0) {
+
+    if (d < 0.0) {
         hit = false;
-        return vec2(-1.0, 1.0);
+        return vec2(-1.0, -1.0); // consistent failure signal
     }
 
-    float t0 = (-b - sqrt(d)) / (2.0 * a);
+    float sqrt_d = sqrt(d);
+    float inv_2a = 0.5 / a;
 
-    if(t0 > 0.0) {
-        hit = true;
-        return vec2(
-            t0,
-            (-b + sqrt(d)) / (2.0 * a)
-        );
+    float t0 = (-b - sqrt_d) * inv_2a;
+    float t1 = (-b + sqrt_d) * inv_2a;
+
+    if (t0 > t1) {
+        float tmp = t0;
+        t0 = t1;
+        t1 = tmp;
     }
 
-    hit = false;
-    return vec2(-1.0, 1.0);
+    if (t1 < 0.0) {
+        hit = false;
+        return vec2(-1.0, -1.0);
+    }
+
+    hit = true;
+    return vec2(t0, t1);
 }
 
 // Most basic raytracing example on how raytracing actually works
@@ -232,7 +240,6 @@ vec4 render(vec2 uv) {
 }
 
 void main() {
-    vec3 p = vec3(0.0);
     vec2 uv = (gl_FragCoord.xy / u_resolution.xy) * 2.0 - 1.0;
 
     fragColor = render(uv);

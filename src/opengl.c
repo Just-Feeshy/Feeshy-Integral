@@ -20,6 +20,15 @@ void opengl_gen_vertex_arrays(GLsizei n, GLuint* arrays) {
     glGenVertexArrays(n, arrays);
 }
 
+void opengl_destroy_vertex_array(GLuint array) {
+    glBindVertexArray(0);
+    glDeleteVertexArrays(1, &array);
+}
+
+void opengl_destroy_vertex_buffer(GLuint buffer) {
+    glDeleteBuffers(1, &buffer);
+}
+
 void opengl_bind_vertex_array(GLuint array) {
     glBindVertexArray(array);
 }

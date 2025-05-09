@@ -1,6 +1,8 @@
 #pragma once
 
 #include <stdint.h>
+#include <aabb.h>
+#include <cglm/vec3.h>
 
 typedef struct texture {
     int width;
@@ -19,4 +21,5 @@ typedef struct image {
 
 void texture_init(texture* tex, image* img);
 void texture_bind(texture* tex, unsigned unit);
+void texture_volume(texture* tex, AABB aabb, float* distanceFieldData, vec3 size);
 image* create_simplex_noise(int width, int height);

@@ -9,6 +9,10 @@
 #include <world.h>
 #include <timer_query.h>
 
+#if FRAGMENT_SELECTOR == 2
+#include <gl_dfao.h>
+#endif
+
 #ifdef EMSCRIPTEN
 #include <SDL2/SDL_rwops.h>
 #else
@@ -65,8 +69,16 @@ void screen_init(int w, int h) {
     shader_attribute* frag_attrs[] = {
     };
 
+    printf("Fragment Selector: %d\n", FRAGMENT_SELECTOR);
+
+    #if FRAGMENT_SELECTOR == 1
     load_shader("shaders/vert.glsl", &vert_shader, SHADER_VERTEX, 1, vert_attrs);
     load_shader("shaders/frag-sec.glsl", &frag_shader, SHADER_FRAGMENT, 0, frag_attrs);
+    #elif FRAGMENT_SELECTOR == 2
+    #else
+    load_shader("shaders/vert.glsl", &vert_shader, SHADER_VERTEX, 1, vert_attrs);
+    load_shader("shaders/frag-san.glsl", &frag_shader, SHADER_FRAGMENT, 0, frag_attrs);
+    #endif
 
     pipeline_init(&pipeline);
     pipeline_compile(2, &pipeline, (shader*[]){&vert_shader, &frag_shader});
@@ -76,7 +88,7 @@ void screen_init(int w, int h) {
     create_constant_location(&pipeline, "u_time");
     world_aspect_ratio(width, height);
 
-   gpu_timer_query_init();
+    gpu_timer_query_init();
 }
 
 void screen_render() {
