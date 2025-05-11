@@ -109,6 +109,7 @@ void world_aspect_ratio(float width, float height) {
 
     update_projection_matrix(&cam, aspect_ratio, 45.0f);
     set_ssbo_data(**block, &cam.cam, sizeof(cam_block));
+    glm_vec3_copy(cam.init_position, cam.cam.position);
 }
 
 void world_begin(graphics_pipeline* pipe) {

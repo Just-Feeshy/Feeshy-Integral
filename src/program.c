@@ -3,6 +3,7 @@
 #include <opengl.h>
 #include <program.h>
 #include <screen.h>
+#include <world.h>
 #include <more_math.h>
 #include <nuklear_sdl_gl.h>
 #include <menu.h>
@@ -265,6 +266,10 @@ void program_init(const char* name, int w, int h) {
     main_update.nextUpdate = main_update.lastUpdate;
     main_update.currentUpdate = SDL_GetTicks();
     main_update.timerActive = false;
+
+    screen_init(w, h);
+    world_init();
+    world_aspect_ratio(w, h);
 }
 
 void program_set_as_escaped() {

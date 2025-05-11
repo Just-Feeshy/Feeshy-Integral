@@ -8,6 +8,7 @@
 #include <screen.h>
 #include <world.h>
 #include <timer_query.h>
+#include <config.h>
 
 #if FRAGMENT_SELECTOR == 2
 #include <gl_dfao.h>
@@ -86,8 +87,6 @@ void screen_init(int w, int h) {
     uniform_manager_init();
     create_constant_location(&pipeline, "u_resolution");
     create_constant_location(&pipeline, "u_time");
-    world_aspect_ratio(width, height);
-
     gpu_timer_query_init();
 }
 

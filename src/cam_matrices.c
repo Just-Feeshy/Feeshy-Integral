@@ -57,10 +57,8 @@ cam_matrices create_cam_matrices() {
         .horizontal_angle = atan2(look_at[0], look_at[2]),
         .vertical_angle = asin(look_at[1]),
         .position = {0.0f, 0.0f, 0.0f},
-        .init_position = {0.0f, 6.0f, 0.0f}
+        .init_position = {0.0f, 1.0f, -6.0f}
     };
-
-    glm_vec3_copy(cam.position, cam.init_position);
 
     return cam;
 }

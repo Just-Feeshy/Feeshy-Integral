@@ -82,8 +82,8 @@ vec2 quadratic(float a, float b, float c, inout bool hit) {
 // Most basic raytracing example on how raytracing actually works
 // TO WRITE: How this works and the basics of raytracing
 vec2 sphere(float r, vec3 rayOrigin, vec3 rayDirection, inout bool hit) {
-    vec3 oc = rayOrigin;
-    const float a = 1.0;
+    vec3 oc = rayOrigin; // Sphere center at origin
+    float a = dot(rayDirection, rayDirection);
 
     float b = 2.0 * dot(oc, rayDirection);
     float c = dot(oc, oc) - r * r;

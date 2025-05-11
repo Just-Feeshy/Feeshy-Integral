@@ -30,9 +30,6 @@ LIBRARY_DIR = "../third_party/libraries"
 
 ENABLE_VSYNC = true
 
--- Choose the type of fragment shader to use for rendering
-FRAGMENT_SELECTOR = 1
-
 function sdl_config()
     includedirs {
         "../third_party/SDL/include"
@@ -289,7 +286,6 @@ function project_config()
             "STB_IMAGE_IMPLEMENTATION",
             "STBI_SUPPORT_ZLIB",
             "NK_IMPLEMENTATION",
-            "FRAGMENT_SELECTOR=" .. FRAGMENT_SELECTOR,
         }
 
         files {
