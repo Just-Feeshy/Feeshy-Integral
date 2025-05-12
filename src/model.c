@@ -510,7 +510,6 @@ AABB get_model_AABB(Model model) {
 #undef CGLTF_IMPLEMENTATION
 
 #include <opengl.h>
-#include <cglm/affine.h>
 
 void upload_mesh(Mesh* mesh) {
     if(mesh->vaoID > 0) {
