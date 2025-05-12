@@ -1,7 +1,6 @@
 #define CGLTF_IMPLEMENTATION
 
 #include <model.h>
-#include <cglm/vec3.h>
 #include <opengl.h>
 #include <cgltf.h>
 
@@ -16,6 +15,7 @@
 #endif
 
 #define MAX_MESH_VERTEX_BUFFERS 9
+#define MAX_MATERIAL_MAPS 12
 
 // Very simple 3D vector functions
 
@@ -86,7 +86,7 @@ static void free_gltf_callback(
 
 // Inspired by the glTF loader from Raylib
 // Credits go to raysan5
-Model load_model_gltf(const char* path) {
+static Model load_model_gltf(const char* path) {
     /*********************************************************************************************
 
         Function implemented by Wilhem Barbier(@wbrbr), with modifications by Tyler Bezera(@gamerfiend)
@@ -253,13 +253,14 @@ Model load_model_gltf(const char* path) {
 
                             float* vertices = model.meshes[mesh_index].vertices;
                             for(uint32_t l=0; l<attribute->count; l++) {
-                                vec3 v = { vertices[3*k], vertices[3*k+1], vertices[3*k+2] };
-                                vec3 vt;
+                                vec4 pos = { vertices[3*l], vertices[3*l+1], vertices[3*l+2], 1.0f };
+                                vec4 transformed;
 
-                                glm_mat4_mulv3(world_matrix, v, 1.0f, vt);
-                                vertices[3*k]   = vt[0];
-                                vertices[3*k+1] = vt[1];
-                                vertices[3*k+2] = vt[2];
+                                glm_mat4_mulv(world_matrix, pos, transformed);
+
+                                vertices[3*l]   = transformed[0];
+                                vertices[3*l+1] = transformed[1];
+                                vertices[3*l+2] = transformed[2];
                             }
                         }else {
                             SDL_Log("MODEL: [%s] Model has unsupported attribute type\n", path);
@@ -276,13 +277,14 @@ Model load_model_gltf(const char* path) {
 
                             float* normals = model.meshes[mesh_index].normals;
                             for(uint32_t l=0; l<attribute->count; l++) {
-                                vec3 n = { normals[3*k], normals[3*k+1], normals[3*k+2] };
-                                vec3 nt;
+                                vec4 n = { normals[3*l], normals[3*l+1], normals[3*l+2], 1.0f };
+                                vec4 transformed;
 
-                                glm_mat4_mulv3(normal_matrix, n, 0.0f, nt);
-                                normals[3*k]   = nt[0];
-                                normals[3*k+1] = nt[1];
-                                normals[3*k+2] = nt[2];
+                                glm_mat4_mulv(world_matrix, n, transformed);
+
+                                normals[3*l]   = transformed[0];
+                                normals[3*l+1] = transformed[1];
+                                normals[3*l+2] = transformed[2];
                             }
                         }else {
                             SDL_Log("MODEL: [%s] Model has unsupported attribute type\n", path);
@@ -299,14 +301,14 @@ Model load_model_gltf(const char* path) {
 
                             float* tangents = model.meshes[mesh_index].tangents;
                             for(uint32_t l=0; l<attribute->count; l++) {
-                                vec3 t = { tangents[3*k], tangents[3*k+1], tangents[3*k+2] };
-                                vec3 tt;
+                                vec4 t = { tangents[3*l], tangents[3*l+1], tangents[3*l+2], 1.0f };
+                                vec4 transformed;
 
-                                glm_mat4_mulv3(world_matrix, t, 0.0f, tt);
+                                glm_mat4_mulv(world_matrix, t, transformed);
 
-                                tangents[3*k]   = tt[0];
-                                tangents[3*k+1] = tt[1];
-                                tangents[3*k+2] = tt[2];
+                                tangents[3*l]   = transformed[0];
+                                tangents[3*l+1] = transformed[1];
+                                tangents[3*l+2] = transformed[2];
                             }
                         }else {
                             SDL_Log("MODEL: [%s] Model has unsupported attribute type\n", path);
@@ -359,7 +361,7 @@ Model load_model_gltf(const char* path) {
                         }else if(index == 1) {
                             model.meshes[mesh_index].texcoords2 = texcoordPtr;
                         }else {
-                            SDL_Log("MODEL: [%s] Model has unsupported texcoord index\n", path);
+                            // SDL_Log("MODEL: [%s] Model has unsupported texcoord index\n", path);
                             if(texcoordPtr) {
                                 free(texcoordPtr);
                             }
@@ -373,18 +375,30 @@ Model load_model_gltf(const char* path) {
                     cgltf_accessor* attribute = mesh->primitives[j].indices;
                     model.meshes[mesh_index].triangle_count = attribute->count / 3;
 
+                    #ifdef SUPPORT_32_BIT_INDICES
+                    #define INDICES_TYPE uint32_t
+                    #else
+                    #define INDICES_TYPE uint16_t
+                    #endif
+
                     if(attribute->component_type == cgltf_component_type_r_16u) {
-                        model.meshes[mesh_index].indices = (uint16_t*)malloc(attribute->count * sizeof(uint16_t));
-                        LOAD_ATTRIBUTE(attribute, 1, uint16_t, model.meshes[mesh_index].indices);
+                        model.meshes[mesh_index].indices = (INDICES_TYPE*)malloc(attribute->count * sizeof(INDICES_TYPE));
+                        LOAD_ATTRIBUTE_CAST(attribute, 1, uint16_t, model.meshes[mesh_index].indices, INDICES_TYPE);
                     }else if(attribute->component_type == cgltf_component_type_r_8u) {
-                        model.meshes[mesh_index].indices = (uint16_t*)malloc(attribute->count * sizeof(uint16_t));
-                        LOAD_ATTRIBUTE_CAST(attribute, 1, uint8_t, model.meshes[mesh_index].indices, uint16_t);
+                        model.meshes[mesh_index].indices = (INDICES_TYPE*)malloc(attribute->count * sizeof(INDICES_TYPE));
+                        LOAD_ATTRIBUTE_CAST(attribute, 1, uint8_t, model.meshes[mesh_index].indices, INDICES_TYPE);
                     }else if(attribute->component_type == cgltf_component_type_r_32u) {
-                        model.meshes[mesh_index].indices = (uint16_t*)malloc(attribute->count * sizeof(uint16_t));
-                        LOAD_ATTRIBUTE_CAST(attribute, 1, uint32_t, model.meshes[mesh_index].indices, uint16_t);
+                        model.meshes[mesh_index].indices = (INDICES_TYPE*)malloc(attribute->count * sizeof(uint16_t));
+                        LOAD_ATTRIBUTE_CAST(attribute, 1, uint32_t, model.meshes[mesh_index].indices, INDICES_TYPE);
+
+                        #ifndef SUPPORT_32_BIT_INDICES
+                        SDL_Log("MODEL: [%s] Model has 32 bit indices, truncating to 16 bit\n", path);
+                        #endif
                     }else {
                         SDL_Log("MODEL: [%s] Model has unsupported index type\n", path);
                     }
+
+                    #undef INDICES_TYPE
                 }else {
                     model.meshes[mesh_index].triangle_count = model.meshes[mesh_index].vertex_count / 3;
                 }
@@ -494,3 +508,107 @@ AABB get_model_AABB(Model model) {
 }
 
 #undef CGLTF_IMPLEMENTATION
+
+#include <opengl.h>
+#include <cglm/affine.h>
+
+void upload_mesh(Mesh* mesh) {
+    if(mesh->vaoID > 0) {
+        SDL_Log("MODEL: Mesh already uploaded\n");
+        return;
+    }
+
+    mesh->vboID = (uint32_t*)calloc(MAX_MESH_VERTEX_BUFFERS, sizeof(uint32_t));
+
+    mesh->vaoID = 0;
+    mesh->vboID[POSITION_ATTR_LOCATION] = 0;
+    mesh->vboID[TEXCOORD_ATTR_LOCATION] = 0;
+
+    opengl_gen_vertex_arrays(1, &mesh->vaoID);
+    opengl_bind_vertex_array(mesh->vaoID);
+
+    float* vertices = mesh->vertices;
+    mesh->vboID[POSITION_ATTR_LOCATION] = opengl_load_vertex_buffer(vertices, sizeof(float) * mesh->vertex_count * 3);
+    opengl_set_vertex_attr(POSITION_ATTR_LOCATION, 3, GL_FLOAT, 0, 0, 0);
+    glEnableVertexAttribArray(POSITION_ATTR_LOCATION);
+
+    mesh->vboID[TEXCOORD_ATTR_LOCATION] = opengl_load_vertex_buffer(mesh->texcoords, sizeof(float) * mesh->vertex_count * 2);
+    opengl_set_vertex_attr(TEXCOORD_ATTR_LOCATION, 2, GL_FLOAT, 0, 0, 0);
+    glEnableVertexAttribArray(TEXCOORD_ATTR_LOCATION);
+
+    if(mesh->normals != NULL) {
+        void* normals = mesh->normals;
+        mesh->vboID[NORMAL_ATTR_LOCATION] = opengl_load_vertex_buffer(normals, sizeof(float) * mesh->vertex_count * 3);
+        opengl_set_vertex_attr(NORMAL_ATTR_LOCATION, 3, GL_FLOAT, 0, 0, 0);
+        glEnableVertexAttribArray(NORMAL_ATTR_LOCATION);
+    }else {
+        float vertices[3] = {0.0f, 0.0f, 1.0f};
+        opengl_set_vertex_attr_default(NORMAL_ATTR_LOCATION, vertices, GL_SHADER_ATTR_VEC3, 3);
+        glDisableVertexAttribArray(NORMAL_ATTR_LOCATION);
+    }
+
+    if(mesh->texcoords2 != NULL) {
+        mesh->vboID[TEXCOORD2_ATTR_LOCATION] = opengl_load_vertex_buffer(mesh->texcoords2, sizeof(float) * mesh->vertex_count * 2);
+        opengl_set_vertex_attr(TEXCOORD2_ATTR_LOCATION, 2, GL_FLOAT, 0, 0, 0);
+        glEnableVertexAttribArray(TEXCOORD2_ATTR_LOCATION);
+    }else {
+        float vertices[2] = {0.0f, 0.0f};
+        opengl_set_vertex_attr_default(TEXCOORD2_ATTR_LOCATION, vertices, GL_SHADER_ATTR_VEC2, 2);
+        glDisableVertexAttribArray(TEXCOORD2_ATTR_LOCATION);
+    }
+
+    if(mesh->indices != NULL) {
+        mesh->vboID[INDICES_ATTR_LOCATION] = opengl_load_vertex_buffer(mesh->indices, sizeof(uint16_t) * mesh->triangle_count * 3);
+    }
+
+    if(mesh->vaoID > 0) {
+        SDL_Log("MODEL: [ID %i] Mesh uploaded to VRAM successfully\n", mesh->vaoID);
+    }else {
+        SDL_Log("VBO: Mesh uploaded successfully to VRAM\n");
+    }
+
+    glBindVertexArray(0);
+}
+
+Model load_model(const char* path) {
+    Model model = load_model_gltf(path);
+    glm_mat4_identity(model.transform);
+
+    if(model.mesh_count != 0 && model.meshes != NULL) {
+        for(uint32_t i=0; i<model.mesh_count; i++) {
+            upload_mesh(&model.meshes[i]);
+        }
+    }else {
+        SDL_Log("MODEL: [%s] Model has no meshes\n", path);
+    }
+
+    return model;
+}
+
+void draw_model(Model model) {
+    for(uint32_t i=0; i<model.mesh_count; i++) {
+        draw_mesh(model.meshes[i]);
+    }
+}
+
+void draw_mesh(Mesh mesh) {
+    glBindVertexArray(mesh.vaoID);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh.vboID[POSITION_ATTR_LOCATION]);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh.vboID[TEXCOORD_ATTR_LOCATION]);
+
+    if(mesh.indices != NULL) {
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.vboID[INDICES_ATTR_LOCATION]);
+
+        #ifdef SUPPORT_32_BIT_INDICES
+        glDrawElements(GL_TRIANGLES, mesh.triangle_count * 3, GL_UNSIGNED_INT, 0);
+        #else
+        glDrawElements(GL_TRIANGLES, mesh.triangle_count * 3, GL_UNSIGNED_SHORT, 0);
+        #endif
+    }else {
+        glDrawArrays(GL_TRIANGLES, 0, mesh.vertex_count);
+    }
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}

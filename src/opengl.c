@@ -16,8 +16,31 @@ void opengl_begin(SDL_Window* window) {
     glViewport(0, 0, w, h);
 }
 
+GLuint opengl_load_vertex_buffer(const void* buffer, size_t size) {
+    GLuint buffer_id;
+    glGenBuffers(1, &buffer_id);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer_id);
+    glBufferData(GL_ARRAY_BUFFER, size, buffer, GL_STATIC_DRAW);
+    return buffer_id;
+}
+
 void opengl_gen_vertex_arrays(GLsizei n, GLuint* arrays) {
     glGenVertexArrays(n, arrays);
+}
+
+void opengl_set_vertex_attr(uint32_t index, uint32_t size, uint32_t type, bool normalized, uint32_t stride, uint32_t offset) {
+    size_t offset_native = offset;
+    glVertexAttribPointer(index, size, type, GL_FALSE, stride, (void*)offset_native);
+}
+
+void opengl_set_vertex_attr_default(uint32_t index, const void* buffer, uint32_t attr_type, uint32_t count) {
+    switch(attr_type) {
+        case GL_SHADER_ATTR_FLOAT: if(count == 1) glVertexAttrib1fv(index, (const GLfloat*)buffer); break;
+        case GL_SHADER_ATTR_VEC2: glVertexAttrib2fv(index, (const GLfloat*)buffer); break;
+        case GL_SHADER_ATTR_VEC3: glVertexAttrib3fv(index, (const GLfloat*)buffer); break;
+        case GL_SHADER_ATTR_VEC4: glVertexAttrib4fv(index, (const GLfloat*)buffer); break;
+        default: SDL_Log("Unknown attribute type %d\n", attr_type); break;
+    }
 }
 
 void opengl_destroy_vertex_array(GLuint array) {

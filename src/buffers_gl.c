@@ -6,8 +6,6 @@ void create_vertex_buffer(unsigned* vao, vertices v) {
     opengl_bind_vertex_array(*vao);
 
     unsigned vbo;
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
     #ifdef EMSCRIPTEN
     const size_t size_vertices = sizeof(vertices) * 2;
@@ -15,7 +13,7 @@ void create_vertex_buffer(unsigned* vao, vertices v) {
     const size_t size_vertices = sizeof(vertices);
     #endif
 
-    glBufferData(GL_ARRAY_BUFFER, size_vertices, &v, GL_STATIC_DRAW);
+    vbo = opengl_load_vertex_buffer(&v, size_vertices);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);

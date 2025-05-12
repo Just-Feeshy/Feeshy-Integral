@@ -44,6 +44,7 @@ void screen_init(int w, int h) {
     width = (float)w * program_get_pixel_density();
     height = (float)h * program_get_pixel_density();
 
+    #if FRAGMENT_SELECTOR != 2
     v = (vertices){
         .bottom_left_x = 0.0f,
         .bottom_left_y = 0.0f,
@@ -59,12 +60,18 @@ void screen_init(int w, int h) {
     };
 
     create_vertex_buffer(&VAO, v);
+    #endif
 
     shader frag_shader;
     shader vert_shader;
 
     shader_attribute* vert_attrs[] = {
-        &(shader_attribute){"a_position", 0},
+        &(shader_attribute){"a_position", POSITION_ATTR_LOCATION},
+
+        #if FRAGMENT_SELECTOR == 2
+        // &(shader_attribute){"a_texcoord", TEXCOORD_ATTR_LOCATION},
+        // &(shader_attribute){"a_indices", INDICES_ATTR_LOCATION},
+        #endif
     };
 
     shader_attribute* frag_attrs[] = {
@@ -76,6 +83,9 @@ void screen_init(int w, int h) {
     load_shader("shaders/vert.glsl", &vert_shader, SHADER_VERTEX, 1, vert_attrs);
     load_shader("shaders/frag-sec.glsl", &frag_shader, SHADER_FRAGMENT, 0, frag_attrs);
     #elif FRAGMENT_SELECTOR == 2
+    dfao_test_world();
+    load_shader("shaders/dfao_vert.glsl", &vert_shader, SHADER_VERTEX, 1, vert_attrs);
+    load_shader("shaders/frag-standard.glsl", &frag_shader, SHADER_FRAGMENT, 0, frag_attrs);
     #else
     load_shader("shaders/vert.glsl", &vert_shader, SHADER_VERTEX, 1, vert_attrs);
     load_shader("shaders/frag-san.glsl", &frag_shader, SHADER_FRAGMENT, 0, frag_attrs);
@@ -85,8 +95,14 @@ void screen_init(int w, int h) {
     pipeline_compile(2, &pipeline, (shader*[]){&vert_shader, &frag_shader});
 
     uniform_manager_init();
+
+    #if FRAGMENT_SELECTOR == 2
+    create_constant_location(&pipeline, "u_model");
+    #else
     create_constant_location(&pipeline, "u_resolution");
     create_constant_location(&pipeline, "u_time");
+    #endif
+
     gpu_timer_query_init();
 }
 
@@ -95,11 +111,17 @@ void screen_render() {
     gpu_timer_query_begin();
 
     pipeline_set(&pipeline);
-    set_uniform_vec2("u_resolution", width, height);
-    set_uniform_float("u_time", SDL_GetTicks() / 5000.0f);
 
     world_begin(&pipeline);
+
+    #if FRAGMENT_SELECTOR != 2
+    set_uniform_float("u_time", SDL_GetTicks() / 5000.0f);
+    set_uniform_vec2("u_resolution", width, height);
     draw_vertex_buffer(VAO, 6);
+    #else
+    dfao_test_world_render();
+    #endif
+
     world_end(&pipeline);
 
     // End the benchmark timer for fragment shader

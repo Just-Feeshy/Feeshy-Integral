@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdbool.h>
+
 #ifndef EMSCRIPTEN
 #include <SDL.h>
 #endif
@@ -26,6 +28,13 @@
 #define GL_APP_MINOR_VERSION 1
 #endif
 
+typedef enum {
+    GL_SHADER_ATTR_FLOAT = 0,
+    GL_SHADER_ATTR_VEC2,
+    GL_SHADER_ATTR_VEC3,
+    GL_SHADER_ATTR_VEC4
+} GL_SHADER_ATTR_TYPE;
+
 typedef struct pipeline_core_gl {
     unsigned programId;
 	char **textures;
@@ -40,7 +49,10 @@ typedef struct constant_location_core_gl {
 
 void opengl_init(SDL_Window* window);
 void opengl_begin(SDL_Window* window);
+unsigned opengl_load_vertex_buffer(const void* buffer, size_t size);
 void opengl_gen_vertex_arrays(GLsizei n, GLuint* arrays);
+void opengl_set_vertex_attr(uint32_t index, uint32_t size, uint32_t type, bool normalized, uint32_t stride, uint32_t offset);
+void opengl_set_vertex_attr_default(uint32_t index, const void* buffer, uint32_t attr_type, uint32_t count);
 void opengl_bind_vertex_array(GLuint array);
 void opengl_destroy_vertex_array(GLuint array);
 void opengl_destroy_vertex_buffer(GLuint buffer);
