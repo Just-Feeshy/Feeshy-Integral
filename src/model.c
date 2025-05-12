@@ -1,8 +1,9 @@
 #define CGLTF_IMPLEMENTATION
-
 #include <model.h>
 #include <opengl.h>
+#include <core.h>
 #include <cgltf.h>
+#include <string.h>
 
 #ifdef EMSCRIPTEN
 #include <SDL2/SDL_rwops.h>
@@ -66,11 +67,11 @@ static cgltf_result load_gltf_callback(
     *data = file_buffer;
 
 cleanup_callback:
-    if (file) {
+    if(file) {
         SDL_RWclose(file);
     }
 
-    if (result != cgltf_result_success) {
+    if(result != cgltf_result_success) {
         free(file_buffer);
     }
 
@@ -82,6 +83,66 @@ static void free_gltf_callback(
         const struct cgltf_file_options* file_options,
         void* data) {
     free(data); // Yea.. pretty much.
+}
+
+static image load_image_from_gltf(cgltf_image* gltf_image, const char* path) {
+    image img = {0};
+
+    if(gltf_image == NULL) {
+        return img;
+    }
+
+    if(gltf_image->uri) {
+        if(strlen(gltf_image->uri) > 5
+        && gltf_image->uri[0] == 'd'
+        && gltf_image->uri[1] == 'a'
+        && gltf_image->uri[2] == 't'
+        && gltf_image->uri[3] == 'a'
+        && gltf_image->uri[4] == ':') {
+            int i = 0;
+            while(gltf_image->uri[i] != ',' && gltf_image->uri[i] != '\0') {
+                i++;
+            }
+
+            if(gltf_image->uri[i] == '\0') {
+                SDL_Log("Invalid GLTF data URI: %s\n", gltf_image->uri);
+            }else {
+                int base64_len = (int)strlen(gltf_image->uri + i + 1);
+                while(gltf_image->uri[i + base64_len] == '=') base64_len--;
+                int number_of_encoded_bits = base64_len * 6 - (base64_len * 6) % 8;
+                int out_size = number_of_encoded_bits / 8;
+                void* data = NULL;
+
+                cgltf_options options = {0};
+                options.file.read = load_gltf_callback;
+                options.file.release = free_gltf_callback;
+                cgltf_result result = cgltf_load_buffer_base64(&options, out_size, gltf_image->uri + i + 1, &data);
+
+                if(result == cgltf_result_success) {
+                    img = load_image_raw(data, out_size);
+                    free(data);
+                }
+            }
+        }else {
+            char full_path[MAX_FILEPATH_LENGTH];
+            SDL_snprintf(full_path, MAX_FILEPATH_LENGTH, "%s/%s", path, gltf_image->uri);
+            img = load_image(full_path);
+        }
+    }else if(gltf_image->buffer_view != NULL && gltf_image->buffer_view->buffer->data != NULL) {
+        uint8_t* data = (uint8_t*)malloc(gltf_image->buffer_view->size);
+        int offset = gltf_image->buffer_view->offset;
+        int stride = gltf_image->buffer_view->stride ? gltf_image->buffer_view->stride : 1;
+
+        for(uint32_t i=0; i<gltf_image->buffer_view->size; i++) {
+            data[i] = ((uint8_t*)gltf_image->buffer_view->buffer->data)[offset];
+            offset += stride;
+        }
+
+        img = load_image_raw(data, (uint32_t)gltf_image->buffer_view->size);
+        free(data);
+    }
+
+    return img;
 }
 
 // Inspired by the glTF loader from Raylib
@@ -211,6 +272,48 @@ static Model load_model_gltf(const char* path) {
         model.meshes = (Mesh*)calloc(primitive_count, sizeof(Mesh));
 
         // If needed, we can put a materials function here.
+        model.material_count = data->materials_count + 1;
+        model.materials = (Material*)calloc(model.material_count, sizeof(Material));
+        model.materials[0] = load_material_default();
+        model.mesh_material = (int*)calloc(model.mesh_count, sizeof(int));
+
+        for(uint32_t i=0, j=1; i<data->materials_count; i++, j++) {
+            model.materials[j] = load_material_default();
+            const char* tex_path = get_directory_path(path);
+
+            if(data->materials[i].has_pbr_metallic_roughness) {
+                printf("MODEL: [%s] Material %d has PBR metallic roughness\n", path, i);
+
+                // Base color texture
+                if(data->materials[i].pbr_metallic_roughness.base_color_texture.texture) {
+                    image im_albedo = load_image_from_gltf(data->materials[i].pbr_metallic_roughness.base_color_texture.texture->image, tex_path);
+                    if(im_albedo.data != NULL) {
+                        model.materials[j].maps[MATERIAL_MAP_ALBEDO].texture = texture_init(im_albedo);
+                        free(im_albedo.data);
+                    }
+                }
+
+                // Normal texture
+                if(data->materials[i].normal_texture.texture) {
+                    image im_normal = load_image_from_gltf(data->materials[i].normal_texture.texture->image, tex_path);
+
+                    if(im_normal.data) {
+                        model.materials[j].maps[MATERIAL_MAP_NORMAL].texture = texture_init(im_normal);
+                        free(im_normal.data);
+                    }
+                }
+
+                // Occlusion texture (Most important)
+                if(data->materials[i].occlusion_texture.texture) {
+                    image im_occlusion = load_image_from_gltf(data->materials[i].occlusion_texture.texture->image, tex_path);
+
+                    if(im_occlusion.data) {
+                        model.materials[j].maps[MATERIAL_MAP_OCCLUSION].texture = texture_init(im_occlusion);
+                        free(im_occlusion.data);
+                    }
+                }
+            }
+        }
 
         uint32_t mesh_index = 0;
         for(uint32_t i=0; i<data->nodes_count; i++) {
@@ -224,8 +327,12 @@ static Model load_model_gltf(const char* path) {
             cgltf_float world_transform[16];
             cgltf_node_transform_world(node, world_transform);
 
-            mat4 world_matrix;
-            memcpy(world_matrix, world_transform, sizeof(float) * 16);
+            mat4 world_matrix = {
+                world_transform[0], world_transform[4], world_transform[8],  world_transform[12],
+                world_transform[1], world_transform[5], world_transform[9],  world_transform[13],
+                world_transform[2], world_transform[6], world_transform[10], world_transform[14],
+                world_transform[3], world_transform[7], world_transform[11], world_transform[15]
+            };
 
             mat4 normal_matrix;
             glm_mat4_inv(world_matrix, normal_matrix);
@@ -280,7 +387,7 @@ static Model load_model_gltf(const char* path) {
                                 vec4 n = { normals[3*l], normals[3*l+1], normals[3*l+2], 1.0f };
                                 vec4 transformed;
 
-                                glm_mat4_mulv(world_matrix, n, transformed);
+                                glm_mat4_mulv(normal_matrix, n, transformed);
 
                                 normals[3*l]   = transformed[0];
                                 normals[3*l+1] = transformed[1];
@@ -361,7 +468,6 @@ static Model load_model_gltf(const char* path) {
                         }else if(index == 1) {
                             model.meshes[mesh_index].texcoords2 = texcoordPtr;
                         }else {
-                            // SDL_Log("MODEL: [%s] Model has unsupported texcoord index\n", path);
                             if(texcoordPtr) {
                                 free(texcoordPtr);
                             }
@@ -388,7 +494,7 @@ static Model load_model_gltf(const char* path) {
                         model.meshes[mesh_index].indices = (INDICES_TYPE*)malloc(attribute->count * sizeof(INDICES_TYPE));
                         LOAD_ATTRIBUTE_CAST(attribute, 1, uint8_t, model.meshes[mesh_index].indices, INDICES_TYPE);
                     }else if(attribute->component_type == cgltf_component_type_r_32u) {
-                        model.meshes[mesh_index].indices = (INDICES_TYPE*)malloc(attribute->count * sizeof(uint16_t));
+                        model.meshes[mesh_index].indices = (INDICES_TYPE*)malloc(attribute->count * sizeof(INDICES_TYPE));
                         LOAD_ATTRIBUTE_CAST(attribute, 1, uint32_t, model.meshes[mesh_index].indices, INDICES_TYPE);
 
                         #ifndef SUPPORT_32_BIT_INDICES
@@ -401,6 +507,13 @@ static Model load_model_gltf(const char* path) {
                     #undef INDICES_TYPE
                 }else {
                     model.meshes[mesh_index].triangle_count = model.meshes[mesh_index].vertex_count / 3;
+                }
+
+                for(uint32_t l=0; l<data->materials_count; l++) {
+                    if(&data->materials[l] == mesh->primitives[j].material) {
+                        model.mesh_material[mesh_index] = l + 1;
+                        break;
+                    }
                 }
 
                 mesh_index++;
@@ -428,6 +541,13 @@ cleanup_model:
     return model;
 }
 
+Material load_material_default() {
+    Material material = {0};
+    material.maps = (MaterialMap*)calloc(MAX_MATERIAL_MAPS, sizeof(MaterialMap));
+    material.maps[MATERIAL_MAP_ALBEDO].texture = NULL;
+    return material;
+}
+
 void destroy_mesh(Mesh mesh) {
     opengl_destroy_vertex_array(mesh.vaoID);
 
@@ -452,7 +572,24 @@ void destroy_model(Model* model) {
         destroy_mesh(model->meshes[i]);
     }
 
+    for(uint32_t i=0; i<model->material_count; i++) {
+        free(model->materials[i].maps[MATERIAL_MAP_ALBEDO].texture);
+        free(model->materials[i].maps[MATERIAL_MAP_NORMAL].texture);
+        free(model->materials[i].maps[MATERIAL_MAP_OCCLUSION].texture);
+        free(model->materials[i].maps[MATERIAL_MAP_ROUGHNESS].texture);
+        free(model->materials[i].maps[MATERIAL_MAP_METALNESS].texture);
+        free(model->materials[i].maps[MATERIAL_MAP_EMISSION].texture);
+        free(model->materials[i].maps[MATERIAL_MAP_HEIGHT].texture);
+        free(model->materials[i].maps[MATERIAL_MAP_IRRADIANCE].texture);
+        free(model->materials[i].maps[MATERIAL_MAP_PREFILTER].texture);
+        free(model->materials[i].maps[MATERIAL_MAP_BRDF].texture);
+
+        free(model->materials[i].maps);
+    }
+
     free(model->meshes);
+    free(model->materials);
+    free(model->mesh_material);
     free(model);
 }
 
@@ -510,6 +647,7 @@ AABB get_model_AABB(Model model) {
 #undef CGLTF_IMPLEMENTATION
 
 #include <opengl.h>
+#include <uniform_manager.h>
 
 void upload_mesh(Mesh* mesh) {
     if(mesh->vaoID > 0) {
@@ -586,11 +724,24 @@ Model load_model(const char* path) {
 
 void draw_model(Model model) {
     for(uint32_t i=0; i<model.mesh_count; i++) {
-        draw_mesh(model.meshes[i]);
+        draw_mesh(model.meshes[i], model.materials[model.mesh_material[i]]);
     }
 }
 
-void draw_mesh(Mesh mesh) {
+void draw_mesh(Mesh mesh, Material material) {
+    for(uint32_t i=0; i<MAX_MATERIAL_MAPS; i++) {
+        if(material.maps[i].texture == NULL) {
+            continue;
+        }
+
+
+        if(material.maps[i].texture->texture > 0) {
+            glActiveTexture(GL_TEXTURE0 + i);
+            glBindTexture(GL_TEXTURE_2D, material.maps[i].texture->texture);
+            set_uniform_int("u_texture", i);
+        }
+    }
+
     glBindVertexArray(mesh.vaoID);
     glBindBuffer(GL_ARRAY_BUFFER, mesh.vboID[POSITION_ATTR_LOCATION]);
     glBindBuffer(GL_ARRAY_BUFFER, mesh.vboID[TEXCOORD_ATTR_LOCATION]);

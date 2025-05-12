@@ -2,7 +2,6 @@
 #include <shader.h>
 #include <pipeline.h>
 #include <uniform_manager.h>
-#include <stb_image.h>
 #include <menu.h>
 #include <program.h>
 #include <screen.h>
@@ -69,7 +68,7 @@ void screen_init(int w, int h) {
         &(shader_attribute){"a_position", POSITION_ATTR_LOCATION},
 
         #if FRAGMENT_SELECTOR == 2
-        // &(shader_attribute){"a_texcoord", TEXCOORD_ATTR_LOCATION},
+        &(shader_attribute){"a_texcoord", TEXCOORD_ATTR_LOCATION},
         // &(shader_attribute){"a_indices", INDICES_ATTR_LOCATION},
         #endif
     };
@@ -98,6 +97,7 @@ void screen_init(int w, int h) {
 
     #if FRAGMENT_SELECTOR == 2
     create_constant_location(&pipeline, "u_model");
+    create_constant_location(&pipeline, "u_texture");
     #else
     create_constant_location(&pipeline, "u_resolution");
     create_constant_location(&pipeline, "u_time");
