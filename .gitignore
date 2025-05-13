@@ -1,5 +1,6 @@
 .DS_Store
 bin/
+scrap/
 third_party/libraries/
 program.make
 Makefile
