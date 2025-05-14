@@ -26,7 +26,6 @@ void dfao_test_world() {
 
     model = load_model("assets/sponza_atrium_3.glb");
     glm_translate_make(model.transform, (vec3){0.0f, -2.5f, -5.0f});
-    // model = load_model("assets/the_utah_teapot.glb");
 
     pipeline_init(&dfao_pipeline);
     pipeline_compile(2, &dfao_pipeline, (shader*[]){&vert_shader, &frag_shader});
