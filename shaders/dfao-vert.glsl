@@ -21,7 +21,7 @@ void main() {
     vec4 world_position = vec4(a_position, 1.0);
     world_position.xyz -= cam_block.position;
 
-    mat4 vp = cam_block.projection * cam_block.view;
-    gl_Position = vp * world_position;
+    mat4 mvp = cam_block.projection * cam_block.view * u_model;
+    gl_Position = mvp * world_position;
     v_texcoord = a_texcoord;
 }
