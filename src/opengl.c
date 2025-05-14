@@ -4,8 +4,8 @@
 #include <assert.h>
 
 void opengl_init(SDL_Window* window) {
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
 }
 
 void opengl_begin(SDL_Window* window) {
@@ -58,6 +58,8 @@ void opengl_bind_vertex_array(GLuint array) {
 
 void opengl_clear() {
     glClear(GL_COLOR_BUFFER_BIT);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
 }
 
 const uint32_t opengl_get_integerv(GLenum pname) {

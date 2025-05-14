@@ -5,6 +5,7 @@
 #include <screen.h>
 #include <world.h>
 #include <more_math.h>
+#include <geometry_pass.h>
 #include <nuklear_sdl_gl.h>
 #include <menu.h>
 #include <stdlib.h>
@@ -17,6 +18,10 @@
 #define NAP_MULT 1
 #define NAP_DIV 3
 
+#if FRAGMENT_SELECTOR == 2
+#include <gl_dfao.h>
+#endif
+
 #ifdef EMSCRIPTEN
 #include <SDL2/SDL_render.h>
 #include <emscripten.h>
@@ -28,6 +33,7 @@ const double frame_period = 1000.0f / 60.0f;
 
 static struct nk_context* ctx;
 static struct nk_colorf bg;
+static geometry_pass g_pass;
 
 static char FOV_TXT[9] = "FOV (45)";
 static char buffer_url[65536] = {0}; // I really don't care of any buffer overflow here, it's just a simulation
@@ -76,6 +82,10 @@ static void program_context_flip() {
 }
 
 static void program_update_opengl() {
+    #ifdef HAS_GEOMETRY_PASS
+    geometry_pass_render(g_pass);
+    #endif
+
     opengl_begin(main_program.window);
     opengl_clear();
 
@@ -229,6 +239,9 @@ void program_init(const char* name, int w, int h) {
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     #endif
 
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+
     SDL_SetRelativeMouseMode(SDL_FALSE);
 
     create_window(name, w, h);
@@ -267,7 +280,22 @@ void program_init(const char* name, int w, int h) {
     main_update.currentUpdate = SDL_GetTicks();
     main_update.timerActive = false;
 
+    uniform_manager_init();
     screen_init(w, h);
+
+    #if FRAGMENT_SELECTOR == 2
+    RenderCallback dfao_callback = dfao_test_world_render;
+    #endif
+
+    #ifdef HAS_GEOMETRY_PASS
+    dfao_test_world();
+    g_pass = geometry_pass_init(
+        dfao_test_world_render,
+        w * program_get_pixel_density(),
+        h * program_get_pixel_density()
+    );
+    #endif
+
     world_init();
     world_aspect_ratio(w, h);
 }

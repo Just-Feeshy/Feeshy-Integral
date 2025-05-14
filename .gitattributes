@@ -2,3 +2,4 @@
 * text=auto
 
 nuklear_bindings/** linguist-vendored
+include/external/** linguist-vendored

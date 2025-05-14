@@ -147,12 +147,14 @@ static image load_image_from_gltf(cgltf_image* gltf_image, const char* path) {
 
 // Inspired by the glTF loader from Raylib
 // Credits go to raysan5
+// Modified slightly by me
 static Model load_model_gltf(const char* path) {
     /*********************************************************************************************
 
         Function implemented by Wilhem Barbier(@wbrbr), with modifications by Tyler Bezera(@gamerfiend)
         Transform handling implemented by Paul Melis (@paulmelis).
         Reviewed by Ramon Santamaria (@raysan5)
+        Further modified done by Diego Fonseca (@just-feeshy)
 
         FEATURES:
           - Supports .gltf and .glb files
@@ -182,18 +184,18 @@ static Model load_model_gltf(const char* path) {
     // Macro to simplify attributes loading code
     #define LOAD_ATTRIBUTE(accesor, numComp, srcType, dstPtr) LOAD_ATTRIBUTE_CAST(accesor, numComp, srcType, dstPtr, srcType)
 
-    #define LOAD_ATTRIBUTE_CAST(accesor, numComp, srcType, dstPtr, dstType) \
+    #define LOAD_ATTRIBUTE_CAST(accessor, numComp, srcType, dstPtr, dstType) \
     { \
-        int n = 0; \
-        srcType *buffer = (srcType *)accesor->buffer_view->buffer->data + accesor->buffer_view->offset/sizeof(srcType) + accesor->offset/sizeof(srcType); \
-        for (unsigned int k = 0; k < accesor->count; k++) \
-        {\
-            for (int l = 0; l < numComp; l++) \
-            {\
-                dstPtr[numComp*k + l] = (dstType)buffer[n + l];\
-            }\
-            n += (int)(accesor->stride/sizeof(srcType));\
-        }\
+        uint8_t* raw = (uint8_t*)accessor->buffer_view->buffer->data; \
+        raw += accessor->buffer_view->offset + accessor->offset; \
+        int stride = accessor->stride ? accessor->stride : sizeof(srcType) * numComp; \
+        \
+        for (unsigned int k = 0; k < accessor->count; k++) { \
+            srcType* src = (srcType*)(raw + k * stride); \
+            for (int l = 0; l < numComp; l++) { \
+                dstPtr[numComp * k + l] = (dstType)src[l]; \
+            } \
+        } \
     }
 
     Model model = {0};
@@ -293,6 +295,7 @@ static Model load_model_gltf(const char* path) {
                     }
                 }
 
+                /*
                 // Normal texture
                 if(data->materials[i].normal_texture.texture) {
                     image im_normal = load_image_from_gltf(data->materials[i].normal_texture.texture->image, tex_path);
@@ -312,6 +315,7 @@ static Model load_model_gltf(const char* path) {
                         free(im_occlusion.data);
                     }
                 }
+                */
             }
         }
 
@@ -433,28 +437,27 @@ static Model load_model_gltf(const char* path) {
                             if(attribute->component_type == cgltf_component_type_r_32f) {
                                 texcoordPtr = (float*)malloc(sizeof(float) * attribute->count * 2);
                                 LOAD_ATTRIBUTE(attribute, 2, float, texcoordPtr);
+
                             }else if(attribute->component_type == cgltf_component_type_r_8u) {
                                 texcoordPtr = (float*)malloc(sizeof(float) * attribute->count * 2);
-
                                 uint8_t* temp = (uint8_t*)malloc(sizeof(uint8_t) * attribute->count * 2);
-                                LOAD_ATTRIBUTE(attribute, 2, uint8_t, temp);
 
+                                LOAD_ATTRIBUTE(attribute, 2, uint8_t, temp);
                                 for(uint32_t l=0; l<attribute->count * 2; l++) {
                                     texcoordPtr[l] = (float)temp[l] / 255.0f;
                                 }
-
                                 free(temp);
+
                             }else if(attribute->component_type == cgltf_component_type_r_16u) {
                                 texcoordPtr = (float*)malloc(sizeof(float) * attribute->count * 2);
-
                                 uint16_t* temp = (uint16_t*)malloc(sizeof(uint16_t) * attribute->count * 2);
-                                LOAD_ATTRIBUTE(attribute, 2, uint16_t, temp);
 
+                                LOAD_ATTRIBUTE(attribute, 2, uint16_t, temp);
                                 for(uint32_t l=0; l<attribute->count * 2; l++) {
                                     texcoordPtr[l] = (float)temp[l] / 65535.0f;
                                 }
-
                                 free(temp);
+
                             }else {
                                 SDL_Log("MODEL: [%s] Texcoord attribute has unsupported component type\n", path);
                             }
@@ -479,7 +482,7 @@ static Model load_model_gltf(const char* path) {
                 // Indices
                 if(mesh->primitives[j].indices != NULL && mesh->primitives[j].indices->buffer_view != NULL) {
                     cgltf_accessor* attribute = mesh->primitives[j].indices;
-                    model.meshes[mesh_index].triangle_count = attribute->count / 3;
+                    model.meshes[mesh_index].triangle_count = (uint32_t)attribute->count / 3;
 
                     #ifdef SUPPORT_32_BIT_INDICES
                     #define INDICES_TYPE uint32_t
@@ -488,13 +491,16 @@ static Model load_model_gltf(const char* path) {
                     #endif
 
                     if(attribute->component_type == cgltf_component_type_r_16u) {
-                        model.meshes[mesh_index].indices = (INDICES_TYPE*)malloc(attribute->count * sizeof(INDICES_TYPE));
+
+                        model.meshes[mesh_index].indices = malloc(attribute->count * sizeof(INDICES_TYPE));
                         LOAD_ATTRIBUTE_CAST(attribute, 1, uint16_t, model.meshes[mesh_index].indices, INDICES_TYPE);
                     }else if(attribute->component_type == cgltf_component_type_r_8u) {
-                        model.meshes[mesh_index].indices = (INDICES_TYPE*)malloc(attribute->count * sizeof(INDICES_TYPE));
+
+                        model.meshes[mesh_index].indices = malloc(attribute->count * sizeof(INDICES_TYPE));
                         LOAD_ATTRIBUTE_CAST(attribute, 1, uint8_t, model.meshes[mesh_index].indices, INDICES_TYPE);
                     }else if(attribute->component_type == cgltf_component_type_r_32u) {
-                        model.meshes[mesh_index].indices = (INDICES_TYPE*)malloc(attribute->count * sizeof(INDICES_TYPE));
+
+                        model.meshes[mesh_index].indices = malloc(attribute->count * sizeof(INDICES_TYPE));
                         LOAD_ATTRIBUTE_CAST(attribute, 1, uint32_t, model.meshes[mesh_index].indices, INDICES_TYPE);
 
                         #ifndef SUPPORT_32_BIT_INDICES
@@ -666,7 +672,7 @@ void upload_mesh(Mesh* mesh) {
 
     float* vertices = mesh->vertices;
     mesh->vboID[POSITION_ATTR_LOCATION] = opengl_load_vertex_buffer(vertices, sizeof(float) * mesh->vertex_count * 3);
-    opengl_set_vertex_attr(POSITION_ATTR_LOCATION, 3, GL_FLOAT, 0, 0, 0);
+    opengl_set_vertex_attr(POSITION_ATTR_LOCATION, 3, GL_FLOAT, 0, 3 * sizeof(float), 0);
     glEnableVertexAttribArray(POSITION_ATTR_LOCATION);
 
     mesh->vboID[TEXCOORD_ATTR_LOCATION] = opengl_load_vertex_buffer(mesh->texcoords, sizeof(float) * mesh->vertex_count * 2);
@@ -682,16 +688,6 @@ void upload_mesh(Mesh* mesh) {
         float vertices[3] = {0.0f, 0.0f, 1.0f};
         opengl_set_vertex_attr_default(NORMAL_ATTR_LOCATION, vertices, GL_SHADER_ATTR_VEC3, 3);
         glDisableVertexAttribArray(NORMAL_ATTR_LOCATION);
-    }
-
-    if(mesh->texcoords2 != NULL) {
-        mesh->vboID[TEXCOORD2_ATTR_LOCATION] = opengl_load_vertex_buffer(mesh->texcoords2, sizeof(float) * mesh->vertex_count * 2);
-        opengl_set_vertex_attr(TEXCOORD2_ATTR_LOCATION, 2, GL_FLOAT, 0, 0, 0);
-        glEnableVertexAttribArray(TEXCOORD2_ATTR_LOCATION);
-    }else {
-        float vertices[2] = {0.0f, 0.0f};
-        opengl_set_vertex_attr_default(TEXCOORD2_ATTR_LOCATION, vertices, GL_SHADER_ATTR_VEC2, 2);
-        glDisableVertexAttribArray(TEXCOORD2_ATTR_LOCATION);
     }
 
     if(mesh->indices != NULL) {
@@ -745,6 +741,7 @@ void draw_mesh(Mesh mesh, Material material) {
     glBindVertexArray(mesh.vaoID);
     glBindBuffer(GL_ARRAY_BUFFER, mesh.vboID[POSITION_ATTR_LOCATION]);
     glBindBuffer(GL_ARRAY_BUFFER, mesh.vboID[TEXCOORD_ATTR_LOCATION]);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     if(mesh.indices != NULL) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.vboID[INDICES_ATTR_LOCATION]);

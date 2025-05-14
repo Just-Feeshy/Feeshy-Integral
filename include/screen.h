@@ -1,4 +1,5 @@
 #pragma once
+#include <uniform_manager.h>
 #include <buffers.h>
 #include <stdint.h>
 

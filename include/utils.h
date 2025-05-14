@@ -28,3 +28,12 @@ static FORCE_INLINE int __builtin_ctz(unsigned x)
 #define FORCE_INLINE __attribute__((always_inline))
 #define mem_alloca(size) alloca(size)
 #endif
+
+#include <config.h>
+
+
+// There can be multiple cases where geometry pass is used
+
+#if FRAGMENT_SELECTOR == 2
+#define HAS_GEOMETRY_PASS
+#endif
