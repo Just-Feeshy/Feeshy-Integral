@@ -42,10 +42,8 @@ cam_matrices create_cam_matrices() {
         .projection = GLM_MAT4_IDENTITY_INIT,
         .view = GLM_MAT4_IDENTITY_INIT,
         .position = {0.0f, 0.0f, 0.0f},
-        // .far = 9600.0f,
-        // .near = 0.001f
-        .far = 100.0f,
-        .near = 0.1f
+        .far = 960.0f,
+        .near = 0.001f
     };
 
     vec3 look_at = {0.0f, 0.0f, -1.0f};

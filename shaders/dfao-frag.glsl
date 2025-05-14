@@ -18,6 +18,12 @@ uniform sampler2D u_texture;
 uniform mat4 u_model;
 
 void main() {
+    vec4 texColor = texture(u_texture, v_texcoord);
+
+    if (texColor.a < 0.01) {
+        discard;
+    }
+
     //fragColor = vec4(1.0, 1.0, 0.0, 1.0);
-    fragColor = texture(u_texture, v_texcoord);
+    fragColor = texColor;
 }

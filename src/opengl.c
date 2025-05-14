@@ -5,6 +5,7 @@
 
 void opengl_init(SDL_Window* window) {
     glEnable(GL_DEPTH_TEST);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthFunc(GL_LESS);
 }
 
