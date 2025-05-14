@@ -295,7 +295,6 @@ static Model load_model_gltf(const char* path) {
                     }
                 }
 
-                /*
                 // Normal texture
                 if(data->materials[i].normal_texture.texture) {
                     image im_normal = load_image_from_gltf(data->materials[i].normal_texture.texture->image, tex_path);
@@ -315,7 +314,6 @@ static Model load_model_gltf(const char* path) {
                         free(im_occlusion.data);
                     }
                 }
-                */
             }
         }
 
@@ -580,15 +578,8 @@ void destroy_model(Model* model) {
 
     for(uint32_t i=0; i<model->material_count; i++) {
         free(model->materials[i].maps[MATERIAL_MAP_ALBEDO].texture);
-        free(model->materials[i].maps[MATERIAL_MAP_NORMAL].texture);
         free(model->materials[i].maps[MATERIAL_MAP_OCCLUSION].texture);
-        free(model->materials[i].maps[MATERIAL_MAP_ROUGHNESS].texture);
-        free(model->materials[i].maps[MATERIAL_MAP_METALNESS].texture);
-        free(model->materials[i].maps[MATERIAL_MAP_EMISSION].texture);
-        free(model->materials[i].maps[MATERIAL_MAP_HEIGHT].texture);
-        free(model->materials[i].maps[MATERIAL_MAP_IRRADIANCE].texture);
-        free(model->materials[i].maps[MATERIAL_MAP_PREFILTER].texture);
-        free(model->materials[i].maps[MATERIAL_MAP_BRDF].texture);
+        free(model->materials[i].maps[MATERIAL_MAP_NORMAL].texture);
 
         free(model->materials[i].maps);
     }
@@ -666,6 +657,8 @@ void upload_mesh(Mesh* mesh) {
     mesh->vaoID = 0;
     mesh->vboID[POSITION_ATTR_LOCATION] = 0;
     mesh->vboID[TEXCOORD_ATTR_LOCATION] = 0;
+    mesh->vboID[NORMAL_ATTR_LOCATION] = 0;
+    mesh->vboID[TANGENT_ATTR_LOCATION] = 0;
 
     opengl_gen_vertex_arrays(1, &mesh->vaoID);
     opengl_bind_vertex_array(mesh->vaoID);
@@ -688,6 +681,17 @@ void upload_mesh(Mesh* mesh) {
         float vertices[3] = {0.0f, 0.0f, 1.0f};
         opengl_set_vertex_attr_default(NORMAL_ATTR_LOCATION, vertices, GL_SHADER_ATTR_VEC3, 3);
         glDisableVertexAttribArray(NORMAL_ATTR_LOCATION);
+    }
+
+    if(mesh->tangents != NULL) {
+        void* tangents = mesh->tangents;
+        mesh->vboID[TANGENT_ATTR_LOCATION] = opengl_load_vertex_buffer(tangents, sizeof(float) * mesh->vertex_count * 4);
+        opengl_set_vertex_attr(TANGENT_ATTR_LOCATION, 4, GL_FLOAT, 0, 0, 0);
+        glEnableVertexAttribArray(TANGENT_ATTR_LOCATION);
+    }else {
+        float vertices[4] = {1.0f, 0.0f, 0.0f, 1.0f};
+        opengl_set_vertex_attr_default(TANGENT_ATTR_LOCATION, vertices, GL_SHADER_ATTR_VEC4, 4);
+        glDisableVertexAttribArray(TANGENT_ATTR_LOCATION);
     }
 
     if(mesh->indices != NULL) {

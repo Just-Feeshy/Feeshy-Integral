@@ -16,6 +16,8 @@ void dfao_test_world() {
     shader_attribute* vert_attrs[] = {
         &(shader_attribute){"a_position", POSITION_ATTR_LOCATION},
         &(shader_attribute){"a_texcoord", TEXCOORD_ATTR_LOCATION},
+        &(shader_attribute){"a_normal", NORMAL_ATTR_LOCATION},
+        &(shader_attribute){"a_tangent", TANGENT_ATTR_LOCATION},
     };
 
     shader_attribute* frag_attrs[] = {
@@ -30,6 +32,7 @@ void dfao_test_world() {
     pipeline_init(&dfao_pipeline);
     pipeline_compile(2, &dfao_pipeline, (shader*[]){&vert_shader, &frag_shader});
     create_constant_location(&dfao_pipeline, "u_model");
+    create_constant_location(&dfao_pipeline, "u_normal");
 }
 
 void dfao_test_world_render() {
@@ -39,6 +42,7 @@ void dfao_test_world_render() {
     world_begin(&dfao_pipeline);
 
     set_uniform_mat4("u_model", model.transform);
+    set_uniform_int("u_normal", MATERIAL_MAP_NORMAL);
     draw_model(model);
 
     world_end(&dfao_pipeline);
