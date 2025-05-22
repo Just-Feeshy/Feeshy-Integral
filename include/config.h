@@ -3,8 +3,10 @@
 // This file is suppose to be used for
 // compile time configurations
 
+#define GRID_SIZE 128
 #define FRAGMENT_SELECTOR 2
-// #define SUPPORT_32_BIT_INDICES // Allow 32 bit indices
+#define DEFAULT_BUFFER_SIZE 128
+#define MAX_ITERATIONS 10000
 
 // Shader locations
 // These are the locations of the attributes in the shader

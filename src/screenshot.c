@@ -1,13 +1,26 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#define TINYFD_FORCE_WCHAR
 
 #include <screenshot.h>
 #include <stb_image_write.h>
-#include <tinyfiledialogs.h>
 #include <program.h>
 #include <texture.h>
 #include <opengl.h>
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#ifdef _WIN32
+#include <direct.h>  // _mkdir
+#else
+#include <unistd.h>
+#endif
+
+SDL_Thread* screenshot_thread = NULL;
+SDL_mutex* screenshot_mutex = NULL;
+SDL_cond* screenshot_cond = NULL;
+
+image current_image;
+bool screenshot_pending = false;
+bool screenshot_thread_running = true;
 
 // https://github.com/vallentin/GLCollection/blob/master/screenshot.cpp
 // I just copied this function from the above link
@@ -34,26 +47,74 @@ static void flipY(int width, int height, uint8_t* data) {
 // and that this project is multi-threaded
 //
 // Okay, in a seriousness, the reason why it's multi-threaded is because
-// the cursor freezes when the file dialog is open, so I had to make it
-// multi-threaded to avoid that issue.
-static int save_screenshot(void* raw_image) {
-    image img = *(image*)raw_image;
-    const char* path = tinyfd_saveFileDialog("Save Screenshot", "screenshot.png", 1, (const char*[]){"*.png"}, "PNG Files");
+// it's because the screenshot function is blocking the main thread which
+// causes the program to freeze for a few seconds and loop the screenshot
+// input event since the freeze causes the program to not process any events
+// and repeat the last event over and over again
+//
+// Plus, I don't want to block the main thread while saving the screenshot
+// keeping it as smooth as possible without any lag
+static void save_screenshot(void* raw_image) {
+    SDL_Delay(100);  // Give the program some time to process the screenshot input event
 
-    if(path) {
-        if(!stbi_write_png(path, img.width, img.height, 3, img.data, 0)) {
-            printf("Failed to write screenshot!\n");
+    image img = *(image*)raw_image;
+    char path[128];
+    snprintf(path, sizeof(path), "screenshots/screenshot_%d.png", SDL_GetTicks());
+
+#ifdef _WIN32
+    _mkdir("../screenshot");
+#else
+    mkdir("../screenshot", 0755);  // Read/write/search for owner, read/search for others
+#endif
+
+    if(!stbi_write_png(path, img.width, img.height, 3, img.data, 0)) {
+        printf("Failed to write screenshot!\n");
+    }
+}
+
+int screenshot_worker(void* unused) {
+    while (screenshot_thread_running) {
+        SDL_LockMutex(screenshot_mutex);
+
+        // Wait until there's a job or we’re shutting down
+        while (!screenshot_pending && screenshot_thread_running)
+            SDL_CondWait(screenshot_cond, screenshot_mutex);
+
+        if (screenshot_pending) {
+            // Copy image data locally if needed (optional safety)
+            image img = current_image;
+            screenshot_pending = false;
+            SDL_UnlockMutex(screenshot_mutex);
+
+            // Do the actual work (this part runs unlocked)
+            save_screenshot(&img);
+        } else {
+            SDL_UnlockMutex(screenshot_mutex);
         }
     }
 
     return 0;
 }
 
-void capture_screenshot() {
-    SDL_SetRelativeMouseMode(SDL_FALSE);
-    SDL_ShowCursor(1);
-    program_set_as_escaped();
+static void trigger_screenshot(image* img) {
+    SDL_LockMutex(screenshot_mutex);
 
+    if (!screenshot_pending) {
+        current_image = *img;
+        screenshot_pending = true;
+        SDL_CondSignal(screenshot_cond);
+    }
+
+    SDL_UnlockMutex(screenshot_mutex);
+}
+
+void screenshot_init() {
+    screenshot_mutex = SDL_CreateMutex();
+    screenshot_cond = SDL_CreateCond();
+    screenshot_thread = SDL_CreateThread(screenshot_worker, "screenshot_worker", NULL);
+}
+
+void capture_screenshot() {
     GLint viewport[4];
 	glGetIntegerv(GL_VIEWPORT, viewport);
 
@@ -73,14 +134,8 @@ void capture_screenshot() {
     image img = {w, h, 3, data};
     flipY(w, h, data);
 
-    // Yeah, I know, I'm taking it too far
-    int threadReturnValue;
-    SDL_Thread* screenshot_thread = SDL_CreateThread(save_screenshot, "screenshot", &img);
-    SDL_WaitThread(screenshot_thread, &threadReturnValue);
-
-    if(threadReturnValue != 0) {
-        printf("Failed to save screenshot!\n");
-    }
+    glFlush();
+    trigger_screenshot(&img);
 
     free(data);
 }

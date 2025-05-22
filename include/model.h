@@ -4,6 +4,7 @@
 #include <cglm/vec3.h>
 #include <cglm/mat4.h>
 #include <stdint.h>
+#include <mesh.h>
 #include <aabb.h>
 #include <config.h>
 
@@ -29,27 +30,6 @@ typedef struct Material {
     MaterialMap* maps;
 } Material;
 
-// The screen should probably be a mesh.
-typedef struct Mesh {
-    uint32_t vertex_count;
-    uint32_t triangle_count;
-
-    float* vertices;
-    float* normals;
-    float* tangents;
-    float* texcoords;
-    float* texcoords2;
-
-    #ifdef SUPPORT_32_BIT_INDICES
-    uint32_t* indices;
-    #else
-    uint16_t* indices;
-    #endif
-
-    uint32_t vaoID;
-    uint32_t* vboID;
-} Mesh;
-
 typedef struct Model {
     mat4 transform;
     uint32_t mesh_count;
@@ -61,10 +41,11 @@ typedef struct Model {
 
 Material load_material_default();
 void upload_mesh(Mesh* mesh);
+Mesh gen_mesh_cube(AABB aabb);
 Model load_model(const char* path);
 void destroy_mesh(Mesh mesh);
 void destroy_model(Model* model);
 AABB get_mesh_AABB(Mesh mesh);
-AABB get_model_AABB(Model model);
+AABB get_model_AABB(Model model, AABB* out_mesh_aabb[]);
 void draw_model(Model model);
 void draw_mesh(Mesh mesh, Material material);

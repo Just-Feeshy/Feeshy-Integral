@@ -5,7 +5,6 @@
 
 void opengl_init(SDL_Window* window) {
     glEnable(GL_DEPTH_TEST);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthFunc(GL_LESS);
 }
 
@@ -59,6 +58,7 @@ void opengl_bind_vertex_array(GLuint array) {
 
 void opengl_clear() {
     glClear(GL_COLOR_BUFFER_BIT);
+    glDepthMask(GL_FALSE);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 }

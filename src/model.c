@@ -21,15 +21,15 @@
 // Very simple 3D vector functions
 
 static void vec3_min(vec3* result, vec3 a, vec3 b) {
-    *result[0] = a[0] < b[0] ? a[0] : b[0];
-    *result[1] = a[1] < b[1] ? a[1] : b[1];
-    *result[2] = a[2] < b[2] ? a[2] : b[2];
+    (*result)[0] = a[0] < b[0] ? a[0] : b[0];
+    (*result)[1] = a[1] < b[1] ? a[1] : b[1];
+    (*result)[2] = a[2] < b[2] ? a[2] : b[2];
 }
 
 static void vec3_max(vec3* result, vec3 a, vec3 b) {
-    *result[0] = a[0] > b[0] ? a[0] : b[0];
-    *result[1] = a[1] > b[1] ? a[1] : b[1];
-    *result[2] = a[2] > b[2] ? a[2] : b[2];
+    (*result)[0] = a[0] > b[0] ? a[0] : b[0];
+    (*result)[1] = a[1] > b[1] ? a[1] : b[1];
+    (*result)[2] = a[2] > b[2] ? a[2] : b[2];
 }
 
 // Someone in my calc class saw this function, and no joke,
@@ -482,11 +482,7 @@ static Model load_model_gltf(const char* path) {
                     cgltf_accessor* attribute = mesh->primitives[j].indices;
                     model.meshes[mesh_index].triangle_count = (uint32_t)attribute->count / 3;
 
-                    #ifdef SUPPORT_32_BIT_INDICES
-                    #define INDICES_TYPE uint32_t
-                    #else
                     #define INDICES_TYPE uint16_t
-                    #endif
 
                     if(attribute->component_type == cgltf_component_type_r_16u) {
 
@@ -500,10 +496,6 @@ static Model load_model_gltf(const char* path) {
 
                         model.meshes[mesh_index].indices = malloc(attribute->count * sizeof(INDICES_TYPE));
                         LOAD_ATTRIBUTE_CAST(attribute, 1, uint32_t, model.meshes[mesh_index].indices, INDICES_TYPE);
-
-                        #ifndef SUPPORT_32_BIT_INDICES
-                        SDL_Log("MODEL: [%s] Model has 32 bit indices, truncating to 16 bit\n", path);
-                        #endif
                     }else {
                         SDL_Log("MODEL: [%s] Model has unsupported index type\n", path);
                     }
@@ -614,7 +606,7 @@ AABB get_mesh_AABB(Mesh mesh) {
     return aabb;
 }
 
-AABB get_model_AABB(Model model) {
+AABB get_model_AABB(Model model, AABB* out_mesh_aabb[model.mesh_count]) {
     AABB aabb = {0};
     vec3 out = {0};
 
@@ -628,6 +620,8 @@ AABB get_model_AABB(Model model) {
             vec3_max(&temp, aabb.max, mesh_aabb.max);
             glm_vec3_copy(temp, aabb.min);
             glm_vec3_copy(temp, aabb.max);
+
+            *out_mesh_aabb[i] = mesh_aabb;
         }
     }
 
@@ -707,6 +701,126 @@ void upload_mesh(Mesh* mesh) {
     glBindVertexArray(0);
 }
 
+Mesh gen_mesh_cube(AABB aabb) {
+    Mesh mesh = {0};
+
+    float vertices[] = {
+        aabb.min[0], aabb.min[1], aabb.max[2],
+        aabb.max[0], aabb.min[1], aabb.max[2],
+        aabb.max[0], aabb.max[1], aabb.max[2],
+        aabb.min[0], aabb.max[1], aabb.max[2],
+
+        aabb.min[0], aabb.min[1], aabb.min[2],
+        aabb.min[0], aabb.max[1], aabb.min[2],
+        aabb.max[0], aabb.max[1], aabb.min[2],
+        aabb.max[0], aabb.min[1], aabb.min[2],
+
+        aabb.min[0], aabb.max[1], aabb.min[2],
+        aabb.min[0], aabb.max[1], aabb.max[2],
+        aabb.max[0], aabb.max[1], aabb.max[2],
+        aabb.max[0], aabb.max[1], aabb.min[2],
+
+        aabb.min[0], aabb.min[1], aabb.min[2],
+        aabb.max[0], aabb.min[1], aabb.min[2],
+        aabb.max[0], aabb.min[1], aabb.max[2],
+        aabb.min[0], aabb.min[1], aabb.max[2],
+
+        aabb.max[0], aabb.min[1], aabb.min[2],
+        aabb.max[0], aabb.max[1], aabb.min[2],
+        aabb.max[0], aabb.max[1], aabb.max[2],
+        aabb.max[0], aabb.min[1], aabb.max[2],
+
+        aabb.min[0], aabb.min[1], aabb.min[2],
+        aabb.min[0], aabb.min[1], aabb.max[2],
+        aabb.min[0], aabb.max[1], aabb.max[2],
+        aabb.min[0], aabb.max[1], aabb.min[2]
+    };
+
+    float texcoords[] = {
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        1.0f, 1.0f,
+        0.0f, 1.0f,
+        1.0f, 0.0f,
+        1.0f, 1.0f,
+        0.0f, 1.0f,
+        0.0f, 0.0f,
+        0.0f, 1.0f,
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        1.0f, 1.0f,
+        1.0f, 1.0f,
+        0.0f, 1.0f,
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        1.0f, 0.0f,
+        1.0f, 1.0f,
+        0.0f, 1.0f,
+        0.0f, 0.0f,
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        1.0f, 1.0f,
+        0.0f, 1.0f
+    };
+
+    float normals[] = {
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f,-1.0f,
+        0.0f, 0.0f,-1.0f,
+        0.0f, 0.0f,-1.0f,
+        0.0f, 0.0f,-1.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f,-1.0f, 0.0f,
+        0.0f,-1.0f, 0.0f,
+        0.0f,-1.0f, 0.0f,
+        0.0f,-1.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+        -1.0f, 0.0f, 0.0f,
+        -1.0f, 0.0f, 0.0f,
+        -1.0f, 0.0f, 0.0f,
+        -1.0f, 0.0f, 0.0f
+    };
+
+    mesh.vertices = (float*)malloc(sizeof(float) * 24 * 3);
+    memcpy(mesh.vertices, vertices, sizeof(float) * 24 * 3);
+
+    mesh.normals = (float*)malloc(sizeof(float) * 24 * 3);
+    memcpy(mesh.normals, normals, sizeof(float) * 24 * 3);
+
+    mesh.texcoords = (float*)malloc(sizeof(float) * 24 * 2);
+    memcpy(mesh.texcoords, texcoords, sizeof(float) * 24 * 2);
+
+    mesh.indices = (unsigned short*)malloc(sizeof(unsigned short) * 36);
+
+    int j=0;
+    for(int i=0; i<36; i+=6) {
+        mesh.indices[i] = 4*j;
+        mesh.indices[i+1] = 4*j+1;
+        mesh.indices[i+2] = 4*j+2;
+
+        mesh.indices[i+3] = 4*j;
+        mesh.indices[i+4] = 4*j+2;
+        mesh.indices[i+5] = 4*j+3;
+
+        j++;
+    }
+
+    mesh.triangle_count = 12;
+    mesh.vertex_count = 24;
+
+    upload_mesh(&mesh);
+    return mesh;
+}
+
 Model load_model(const char* path) {
     Model model = load_model_gltf(path);
     glm_mat4_identity(model.transform);
@@ -733,28 +847,19 @@ void draw_mesh(Mesh mesh, Material material) {
         if(material.maps[i].texture == NULL) {
             continue;
         }
+    }
 
-
-        if(material.maps[i].texture->texture > 0) {
-            glActiveTexture(GL_TEXTURE0 + i);
-            glBindTexture(GL_TEXTURE_2D, material.maps[i].texture->texture);
-            set_uniform_int("u_texture", i);
-        }
+    if(material.maps[MATERIAL_MAP_ALBEDO].texture != NULL) {
+        texture_bind(material.maps[MATERIAL_MAP_ALBEDO].texture, 0);
     }
 
     glBindVertexArray(mesh.vaoID);
     glBindBuffer(GL_ARRAY_BUFFER, mesh.vboID[POSITION_ATTR_LOCATION]);
     glBindBuffer(GL_ARRAY_BUFFER, mesh.vboID[TEXCOORD_ATTR_LOCATION]);
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     if(mesh.indices != NULL) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.vboID[INDICES_ATTR_LOCATION]);
-
-        #ifdef SUPPORT_32_BIT_INDICES
-        glDrawElements(GL_TRIANGLES, mesh.triangle_count * 3, GL_UNSIGNED_INT, 0);
-        #else
         glDrawElements(GL_TRIANGLES, mesh.triangle_count * 3, GL_UNSIGNED_SHORT, 0);
-        #endif
     }else {
         glDrawArrays(GL_TRIANGLES, 0, mesh.vertex_count);
     }
@@ -762,4 +867,5 @@ void draw_mesh(Mesh mesh, Material material) {
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }

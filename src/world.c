@@ -71,7 +71,7 @@ static void world_input_callback_impl(uint64_t control_status, input_status inpu
 
     #ifndef EMSCRIPTEN
     if(control_status & SCREENSHOT && input == PRESS_DOWN) {
-        printf("Screenshot\n");
+        printf("Screenshot Saved!\n");
         capture_screenshot();
     }
     #endif
@@ -112,13 +112,13 @@ void world_aspect_ratio(float width, float height) {
     glm_vec3_copy(cam.init_position, cam.cam.position);
 }
 
-void world_begin(graphics_pipeline* pipe) {
-    bind_ubo_with_name(&ubo, "CamBlock", *block, pipe);
+void world_begin(graphics_pipeline** pipe , size_t pipe_count) {
+    bind_ubo_with_name(&ubo, "CamBlock", *block, pipe, pipe_count);
 }
 
-void world_end(graphics_pipeline* pipe) {
+void world_end(graphics_pipeline** pipe, size_t pipe_count) {
     // unbind_ubo_just_ssbo(&ubo, block, pipe);
-    unbind_ubo(&ubo, 0, **block, pipe);
+    unbind_ubo(&ubo, 0, **block, pipe, pipe_count);
 }
 
 

@@ -10,8 +10,7 @@
 #include <utils.h>
 
 #define MAX_GL_BINDINGS \
-    1L << ceil_log2(opengl_get_integerv(GL_MAX_UNIFORM_BUFFER_BINDINGS))
-
+    (1L << ceil_log2(opengl_get_integerv(GL_MAX_UNIFORM_BUFFER_BINDINGS)))
 
 // Uniform Block Object
 
@@ -21,7 +20,6 @@ typedef struct uniform_block {
     hash_set_t* used_bindings;
     int next_binding;
 } uniform_block;
-
 
 // Sized Shader Block Object
 
@@ -35,6 +33,8 @@ typedef struct sized_shader_block {
     bool is_dirty;
 } sized_shader_block;
 
+// Sized Shader Block Methods
+
 sized_shader_block* create_ssbo(uniform_block* ubo, int binding, uint32_t size);
 void init_ssbo(sized_shader_block* block, uniform_block* ubo, int binding, uint32_t size);
 void bind_ssbo(sized_shader_block* block, int binding);
@@ -42,12 +42,13 @@ void unbind_ssbo(sized_shader_block* block, int binding);
 void set_ssbo_data(sized_shader_block* block, void* data, uint32_t size);
 void destroy_ssbo(sized_shader_block* block);
 
-
-// Uniform Block Object Methods
+// Uniform Block Methods (Multi-Pipeline Support)
 
 void init_ubo(uniform_block* block);
-void unbind_ubo(uniform_block* block, int binding, sized_shader_block* ssbo, graphics_pipeline* pipe);
-void unbind_ubo_just_ssbo(uniform_block* block, sized_shader_block** ssbo, graphics_pipeline* pipe);
-int bind_ubo(uniform_block* block, sized_shader_block** ssbo, graphics_pipeline* pipe);
-void bind_ubo_with_name(uniform_block* block, const char* name, sized_shader_block** ssbo, graphics_pipeline* pipe);
 void destroy_ubo(uniform_block* block);
+
+void unbind_ubo(uniform_block* block, int binding, sized_shader_block* ssbo, graphics_pipeline** pipelines, size_t pipeline_count);
+void unbind_ubo_just_ssbo(uniform_block* block, sized_shader_block** ssbo, graphics_pipeline** pipelines, size_t pipeline_count);
+
+int bind_ubo(uniform_block* block, sized_shader_block** ssbo, graphics_pipeline** pipelines, size_t num_pipeline);
+void bind_ubo_with_name(uniform_block* block, const char* name, sized_shader_block** ssbo, graphics_pipeline** pipelines, size_t num_pipeline);

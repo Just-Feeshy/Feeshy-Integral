@@ -241,21 +241,11 @@ function solution_config()
         systemversion "latest"
         language(LANG)
         configurations { "Debug", "Release" }
+        architecture "x86_64"
 
-        -- Platforms + Architecture
-        if os.target() ==  "windows" then
-            platforms { "windows" }
-            system "windows"
-            architecture "x86_64"
-        elseif os.target() == "linux" then
-            platforms { "linux" }
-            system "linux"
-            architecture "x86_64"
-        elseif os.target() == "macosx" then
-            platforms { "macosx" }
-            system "macosx"
-            architecture "arm64"
-        end
+        filter "system:macosx"
+            buildoptions { "-arch x86_64" }
+            linkoptions  { "-arch x86_64" }
 
         flags { "MultiProcessorCompile" }
         optimize(OPTIMIZE)
@@ -295,7 +285,6 @@ function project_config()
             "../third_party/hashmap/hashmap.c",
             "../third_party/hashmap/hashmap.h",
             "../third_party/cglm/src/**.c",
-            "../third_party/tinyfiledialogs/tinyfiledialogs.c",
             "../third_party/cglm/include/**.h",
             "../third_party/stb/stb_image.h",
             "../third_party/cgtlf/cgltf.h",
@@ -311,17 +300,18 @@ function project_config()
             "../third_party/zlib",
             "../third_party/curl/include",
             "../third_party/nuklear",
-            "../third_party/tinyfiledialogs",
-            "../nuklear_bindings/gl3"
+            "../nuklear_bindings/gl3",
         }
 
         -- Third Party Libraries
         links {
             "zlib-lib",
-            "curl-lib"
+            "curl-lib",
         }
 
-        libdirs ("../third_party/curl/lib")
+        libdirs {
+            "../third_party/curl/lib",
+        }
 
         if os.target() ~= "emscripten" then
             targetdir(TARGET_DIR)
@@ -335,6 +325,7 @@ function project_config()
             defines { "MACOSX" }
 
             linkoptions {
+                "-Wl,-rpath,@executable_path/../third_party/angle/out/Release",
                 "-framework IOKit",
                 "-framework SystemConfiguration",
                 "-framework CoreFoundation",
@@ -346,7 +337,8 @@ function project_config()
                 "-framework Cocoa",
                 "-framework CoreServices",
                 "-framework Metal",
-                "-framework OpenGL"
+                "-framework OpenGL",
+                "-framework OpenCL"
             }
 
         filter { "system:windows" }

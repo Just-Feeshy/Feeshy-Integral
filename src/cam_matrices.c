@@ -2,6 +2,7 @@
 #include <cglm/mat4.h>
 #include <cglm/quat.h>
 #include <cglm/cam.h>
+#include <utils.h>
 
 #define UP (vec3){0.0f, 1.0f, 0.0f}
 
@@ -42,12 +43,17 @@ cam_matrices create_cam_matrices() {
         .projection = GLM_MAT4_IDENTITY_INIT,
         .view = GLM_MAT4_IDENTITY_INIT,
         .position = {0.0f, 0.0f, 0.0f},
+
+        #ifndef HAS_GEOMETRY_PASS
         .far = 960.0f,
         .near = 0.001f
+        #else
+        .far = 100.0f,
+        .near = 0.1f
+        #endif
     };
 
     vec3 look_at = {0.0f, 0.0f, -1.0f};
-
     cam_matrices cam = {
         .cam = cam_blck,
         .look_at = {look_at[0], look_at[1], look_at[2]},

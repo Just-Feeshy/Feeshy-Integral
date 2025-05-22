@@ -1,8 +1,9 @@
-#pragma once
-
-#include <cglm/vec3.h>
+#ifndef __AABB_H
+#define __AABB_H
 
 typedef struct AABB {
-    vec3 min;
-    vec3 max;
+    float min[3];
+    float max[3];
 } AABB;
+
+#endif

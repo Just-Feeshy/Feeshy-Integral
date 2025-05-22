@@ -1,8 +1,8 @@
 #define NK_SDL_GL3_IMPLEMENTATION 1
 
-#include <opengl.h>
 #include <program.h>
 #include <screen.h>
+#include <screenshot.h>
 #include <world.h>
 #include <more_math.h>
 #include <geometry_pass.h>
@@ -22,13 +22,6 @@
 #include <gl_dfao.h>
 #endif
 
-#ifdef EMSCRIPTEN
-#include <SDL2/SDL_render.h>
-#include <emscripten.h>
-#else
-#include <SDL_render.h>
-#endif
-
 const double frame_period = 1000.0f / 60.0f;
 
 static struct nk_context* ctx;
@@ -42,7 +35,7 @@ static int length = 0;
 typedef struct program_package {
     struct inputs* in;
     struct SDL_Window* window;
-    struct SDL_GLContext* context;
+    struct GL_Context* context;
     CURL* curl;
     bool active;
     bool dirty_event;
@@ -83,7 +76,11 @@ static void program_context_flip() {
 
 static void program_update_opengl() {
     #ifdef HAS_GEOMETRY_PASS
+    graphics_pipeline* pipelines[] = {pipeline, g_pass.pipeline};
+    world_begin(pipelines, 2);
     geometry_pass_render(g_pass);
+    #else
+    world_begin(&pipeline, 1);
     #endif
 
     opengl_begin(main_program.window);
@@ -91,6 +88,12 @@ static void program_update_opengl() {
 
     screen_render();
     nk_sdl_render(NK_ANTI_ALIASING_ON, MAX_VERTEX_MEMORY, MAX_ELEMENT_MEMORY);
+
+    #ifdef HAS_GEOMETRY_PASS
+    world_end(pipelines, 2);
+    #else
+    world_end(&pipeline, 1);
+    #endif
 
     program_context_flip();
 }
@@ -175,7 +178,7 @@ static void program_update() {
             world_update_fov(fov);
         }
 
-        if (nk_button_label(ctx, "Reset Camera")) {
+        if(nk_button_label(ctx, "Reset Camera")) {
             world_reset_camera();
         }
 
@@ -186,6 +189,12 @@ static void program_update() {
             snprintf(buffer, sizeof(buffer), "Elapsed Shader Time: %u", ms_time_elapsed / 1000000);
             nk_label(ctx, buffer, NK_TEXT_LEFT);
         }
+
+        #ifdef HAS_GEOMETRY_PASS
+        if(nk_button_label(ctx, "Turn On Wireframe")) {
+            g_pass.activate_wireframe = !g_pass.activate_wireframe;
+        }
+        #endif
     }
     nk_end(ctx);
 
@@ -219,12 +228,9 @@ void program_init(const char* name, int w, int h) {
 		return;
 	}
 
-    #ifdef WINDOWS
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, GL_APP_PROFILE_MASK);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, GL_APP_MAJOR_VERSION);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, GL_APP_MINOR_VERSION);
-    #else
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, GL_APP_PROFILE_MASK);
-    #endif
 
     #ifndef EMSCRIPTEN
     SDL_SetHint (SDL_HINT_ANDROID_TRAP_BACK_BUTTON, "0");
@@ -285,17 +291,23 @@ void program_init(const char* name, int w, int h) {
 
     #if FRAGMENT_SELECTOR == 2
     RenderCallback dfao_callback = dfao_test_world_render;
-    #endif
 
-    #ifdef HAS_GEOMETRY_PASS
-    dfao_test_world();
     g_pass = geometry_pass_init(
         dfao_test_world_render,
         w * program_get_pixel_density(),
-        h * program_get_pixel_density()
+        h * program_get_pixel_density(),
+        1
     );
+    dfao_test_world(&g_pass);
     #endif
 
+    #ifdef HAS_GEOMETRY_PASS
+    if(!g_pass.render_callback) {
+        g_pass.render_callback = dfao_callback;
+    }
+    #endif
+
+    screenshot_init();
     world_init();
     world_aspect_ratio(w, h);
 }
@@ -327,6 +339,13 @@ void program_destroy() {
         SDL_GL_DeleteContext(main_program.context);
         main_program.context = NULL;
     }
+
+    #ifdef HAS_GEOMETRY_PASS
+    geometry_pass_destroy(g_pass);
+    #endif
+
+    pipeline_destroy(pipeline);
+    free(pipeline);
 
     SDL_DestroyWindow(main_program.window);
     SDL_Quit();

@@ -37,3 +37,7 @@ static FORCE_INLINE int __builtin_ctz(unsigned x)
 #if FRAGMENT_SELECTOR == 2
 #define HAS_GEOMETRY_PASS
 #endif
+
+#ifndef EMSCRIPTEN
+#define USE_OPENCL
+#endif

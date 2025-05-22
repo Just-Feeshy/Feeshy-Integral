@@ -30,7 +30,7 @@ function main():Void {
         if(Sys.systemName() == "Mac") {
             Sys.println("Detected macOS, setting deployment target to 11.0");
             compileProcess.push("-DCMAKE_OSX_DEPLOYMENT_TARGET=11.0");
-            compileProcess.push('-DCMAKE_OSX_ARCHITECTURES=arm64');
+            compileProcess.push('-DCMAKE_OSX_ARCHITECTURES=x86_64');
         }
 
         for(option in SDL_OPTIONS) {

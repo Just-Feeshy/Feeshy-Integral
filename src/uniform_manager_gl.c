@@ -109,6 +109,17 @@ void set_uniform_vec2(const char* name, float x, float y) {
     glUniform2f(loc->core.location, x, y);
 }
 
+void set_uniform_vec3(const char* name, float x, float y, float z) {
+    const constant_location* loc;
+
+    if ((loc = hashmap_get(uniform_map, &(constant_location){.name=name})) == NULL) {
+        fprintf(stderr, "Failed to find uniform %s\n", name);
+        return;
+    }
+
+    glUniform3f(loc->core.location, x, y, z);
+}
+
 void set_uniform_mat4(const char* name, mat4 mat) {
     const constant_location* loc;
 
