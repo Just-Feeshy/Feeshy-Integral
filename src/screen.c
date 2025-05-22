@@ -79,7 +79,7 @@ void screen_init(int w, int h) {
 
     #if FRAGMENT_SELECTOR == 2
     create_constant_location(pipeline, "u_texture");
-    create_constant_location(pipeline, "u_texture2");
+    create_constant_location(pipeline, "u_volume_tex");
     create_constant_location(pipeline, "u_aabb_min");
     create_constant_location(pipeline, "u_aabb_max");
     #else
@@ -98,16 +98,15 @@ void screen_render() {
     // not the post processing
 
     gpu_timer_query_begin();
-    #ifdef HAS_GEOMETRY_PASS
-    set_uniform_int("u_texture2", 1);
-    world_setup_uniforms();
+
+    #if FRAGMENT_SELECTOR == 2
+    set_uniform_int("u_volume_tex", 1);
+    #else
+    set_uniform_float("u_time", SDL_GetTicks() / 5000.0f);
     #endif
 
     set_uniform_vec2("u_resolution", width, height);
-
-    #if FRAGMENT_SELECTOR != 2
-    set_uniform_float("u_time", SDL_GetTicks() / 5000.0f);
-    #endif
+    world_setup_uniforms();
 
     draw_vertex_buffer(VAO, 6);
 
