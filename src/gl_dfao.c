@@ -2,16 +2,13 @@
 #include <model.h>
 #include <uniform_manager.h>
 #include <cglm/affine.h>
-#include <pipeline.h>
 #include <world.h>
 #include <timer_query.h>
 #include <utils.h>
 
 static Model model;
-static AABB aabb;
 static Mesh mesh_b;
 static Material material_b;
-static graphics_pipeline dfao_pipeline;
 static texture red_texture = {0};
 static int index_mesh = 0;
 
@@ -72,23 +69,16 @@ void dfao_test_world(geometry_pass* g_pass) {
     glm_translate_make(model.transform, (vec3){0.0f, -2.5f, -5.0f});
 
     Mesh mesh = model.meshes[index_mesh];
-    aabb = get_mesh_AABB(mesh);
-    dfao_make_textures(g_pass, mesh, aabb);
-    init_bounding_box(mesh, aabb);
+    g_pass->aabb = get_mesh_AABB(mesh);
+    dfao_make_textures(g_pass, mesh, g_pass->aabb);
+    init_bounding_box(mesh, g_pass->aabb);
 
-    pipeline_init(&dfao_pipeline);
-    pipeline_compile(2, &dfao_pipeline, (shader*[]){&vert_shader, &frag_shader});
-    create_constant_location(&dfao_pipeline, "u_model");
-    create_constant_location(&dfao_pipeline, "u_texture");
+    pipeline_compile(2, g_pass->pipeline, (shader*[]){&vert_shader, &frag_shader});
+    create_constant_location(g_pass->pipeline, "u_model");
+    create_constant_location(g_pass->pipeline, "u_texture");
 }
 
 void dfao_test_world_render() {
-    pipeline_set(&dfao_pipeline);
-
-
-    set_uniform_vec3("u_aabb_min", aabb.min[0], aabb.min[1], aabb.min[2]);
-    set_uniform_vec3("u_aabb_max", aabb.max[0], aabb.max[1], aabb.max[2]);
-
     set_uniform_int("u_texture", 0);
     set_uniform_mat4("u_model", model.transform);
     draw_mesh(model.meshes[index_mesh], model.materials[model.mesh_material[index_mesh]]);

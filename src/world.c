@@ -5,9 +5,16 @@
 #include <cam_matrices.h>
 #include <cglm/vec3.h>
 #include <uniform_block_state.h>
+#include <uniform_manager.h>
 #include <screenshot.h>
 #include <program.h>
 #include <input.h>
+#include <config.h>
+
+#if FRAGMENT_SELECTOR == 2
+#include <gl_dfao.h>
+static geometry_pass g_pass;
+#endif
 
 #ifndef EMSCRIPTEN
 #define SPEED 0.1
@@ -86,8 +93,28 @@ static void world_direction_callback_impl(int x, int y, int dx, int dy) {
     render_cam();
 }
 
-void world_init() {
+void world_init(int w, int h) {
     printf("World Initialized\n");
+
+    #if FRAGMENT_SELECTOR == 2
+    RenderCallback dfao_callback = dfao_test_world_render;
+
+    g_pass = geometry_pass_init(
+        dfao_test_world_render,
+        w * program_get_pixel_density(),
+        h * program_get_pixel_density(),
+        1
+    );
+
+    dfao_test_world(&g_pass);
+    #endif
+
+    #ifdef HAS_GEOMETRY_PASS
+    if(!g_pass.render_callback) {
+        g_pass.render_callback = dfao_callback;
+    }
+    #endif
+
     static InputCallback world_input_callback = world_input_callback_impl;
     static InputDirectionCallback world_direction_callback = world_direction_callback_impl;
     inputs_init_callback(&world_input_callback, &world_direction_callback);
@@ -104,6 +131,16 @@ void world_init() {
     render_cam();
 }
 
+// This sets up the basic uniforms for the world
+// aka. uniforms used in the world
+void world_setup_uniforms() {
+    #ifdef HAS_GEOMETRY_PASS
+    set_uniform_int("u_texture", 0);
+    set_uniform_vec3("u_aabb_min", g_pass.aabb.min[0], g_pass.aabb.min[1], g_pass.aabb.min[2]);
+    set_uniform_vec3("u_aabb_max", g_pass.aabb.max[0], g_pass.aabb.max[1], g_pass.aabb.max[2]);
+    #endif
+}
+
 void world_aspect_ratio(float width, float height) {
     aspect_ratio = width / height;
 
@@ -112,13 +149,34 @@ void world_aspect_ratio(float width, float height) {
     glm_vec3_copy(cam.init_position, cam.cam.position);
 }
 
-void world_begin(graphics_pipeline** pipe , size_t pipe_count) {
-    bind_ubo_with_name(&ubo, "CamBlock", *block, pipe, pipe_count);
+void world_begin(graphics_pipeline* pipe) {
+    size_t pipe_count = 1;
+
+    #ifdef HAS_GEOMETRY_PASS
+    graphics_pipeline* pipelines[] = {pipe, g_pass.pipeline};
+    pipe_count = 2;
+    #else
+    graphics_pipeline* pipelines[] = {pipe};
+    #endif
+
+    bind_ubo_with_name(&ubo, "CamBlock", *block, pipelines, pipe_count);
+
+    #ifdef HAS_GEOMETRY_PASS
+    geometry_pass_render(g_pass);
+    #endif
 }
 
-void world_end(graphics_pipeline** pipe, size_t pipe_count) {
-    // unbind_ubo_just_ssbo(&ubo, block, pipe);
-    unbind_ubo(&ubo, 0, **block, pipe, pipe_count);
+void world_end(graphics_pipeline* pipe) {
+    size_t pipe_count = 1;
+
+    #ifdef HAS_GEOMETRY_PASS
+    graphics_pipeline* pipelines[] = {pipe, g_pass.pipeline};
+    pipe_count = 2;
+    #else
+    graphics_pipeline* pipelines[] = {pipe};
+    #endif
+
+    unbind_ubo(&ubo, 0, **block, pipelines, pipe_count);
 }
 
 
@@ -135,4 +193,20 @@ void world_reset_camera() {
 void world_update_fov(float fov) {
     update_projection_matrix(&cam, aspect_ratio, fov);
     set_ssbo_data(**block, &cam.cam, sizeof(cam_block));
+}
+
+void world_toggle_wireframe() {
+    #ifdef HAS_GEOMETRY_PASS
+    g_pass.activate_wireframe = !g_pass.activate_wireframe;
+    #endif
+}
+
+void world_destroy() {
+    #ifdef HAS_GEOMETRY_PASS
+    geometry_pass_destroy(g_pass);
+    #endif
+
+    free(block[0]);
+    free(block[1]);
+    free(block);
 }

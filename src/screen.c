@@ -99,8 +99,8 @@ void screen_render() {
 
     gpu_timer_query_begin();
     #ifdef HAS_GEOMETRY_PASS
-    set_uniform_int("u_texture", 0);
     set_uniform_int("u_texture2", 1);
+    world_setup_uniforms();
     #endif
 
     set_uniform_vec2("u_resolution", width, height);

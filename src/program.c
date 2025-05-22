@@ -18,15 +18,10 @@
 #define NAP_MULT 1
 #define NAP_DIV 3
 
-#if FRAGMENT_SELECTOR == 2
-#include <gl_dfao.h>
-#endif
-
 const double frame_period = 1000.0f / 60.0f;
 
 static struct nk_context* ctx;
 static struct nk_colorf bg;
-static geometry_pass g_pass;
 
 static char FOV_TXT[9] = "FOV (45)";
 static char buffer_url[65536] = {0}; // I really don't care of any buffer overflow here, it's just a simulation
@@ -75,25 +70,14 @@ static void program_context_flip() {
 }
 
 static void program_update_opengl() {
-    #ifdef HAS_GEOMETRY_PASS
-    graphics_pipeline* pipelines[] = {pipeline, g_pass.pipeline};
-    world_begin(pipelines, 2);
-    geometry_pass_render(g_pass);
-    #else
-    world_begin(&pipeline, 1);
-    #endif
+    world_begin(pipeline);
 
     opengl_begin(main_program.window);
     opengl_clear();
 
     screen_render();
     nk_sdl_render(NK_ANTI_ALIASING_ON, MAX_VERTEX_MEMORY, MAX_ELEMENT_MEMORY);
-
-    #ifdef HAS_GEOMETRY_PASS
-    world_end(pipelines, 2);
-    #else
-    world_end(&pipeline, 1);
-    #endif
+    world_end(pipeline);
 
     program_context_flip();
 }
@@ -192,7 +176,7 @@ static void program_update() {
 
         #ifdef HAS_GEOMETRY_PASS
         if(nk_button_label(ctx, "Turn On Wireframe")) {
-            g_pass.activate_wireframe = !g_pass.activate_wireframe;
+            world_toggle_wireframe();
         }
         #endif
     }
@@ -289,26 +273,8 @@ void program_init(const char* name, int w, int h) {
     uniform_manager_init();
     screen_init(w, h);
 
-    #if FRAGMENT_SELECTOR == 2
-    RenderCallback dfao_callback = dfao_test_world_render;
-
-    g_pass = geometry_pass_init(
-        dfao_test_world_render,
-        w * program_get_pixel_density(),
-        h * program_get_pixel_density(),
-        1
-    );
-    dfao_test_world(&g_pass);
-    #endif
-
-    #ifdef HAS_GEOMETRY_PASS
-    if(!g_pass.render_callback) {
-        g_pass.render_callback = dfao_callback;
-    }
-    #endif
-
     screenshot_init();
-    world_init();
+    world_init(w, h);
     world_aspect_ratio(w, h);
 }
 
@@ -340,10 +306,7 @@ void program_destroy() {
         main_program.context = NULL;
     }
 
-    #ifdef HAS_GEOMETRY_PASS
-    geometry_pass_destroy(g_pass);
-    #endif
-
+    world_destroy();
     pipeline_destroy(pipeline);
     free(pipeline);
 
