@@ -100,8 +100,8 @@ float sampleDistance(vec3 pos) {
 // So it was pretty easy to implement
 vec3 sampleHemisphere(vec3 normal, int i, int total) {
     float phi = TAU * float(i) / float(total); // full circle
-    float cosTheta = float(i + 0.5) / float(total);
-    float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+    float cos_theta = float(i + 0.5) / float(total);
+    float sin_theta = sqrt(1.0 - cos_theta * cos_theta);
 
     // Local tangent space (TBN)
     vec3 up = abs(normal.y) < 0.999 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
@@ -109,9 +109,9 @@ vec3 sampleHemisphere(vec3 normal, int i, int total) {
     vec3 bitangent = cross(normal, tangent);
 
     // Spherical to Cartesian
-    vec3 sampleDir = sinTheta * cos(phi) * tangent +
-                     sinTheta * sin(phi) * bitangent +
-                     cosTheta * normal;
+    vec3 sampleDir = sin_theta * cos(phi) * tangent +
+                     sin_theta * sin(phi) * bitangent +
+                     cos_theta * normal;
     return normalize(sampleDir);
 }
 
