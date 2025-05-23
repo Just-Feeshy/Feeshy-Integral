@@ -123,7 +123,7 @@ void parallelism_init(struct GPU_MODULE* modul, const char* kernel_name, const c
     program = opencl_platform_make_source(context, path);
     assert(program != NULL);
 
-    err = clBuildProgram(program, 1, &device_id, "-cl-std=CL2.0 -Werror -D__OPENCL__ -Iinclude", NULL, NULL);
+    err = clBuildProgram(program, 1, &device_id, "-cl-std=CL1.2 -D__OPENCL__ -Iinclude", NULL, NULL);
     if(err == CL_BUILD_PROGRAM_FAILURE) {
         size_t log_size;
         clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, DEFAULT_BUFFER_SIZE, NULL, &log_size);
@@ -159,21 +159,38 @@ void parallelism_alloc_MDF(struct GPU_MODULE* modul, AABB* aabb, Mesh* mesh, int
     cl_mem normal_buffer = clCreateBuffer(modul->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(float) * mesh->vertex_count * 3, mesh->normals, &err);
     assert(err == CL_SUCCESS);
 
+    cl_mem index_buffer = clCreateBuffer(modul->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(unsigned short) * mesh->triangle_count * 3, mesh->indices, &err);
+
     cl_mem output_buffer = clCreateBuffer(modul->context, CL_MEM_WRITE_ONLY, sizeof(float) * __size, NULL, &err);
     assert(err == CL_SUCCESS);
 
 
     err |= clSetKernelArg(modul->kernel, 0, sizeof(cl_mem), &output_buffer);
+    assert(err == CL_SUCCESS);
+
     err |= clSetKernelArg(modul->kernel, 1, sizeof(cl_mem), &vertex_buffer);
+    assert(err == CL_SUCCESS);
+
     err |= clSetKernelArg(modul->kernel, 2, sizeof(cl_mem), &normal_buffer);
-    err |= clSetKernelArg(modul->kernel, 3, sizeof(cl_int), &mesh->vertex_count);
-    err |= clSetKernelArg(modul->kernel, 4, sizeof(cl_mem), &aabb_buffer);
+    assert(err == CL_SUCCESS);
+
+    err |= clSetKernelArg(modul->kernel, 3, sizeof(cl_mem), &index_buffer);
+    assert(err == CL_SUCCESS);
+
+    err |= clSetKernelArg(modul->kernel, 4, sizeof(cl_int), &mesh->vertex_count);
+    assert(err == CL_SUCCESS);
+
+    err |= clSetKernelArg(modul->kernel, 5, sizeof(cl_int), &mesh->triangle_count);
+    assert(err == CL_SUCCESS);
+
+    err |= clSetKernelArg(modul->kernel, 6, sizeof(cl_mem), &aabb_buffer);
     assert(err == CL_SUCCESS);
 
     (*data) = output_buffer;
     data[1] = vertex_buffer;
     data[2] = normal_buffer;
-    data[3] = aabb_buffer;
+    data[3] = index_buffer;
+    data[4] = aabb_buffer;
 }
 
 void parallelism_invoke_MDF(struct GPU_MODULE* modul, GPU_MEM data, float** buffer, size_t data_size) {

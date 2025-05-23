@@ -89,8 +89,8 @@ texture* texture_volume(struct GPU_MODULE* modul, Mesh* mesh, AABB* aabb) {
     glGenTextures(1, (unsigned*)&tex->texture);
     glBindTexture(tex->type, (unsigned)tex->texture);
 
-    GPU_MEM* data = malloc(sizeof(GPU_MEM) * 4);
-    size_t data_size = 4;
+    size_t data_size = 5;
+    GPU_MEM* data = malloc(sizeof(GPU_MEM) * data_size);
 
     float* buffer = NULL;
 
@@ -108,12 +108,13 @@ texture* texture_volume(struct GPU_MODULE* modul, Mesh* mesh, AABB* aabb) {
     parallelism_alloc_MDF(modul, aabb, mesh, (int32_t)tex->texture, data, UNIFORM_GRID_SIZE);
     parallelism_invoke_MDF(modul, data[0], &buffer, UNIFORM_GRID_SIZE);
 
-    // for(size_t i=0; i<UNIFORM_GRID_SIZE; i++) {
-    //     if(!(buffer[i] < 0.01f && buffer[i] > 0.0f)) {
-    //         continue;
-    //     }
-    //     printf("%f ", buffer[i]);
-    // }
+    for(size_t i=0; i<UNIFORM_GRID_SIZE; i++) {
+        if(buffer[i] > 1.0f) {
+            continue;
+        }
+
+        printf("%f ", buffer[i]);
+    }
 
     glTexImage3D(tex->type, 0, GL_R32F, tex->width, tex->height, tex->depth, 0, GL_RED, GL_FLOAT, buffer);
     glTexParameteri(tex->type, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
