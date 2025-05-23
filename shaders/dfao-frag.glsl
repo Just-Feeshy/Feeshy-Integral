@@ -2,6 +2,8 @@
 
 precision mediump float;
 
+#define TAU 6.28318530
+
 out vec4 fragColor;
 
 layout(std140) uniform CamBlock {
@@ -93,8 +95,11 @@ float sampleDistance(vec3 pos) {
     return max(texture(u_volume_tex, tex_coord).r, 0.0);
 }
 
+// Basically a hemisphere sampling
+// I literally learned this from my Calc III class
+// So it was pretty easy to implement
 vec3 sampleHemisphere(vec3 normal, int i, int total) {
-    float phi = 6.283185 * float(i) / float(total); // full circle
+    float phi = TAU * float(i) / float(total); // full circle
     float cosTheta = float(i + 0.5) / float(total);
     float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
 
@@ -177,8 +182,7 @@ float computeDFAO(vec3 pos, vec3 normal) {
     for (int i = 0; i < NUM_SAMPLES; ++i) {
         vec3 sampleDir = sampleHemisphere(normal, i, NUM_SAMPLES);
         int iter = 0;
-        float dist = sdf_dist(pos + normal * 0.01, 0.0, iter, pos + normal * 0.01, sampleDir, 1.0); // far = 1.0 or whatever your max AO range is
-
+        float dist = sdf_dist(pos + normal * 0.01, 0.0, iter, pos + normal * 0.01, sampleDir, 1.0);
         if (dist > 0.0) {
             occlusion += 1.0 / (1.0 + dist * dist * 4.0);
         }
