@@ -76,7 +76,7 @@ bool intersectBox(vec3 ro, vec3 rd, out float t0, out float t1) {
     t1 = tmax;
 
     if(t0 < 0.0 && t1 >= 0.0) {
-        t0 = 0.01;
+        t0 = 0.0;
     }
 
     if (t1 < 0.0) {
@@ -103,7 +103,7 @@ vec3 sampleHemisphere(vec3 normal, int i, int total) {
     float cos_theta = float(i + 0.5) / float(total);
     float sin_theta = sqrt(1.0 - cos_theta * cos_theta);
 
-    // Local tangent space (TBN)
+    // Local tangent space (TBN) + I used 0.999 for float precision
     vec3 up = abs(normal.y) < 0.999 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
     vec3 tangent = normalize(cross(up, normal));
     vec3 bitangent = cross(normal, tangent);
