@@ -117,24 +117,18 @@ vec3 sampleHemisphere(vec3 normal, int i, int total) {
 
 vec3 sdf_normal(vec3 p) {
     const float eps = 0.005;
+    const vec2 k = vec2(1, -1);
 
-    float dx = sampleDistance(p + vec3(eps, 0.0, 0.0)) - sampleDistance(p - vec3(eps, 0.0, 0.0));
-    float dy = sampleDistance(p + vec3(0.0, eps, 0.0)) - sampleDistance(p - vec3(0.0, eps, 0.0));
-    float dz = sampleDistance(p + vec3(0.0, 0.0, eps)) - sampleDistance(p - vec3(0.0, 0.0, eps));
-    return normalize(vec3(dx, dy, dz));
+    return normalize(
+        k.xyy * sampleDistance(p + k.xyy * eps) +
+        k.yyx * sampleDistance(p + k.yyx * eps) +
+        k.yxy * sampleDistance(p + k.yxy * eps) +
+        k.xxx * sampleDistance(p + k.xxx * eps)
+    );
 }
 
 float sdf_sphere(vec3 p, float r) {
     return length(p) - r;
-}
-
-vec3 sphere_normal(vec3 p) {
-    const float eps = 0.005;
-
-    float dx = sdf_sphere(p + vec3(eps, 0.0, 0.0), 1.0) - sdf_sphere(p - vec3(eps, 0.0, 0.0), 1.0);
-    float dy = sdf_sphere(p + vec3(0.0, eps, 0.0), 1.0) - sdf_sphere(p - vec3(0.0, eps, 0.0), 1.0);
-    float dz = sdf_sphere(p + vec3(0.0, 0.0, eps), 1.0) - sdf_sphere(p - vec3(0.0, 0.0, eps), 1.0);
-    return normalize(vec3(dx, dy, dz));
 }
 
 float weaking(vec3 p, vec3 n) {
@@ -214,8 +208,9 @@ vec4 render(vec2 uv) {
 
         if(t != -1.0) {
             vec3 p = ray_origin + t * ray_direction;
-            float ao = computeDFAO(p, sdf_normal(p));
-            color = texture(u_texture, v_position / u_resolution).rgb * ao;
+            vec3 normal = sdf_normal(p);
+            float ao = computeDFAO(p, normal);
+            // color = texture(u_texture, v_position / u_resolution).rgb * ao;
         }
     }
 
