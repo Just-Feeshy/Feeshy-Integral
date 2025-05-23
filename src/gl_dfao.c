@@ -56,8 +56,6 @@ void dfao_test_world(geometry_pass* g_pass) {
 
     Mesh mesh = model.meshes[index_mesh];
     g_pass->aabb = get_mesh_AABB(mesh);
-    glm_vec3_add(g_pass->aabb.min, (vec3){-0.5f, -0.5f, -0.5f}, g_pass->aabb.min);
-    glm_vec3_add(g_pass->aabb.max, (vec3){0.5f, 0.5f, 0.5f}, g_pass->aabb.max);
     dfao_make_textures(g_pass, mesh, g_pass->aabb);
 
     pipeline_compile(2, g_pass->pipeline, (shader*[]){&vert_shader, &frag_shader});

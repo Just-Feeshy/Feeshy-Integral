@@ -210,7 +210,11 @@ vec4 render(vec2 uv) {
             vec3 p = ray_origin + t * ray_direction;
             vec3 normal = sdf_normal(p);
             float ao = computeDFAO(p, normal);
-            color = texture(u_texture, v_position / u_resolution).rgb * ao;
+            // color = texture(u_texture, v_position / u_resolution).rgb * ao;
+            vec3 tex_color = texture(u_texture, v_position / u_resolution).rgb;
+            if(dot(tex_color, tex_color) > 0.0) {
+                color = vec3(1.0) * ao;
+            }
         }
     }
 
