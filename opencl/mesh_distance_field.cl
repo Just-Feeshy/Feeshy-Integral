@@ -1,6 +1,9 @@
 #define IS_OPENCL
 #include <aabb.h>
 
+// Couldn't be bothered to write my closest point on triangle function
+// so I just copied it from the internet via stackoverflow.
+// https://stackoverflow.com/questions/2924795/fastest-way-to-compute-point-to-triangle-distance-in-3d
 static inline float3 closestPointOnTriangle(float3 p, float3 a, float3 b, float3 c) {
     float3 ab = b - a;
     float3 ac = c - a;
@@ -44,6 +47,8 @@ static inline float3 closestPointOnTriangle(float3 p, float3 a, float3 b, float3
     return a + ab * v + ac * w;
 }
 
+// Originally I had this be the closest point on triangle function,
+// but I ended up rewriting it and such I separated the two functions.
 static inline float pointTriangleDistance(float3 p, float3 a, float3 b, float3 c) {
     float3 cp = closestPointOnTriangle(p, a, b, c);
     return length(p - cp);

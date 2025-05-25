@@ -44,18 +44,23 @@ geometry_pass geometry_pass_init(RenderCallback render_callback, int width, int 
     return pass;
 }
 
-void geometry_pass_render(geometry_pass pass) {
+void geometry_pass_add_texture(geometry_pass* pass, texture tex) {
+    pass->textures = (texture*)realloc(pass->textures, sizeof(texture) * (pass->texture_count + 1));
+    assert(pass->textures != NULL);
+    pass->textures[pass->texture_count] = tex;
+    pass->texture_count++;
+}
+
+void geometry_pass_render(geometry_pass pass, uint32_t texture_offset) {
     glBindFramebuffer(GL_FRAMEBUFFER, pass.framebuffer);
     glViewport(0, 0, pass.textures[0].width, pass.textures[0].height);
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glDepthMask(GL_TRUE);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
+    // glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if(pass.activate_wireframe) {
@@ -72,7 +77,8 @@ void geometry_pass_render(geometry_pass pass) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     for(uint32_t i=0; i<pass.texture_count; i++) {
-        texture_bind(&pass.textures[i], i);
+        texture_bind(&pass.textures[i], i + texture_offset);
+        // printf("Texture %d bound to unit %d\n", i, i + texture_offset);
     }
 }
 

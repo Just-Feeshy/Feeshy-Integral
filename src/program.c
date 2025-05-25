@@ -5,7 +5,6 @@
 #include <screenshot.h>
 #include <world.h>
 #include <more_math.h>
-#include <geometry_pass.h>
 #include <nuklear_sdl_gl.h>
 #include <menu.h>
 #include <stdlib.h>
