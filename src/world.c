@@ -11,9 +11,25 @@
 #include <input.h>
 #include <config.h>
 
-#if FRAGMENT_SELECTOR == 2
-#include <gl_dfao.h>
-static geometry_pass g_pass;
+/*
+ * One of the two source files with spaghetti code
+ * Specifically for macros
+ * I don't care about the code quality here
+ * just wanted more easy control over the lexical scope
+ * and avoid commenting a lot of code and uncommenting it later
+*/
+
+
+#ifdef HAS_GEOMETRY_PASS
+    #if USE_FBO_CUBEMAP == 1
+    #include <cubemap.h>
+    static geometry_pass cube_pass;
+    #endif
+
+    #if USE_FBO_WORLD == 1
+    #include <gl_dfao.h>
+    static geometry_pass g_pass;
+    #endif
 #endif
 
 #ifndef EMSCRIPTEN
@@ -96,7 +112,8 @@ static void world_direction_callback_impl(int x, int y, int dx, int dy) {
 void world_init(int w, int h) {
     printf("World Initialized\n");
 
-    #if FRAGMENT_SELECTOR == 2
+#ifdef HAS_GEOMETRY_PASS
+    #if USE_FBO_WORLD  == 1
     RenderCallback dfao_callback = dfao_test_world_render;
 
     g_pass = geometry_pass_init(
@@ -109,11 +126,19 @@ void world_init(int w, int h) {
     dfao_test_world(&g_pass);
     #endif
 
-    #ifdef HAS_GEOMETRY_PASS
-    if(!g_pass.render_callback) {
-        g_pass.render_callback = dfao_callback;
-    }
+    #if USE_FBO_CUBEMAP == 1
+    RenderCallback cube_callback = cubemap_render;
+
+    cube_pass = geometry_pass_init(
+        cube_callback,
+        w * program_get_pixel_density(),
+        h * program_get_pixel_density(),
+        1
+    );
+
+    cubemap_init(&cube_pass);
     #endif
+#endif
 
     static InputCallback world_input_callback = world_input_callback_impl;
     static InputDirectionCallback world_direction_callback = world_direction_callback_impl;
@@ -134,11 +159,19 @@ void world_init(int w, int h) {
 // This sets up the basic uniforms for the world
 // aka. uniforms used in the world
 void world_setup_uniforms() {
-    #ifdef HAS_GEOMETRY_PASS
+#ifdef HAS_GEOMETRY_PASS
     set_uniform_int("u_texture", 0);
+
+    #if USE_FBO_WORLD == 1
     set_uniform_vec3("u_aabb_min", g_pass.aabb.min[0], g_pass.aabb.min[1], g_pass.aabb.min[2]);
     set_uniform_vec3("u_aabb_max", g_pass.aabb.max[0], g_pass.aabb.max[1], g_pass.aabb.max[2]);
     #endif
+
+    #if USE_FBO_CUBEMAP == 1
+    set_uniform_vec3("u_aabb_min", cube_pass.aabb.min[0], cube_pass.aabb.min[1], cube_pass.aabb.min[2]);
+    set_uniform_vec3("u_aabb_max", cube_pass.aabb.max[0], cube_pass.aabb.max[1], cube_pass.aabb.max[2]);
+    #endif
+#endif
 }
 
 void world_aspect_ratio(float width, float height) {
@@ -149,20 +182,46 @@ void world_aspect_ratio(float width, float height) {
     glm_vec3_copy(cam.init_position, cam.cam.position);
 }
 
+
+/*
+ * Don't care this spaghetti macro code
+ * especially for it repeating twice
+ * I just want something that works
+ * and is dynamic
+*/
+
 void world_begin(graphics_pipeline* pipe) {
     size_t pipe_count = 1;
 
     #ifdef HAS_GEOMETRY_PASS
-    graphics_pipeline* pipelines[] = {pipe, g_pass.pipeline};
-    pipe_count = 2;
+    graphics_pipeline* pipelines[] = {
+        pipe,
+
+        #if USE_FBO_WORLD == 1
+        g_pass.pipeline,
+        #endif
+
+        #if USE_FBO_CUBEMAP == 1
+        cube_pass.pipeline
+        #endif
+    };
+
+    pipe_count = 1 + USE_FBO_WORLD + USE_FBO_CUBEMAP;
     #else
     graphics_pipeline* pipelines[] = {pipe};
     #endif
 
     bind_ubo_with_name(&ubo, "CamBlock", *block, pipelines, pipe_count);
+    size_t texture_count = 0;
 
-    #ifdef HAS_GEOMETRY_PASS
-    geometry_pass_render(g_pass);
+    #if defined(HAS_GEOMETRY_PASS) && USE_FBO_WORLD == 1
+    geometry_pass_render(g_pass, texture_count);
+    texture_count += g_pass.texture_count;
+    #endif
+
+    #if defined(HAS_GEOMETRY_PASS) && USE_FBO_CUBEMAP == 1
+    geometry_pass_render(cube_pass, texture_count);
+    texture_count += cube_pass.texture_count;
     #endif
 }
 
@@ -170,8 +229,19 @@ void world_end(graphics_pipeline* pipe) {
     size_t pipe_count = 1;
 
     #ifdef HAS_GEOMETRY_PASS
-    graphics_pipeline* pipelines[] = {pipe, g_pass.pipeline};
-    pipe_count = 2;
+    graphics_pipeline* pipelines[] = {
+        pipe,
+
+        #if USE_FBO_WORLD == 1
+        g_pass.pipeline,
+        #endif
+
+        #if USE_FBO_CUBEMAP == 1
+        cube_pass.pipeline
+        #endif
+    };
+
+    pipe_count = 1 + USE_FBO_WORLD + USE_FBO_CUBEMAP;
     #else
     graphics_pipeline* pipelines[] = {pipe};
     #endif
@@ -196,15 +266,21 @@ void world_update_fov(float fov) {
 }
 
 void world_toggle_wireframe() {
-    #ifdef HAS_GEOMETRY_PASS
+    #if defined(HAS_GEOMETRY_PASS) && USE_FBO_WORLD == 1
     g_pass.activate_wireframe = !g_pass.activate_wireframe;
     #endif
 }
 
 void world_destroy() {
-    #ifdef HAS_GEOMETRY_PASS
+#ifdef HAS_GEOMETRY_PASS
+    #if USE_FBO_CUBEMAP == 1
+    geometry_pass_destroy(cube_pass);
+    #endif
+
+    #if USE_FBO_WORLD == 1
     geometry_pass_destroy(g_pass);
     #endif
+#endif
 
     free(block[0]);
     free(block[1]);

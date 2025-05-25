@@ -149,6 +149,9 @@ float sdf_dist(vec3 pos, float t, inout int iter, vec3 ray_origin, vec3 ray_dire
             return t;
         }
 
+        // Prevent infinite loop from zero/negative distances
+        dist = max(dist, 0.02);
+
         if(t > far) {
             break;
         }
@@ -169,21 +172,17 @@ float raymarching(vec3 pos, float t_i, float t_f, vec3 ray_origin, vec3 ray_dire
     return t;
 }
 
-float computeDFAO(vec3 pos, vec3 normal) {
-    float occlusion = 0.0;
-    const int NUM_SAMPLES = 16;
+float compute_AO(vec3 p, vec3 n) {
+    float step = cam_block.near * 2;
+    float ao = 0.0;
+    float dist;
 
-    for (int i = 0; i < NUM_SAMPLES; ++i) {
-        vec3 sampleDir = sampleHemisphere(normal, i, NUM_SAMPLES);
-        int iter = 0;
-        float dist = sdf_dist(pos + normal * 0.01, 0.0, iter, pos + normal * 0.01, sampleDir, 1.0);
-        if (dist > 0.0) {
-            occlusion += 1.0 / (1.0 + dist * dist * 4.0);
-        }
+    for(int i=1; i<=3; i++) {
+        dist = step;
+        ao += max((dist - sampleDistance(p + n * dist)) / dist, 0.0);
     }
 
-    occlusion /= float(NUM_SAMPLES);
-    return 1.0 - occlusion;
+    return 1.0 - ao * 0.3; // Scale the AO value
 }
 
 vec4 render(vec2 uv) {
@@ -203,19 +202,14 @@ vec4 render(vec2 uv) {
     vec3 color = vec3(0.0);
 
     if (hit) {
-        vec3 center = (u_aabb_min + u_aabb_max) * 0.5;
-        float t = raymarching(center, t0, t1, ray_origin, ray_direction);
-
+        float t = raymarching(vec3(0.0), t0, t1, ray_origin, ray_direction);
+        //color = sdf_normal(p); // Basic normal mapping
         if(t != -1.0) {
             vec3 p = ray_origin + t * ray_direction;
-            vec3 normal = sdf_normal(p);
-            float ao = computeDFAO(p, normal);
-            // color = texture(u_texture, v_position / u_resolution).rgb * ao;
-            vec3 tex_color = texture(u_texture, v_position / u_resolution).rgb;
-            if(dot(tex_color, tex_color) > 0.0) {
-                color = vec3(1.0) * ao;
-            }
+            color = sdf_normal(p);
         }
+
+        // color = texture(u_texture, v_position / u_resolution).rgb * compute_AO(p, sdf_normal(p));
     }
 
     return vec4(color, 1.0);

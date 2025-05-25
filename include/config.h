@@ -8,6 +8,10 @@
 #define DEFAULT_BUFFER_SIZE 128
 #define MAX_ITERATIONS 10000
 
+// Control Type of FBO that gets preprocessed
+#define USE_FBO_WORLD 1
+#define USE_FBO_CUBEMAP 0
+
 // Shader locations
 // These are the locations of the attributes in the shader
 

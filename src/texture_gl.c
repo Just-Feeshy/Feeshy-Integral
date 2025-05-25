@@ -1,19 +1,8 @@
 #define FNL_IMPL 1
 
-#define STB_IMAGE_IMPLEMENTATION 1
-#include <stb_image.h>
 #include <texture.h>
 #include <opengl.h>
 #include <more_math.h>
-
-#ifdef EMSCRIPTEN
-#include <SDL2/SDL_rwops.h>
-#else
-#include <SDL_rwops.h>
-#endif
-
-#define K1 0.366025404 // (sqrt(3)-1)/2;
-#define K2 0.211324865 // (3-sqrt(3))/6;
 
 texture* texture_init(image img) {
     texture* tex = (texture*)malloc(sizeof(texture));
@@ -48,6 +37,48 @@ texture* texture_init(image img) {
     return tex;
 }
 
+texture* texture_cubemap_init(image imgs[6]) {
+    texture* tex = malloc(sizeof(texture));
+    tex->width = imgs[0].width;
+    tex->height = imgs[0].height;
+    tex->type = GL_TEXTURE_CUBE_MAP;
+    tex->depth = 1;
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glGenTextures(1, &tex->texture);
+    glBindTexture(tex->type, tex->texture);
+
+    GLenum faces[6] = {
+        GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
+    };
+
+    for(int i = 0; i < 6; i++) {
+        switch(imgs[i].channels) {
+            case 1: tex->image_format = GL_RED; break;
+            case 2: tex->image_format = GL_RG; break;
+            case 3: tex->image_format = GL_RGB; break;
+            case 4: tex->image_format = GL_RGBA; break;
+            default: fprintf(stderr, "Invalid number of channels\n"); exit(EXIT_FAILURE);
+        }
+
+        glTexImage2D(faces[i], 0, tex->image_format, tex->width, tex->height, 0, tex->image_format, GL_UNSIGNED_BYTE, imgs[i].data);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    }
+
+    tex->image_format = 0; // Multiple formats, can't choose, so set to 0. Can't be bothered.
+    glBindTexture(tex->type, 0);
+    return tex;
+}
+
 texture texture_red_init() {
     texture tex = {0};
     tex.width = 1;
@@ -71,10 +102,6 @@ texture texture_red_init() {
 void texture_bind(texture* tex, unsigned unit) {
     glActiveTexture(GL_TEXTURE0 + unit);
     glBindTexture(tex->type, (unsigned)tex->texture);
-    glTexParameteri(tex->type, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(tex->type, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(tex->type, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(tex->type, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
 #ifndef EMSCRIPTEN
@@ -127,58 +154,3 @@ texture* texture_volume(struct GPU_MODULE* modul, Mesh* mesh, AABB* aabb) {
     return tex;
 }
 #endif
-
-image load_image(const char* path) {
-    SDL_RWops* file = SDL_RWFromFile(path, "rb");
-
-    if (file == NULL) {
-        fprintf(stderr, "Failed to open file: %s\n", path);
-        goto cleanup_image;
-    }
-
-    int64_t file_size = SDL_RWsize(file);
-    uint8_t* file_buffer = (uint8_t*)SDL_malloc(file_size);
-
-    if (file_buffer == NULL) {
-        fprintf(stderr, "Failed to allocate memory for file: %s\n", path);
-        goto cleanup_image;
-    }
-
-    if(SDL_RWread(file, file_buffer, 1, file_size) != file_size) {
-        fprintf(stderr, "Failed to read file: %s\n", path);
-        goto cleanup_image;
-    }
-
-    image img = {0};
-    img.data = stbi_load_from_memory(file_buffer, file_size, &img.width, &img.height, &img.channels, 0);
-
-    if(img.data != NULL) {
-        SDL_Log("Image loaded successfully (%dx%d, %d channels)\n", img.width, img.height, img.channels);
-    } else {
-        SDL_Log("Failed to load image file %s\n", path);
-    }
-
-cleanup_image:
-    if(file) {
-        SDL_RWclose(file);
-    }
-
-    if(file_buffer) {
-        free(file_buffer);
-    }
-
-    return img;
-}
-
-image load_image_raw(const uint8_t* data, uint32_t size) {
-    image img = {0};
-    img.data = stbi_load_from_memory(data, size, &img.width, &img.height, &img.channels, 0);
-
-    if(img.data != NULL) {
-        SDL_Log("Image loaded successfully (%dx%d, %d channels)\n", img.width, img.height, img.channels);
-    } else {
-        SDL_Log("Failed to load image data\n");
-    }
-
-    return img;
-}
