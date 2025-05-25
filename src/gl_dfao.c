@@ -6,6 +6,8 @@
 #include <timer_query.h>
 #include <utils.h>
 
+#define EPSILON 0.05f
+
 static Model model;
 static Mesh mesh_b;
 static Material material_b;
@@ -42,8 +44,6 @@ void dfao_test_world(geometry_pass* g_pass) {
     shader_attribute* vert_attrs[] = {
         &(shader_attribute){"a_position", POSITION_ATTR_LOCATION},
         &(shader_attribute){"a_texcoord", TEXCOORD_ATTR_LOCATION},
-        &(shader_attribute){"a_normal", NORMAL_ATTR_LOCATION},
-        &(shader_attribute){"a_tangent", TANGENT_ATTR_LOCATION},
     };
 
     shader_attribute* frag_attrs[] = {
@@ -56,6 +56,8 @@ void dfao_test_world(geometry_pass* g_pass) {
 
     Mesh mesh = model.meshes[index_mesh];
     g_pass->aabb = get_mesh_AABB(mesh);
+    glm_vec3_add(g_pass->aabb.min, (vec3){-EPSILON, -EPSILON, -EPSILON}, g_pass->aabb.min);
+    glm_vec3_add(g_pass->aabb.max, (vec3){EPSILON, EPSILON, EPSILON}, g_pass->aabb.max);
     dfao_make_textures(g_pass, mesh, g_pass->aabb);
 
     pipeline_compile(2, g_pass->pipeline, (shader*[]){&vert_shader, &frag_shader});

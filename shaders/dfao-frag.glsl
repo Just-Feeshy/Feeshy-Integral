@@ -22,8 +22,6 @@ uniform vec2 u_resolution;
 
 in vec2 v_position;
 
-const vec3 light_pos = vec3(0.0, 20.0, 0.0);
-
 #define MAX_STEPS 99
 #define NEW_RAYMARCH 0
 
@@ -91,8 +89,8 @@ vec3 get_tex_coord(vec3 pos) {
 }
 
 float sampleDistance(vec3 pos) {
-    vec3 tex_coord = get_tex_coord(pos);
-    return max(texture(u_volume_tex, tex_coord).r, 0.0);
+    vec3 tex_coord = clamp(get_tex_coord(pos), vec3(0.001), vec3(0.999));
+    return texture(u_volume_tex, tex_coord).r * (length(u_aabb_max - u_aabb_min));
 }
 
 // Basically a hemisphere sampling
@@ -116,26 +114,13 @@ vec3 sampleHemisphere(vec3 normal, int i, int total) {
 }
 
 vec3 sdf_normal(vec3 p) {
-    const float eps = 0.005;
+    const float h = 0.005;
     const vec2 k = vec2(1, -1);
-
-    return normalize(
-        k.xyy * sampleDistance(p + k.xyy * eps) +
-        k.yyx * sampleDistance(p + k.yyx * eps) +
-        k.yxy * sampleDistance(p + k.yxy * eps) +
-        k.xxx * sampleDistance(p + k.xxx * eps)
-    );
-}
-
-float sdf_sphere(vec3 p, float r) {
-    return length(p) - r;
-}
-
-float weaking(vec3 p, vec3 n) {
-    vec3 w_i = normalize(light_pos - p);
-    float diff = dot(w_i, n);
-
-    return diff;
+    vec3 n = k.xyy * sampleDistance(p + k.xyy * h) +
+             k.yyx * sampleDistance(p + k.yyx * h) +
+             k.yxy * sampleDistance(p + k.yxy * h) +
+             k.xxx * sampleDistance(p + k.xxx * h);
+    return normalize(n);
 }
 
 float sdf_dist(vec3 pos, float t, inout int iter, vec3 ray_origin, vec3 ray_direction, float far) {
@@ -156,8 +141,9 @@ float sdf_dist(vec3 pos, float t, inout int iter, vec3 ray_origin, vec3 ray_dire
             break;
         }
 
+        // t += step_size; // Step size is a constant value
         //t += dist;
-        t += min(dist * 0.2, step_size);
+        t += min(dist * 0.25, step_size);
         iter++;
     }
 
@@ -173,19 +159,20 @@ float raymarching(vec3 pos, float t_i, float t_f, vec3 ray_origin, vec3 ray_dire
 }
 
 float compute_AO(vec3 p, vec3 n) {
-    float step = cam_block.near * 2;
+    float step = cam_block.near * 1.5;
     float ao = 0.0;
     float dist;
 
-    for(int i=1; i<=3; i++) {
+    for(int i=1; i<=8; i++) {
         dist = step;
-        ao += max((dist - sampleDistance(p + n * dist)) / dist, 0.0);
+        float weight = exp(-float(i) * 0.5);
+        ao += weight * max((dist - sampleDistance(p + n * dist)) / dist, 0.0);
     }
 
     return 1.0 - ao * 0.3; // Scale the AO value
 }
 
-vec4 render(vec2 uv) {
+vec4 render(vec2 uv, vec4 tex) {
 
     // World View Projection
     vec4 clip = vec4(uv, -1.0, 1.0);
@@ -203,13 +190,11 @@ vec4 render(vec2 uv) {
 
     if (hit) {
         float t = raymarching(vec3(0.0), t0, t1, ray_origin, ray_direction);
-        //color = sdf_normal(p); // Basic normal mapping
         if(t != -1.0) {
             vec3 p = ray_origin + t * ray_direction;
-            color = sdf_normal(p);
+            color = /*tex.rgb*/ vec3(1.0) * compute_AO(p, sdf_normal(p));
         }
 
-        // color = texture(u_texture, v_position / u_resolution).rgb * compute_AO(p, sdf_normal(p));
     }
 
     return vec4(color, 1.0);
@@ -217,5 +202,12 @@ vec4 render(vec2 uv) {
 
 void main() {
     vec2 uv = (gl_FragCoord.xy / u_resolution.xy) * 2.0 - 1.0;
-    fragColor = render(uv);
+    vec4 tex = texture(u_texture, v_position / u_resolution.xy);
+
+    if (tex.a == 0.0) {
+        fragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        return;
+    }
+
+    fragColor = render(uv, tex);
 }

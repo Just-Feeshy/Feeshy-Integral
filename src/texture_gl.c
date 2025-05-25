@@ -102,6 +102,10 @@ texture texture_red_init() {
 void texture_bind(texture* tex, unsigned unit) {
     glActiveTexture(GL_TEXTURE0 + unit);
     glBindTexture(tex->type, (unsigned)tex->texture);
+    glTexParameteri(tex->type, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(tex->type, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(tex->type, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(tex->type, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
 #ifndef EMSCRIPTEN
