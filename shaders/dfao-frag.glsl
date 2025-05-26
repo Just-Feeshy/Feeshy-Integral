@@ -2,6 +2,7 @@
 
 precision mediump float;
 
+#define PI 3.14159265
 #define TAU 6.28318530
 
 out vec4 fragColor;
@@ -26,8 +27,8 @@ in vec2 v_position;
 #define MAX_STEPS 99
 #define NEW_RAYMARCH 0
 
-const float ao_max_iterations = 3; // Maximum iterations for Ambient Occlusion
-const float ao_intensity = 0.2; // Ambient Occlusion intensity
+const float ao_max_iterations = 4; // Maximum iterations for Ambient Occlusion
+const float ao_intensity = 0.25; // Ambient Occlusion intensity
 
 // Thank you for "A Minimal Ray-Tracer"
 // The original code can be found at:
@@ -160,7 +161,7 @@ vec3 sample_hemisphere(vec3 normal, int i, int total) {
 }
 
 float compute_AO(vec3 p, vec3 n) {
-    float step = cam_block.near * 1.5;
+    float step = cam_block.near;
     float ao = 0.0;
     float dist;
 
@@ -169,7 +170,7 @@ float compute_AO(vec3 p, vec3 n) {
         ao += max((dist - sampleDistance(p + n * dist)) / dist, 0.0);
     }
 
-    return 1.0 - ao * ao_intensity; // Scale the AO value
+    return 1.0 - (ao * ao_intensity); // Scale the AO value
 }
 
 vec4 render(vec2 uv, vec4 tex) {
