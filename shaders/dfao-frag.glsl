@@ -16,6 +16,7 @@ layout(std140) uniform CamBlock {
 
 uniform sampler2D u_texture;
 uniform sampler3D u_volume_tex;
+uniform sampler2D u_skybox_tex;
 uniform vec3 u_aabb_min;
 uniform vec3 u_aabb_max;
 uniform vec2 u_resolution;
@@ -24,6 +25,9 @@ in vec2 v_position;
 
 #define MAX_STEPS 99
 #define NEW_RAYMARCH 0
+
+const float ao_max_iterations = 3; // Maximum iterations for Ambient Occlusion
+const float ao_intensity = 0.2; // Ambient Occlusion intensity
 
 // Thank you for "A Minimal Ray-Tracer"
 // The original code can be found at:
@@ -93,10 +97,52 @@ float sampleDistance(vec3 pos) {
     return texture(u_volume_tex, tex_coord).r * (length(u_aabb_max - u_aabb_min));
 }
 
+vec3 sdf_normal(vec3 p) {
+    const float h = 0.005;
+    const vec2 k = vec2(1, -1);
+    vec3 n = k.xyy * sampleDistance(p + k.xyy * h) +
+             k.yyx * sampleDistance(p + k.yyx * h) +
+             k.yxy * sampleDistance(p + k.yxy * h) +
+             k.xxx * sampleDistance(p + k.xxx * h);
+    return normalize(n);
+}
+
+float sdf_dist(vec3 pos, float t, inout int iter, vec3 ray_origin, vec3 ray_direction, float far) {
+    float step_size = cam_block.near;
+    while(iter <= MAX_STEPS) {
+        vec3 p = ray_origin + t * ray_direction;
+        float dist = texture(u_volume_tex, get_tex_coord(p)).r;
+
+        if(dist < cam_block.near * cam_block.near) {
+            return t;
+        }
+
+        // Prevent infinite loop from zero/negative distances
+        dist = max(dist, 0.02);
+
+        if(t > far) {
+            break;
+        }
+
+        t += min(dist * 0.25, step_size);
+        iter++;
+    }
+
+    return -1.0;
+}
+
+float raymarching(vec3 pos, float t_i, float t_f, vec3 ray_origin, vec3 ray_direction) {
+    float t = t_i;
+    int iter = 0;
+    t = sdf_dist(pos, t, iter, ray_origin, ray_direction, min(cam_block.far, t_f));
+
+    return t;
+}
+
 // Basically a hemisphere sampling
 // I literally learned this from my Calc III class
 // So it was pretty easy to implement
-vec3 sampleHemisphere(vec3 normal, int i, int total) {
+vec3 sample_hemisphere(vec3 normal, int i, int total) {
     float phi = TAU * float(i) / float(total); // full circle
     float cos_theta = float(i + 0.5) / float(total);
     float sin_theta = sqrt(1.0 - cos_theta * cos_theta);
@@ -113,63 +159,17 @@ vec3 sampleHemisphere(vec3 normal, int i, int total) {
     return normalize(sampleDir);
 }
 
-vec3 sdf_normal(vec3 p) {
-    const float h = 0.005;
-    const vec2 k = vec2(1, -1);
-    vec3 n = k.xyy * sampleDistance(p + k.xyy * h) +
-             k.yyx * sampleDistance(p + k.yyx * h) +
-             k.yxy * sampleDistance(p + k.yxy * h) +
-             k.xxx * sampleDistance(p + k.xxx * h);
-    return normalize(n);
-}
-
-float sdf_dist(vec3 pos, float t, inout int iter, vec3 ray_origin, vec3 ray_direction, float far) {
-    float step_size = cam_block.near;
-    while(iter <= MAX_STEPS) {
-        vec3 p = ray_origin + t * ray_direction;
-        //float dist = sdf_sphere(p, 1.0);
-        float dist = texture(u_volume_tex, get_tex_coord(p)).r;
-
-        if(dist < cam_block.near * cam_block.near) {
-            return t;
-        }
-
-        // Prevent infinite loop from zero/negative distances
-        dist = max(dist, 0.02);
-
-        if(t > far) {
-            break;
-        }
-
-        // t += step_size; // Step size is a constant value
-        //t += dist;
-        t += min(dist * 0.25, step_size);
-        iter++;
-    }
-
-    return -1.0;
-}
-
-float raymarching(vec3 pos, float t_i, float t_f, vec3 ray_origin, vec3 ray_direction) {
-    float t = t_i;
-    int iter = 0;
-    t = sdf_dist(pos, t, iter, ray_origin, ray_direction, min(cam_block.far, t_f));
-
-    return t;
-}
-
 float compute_AO(vec3 p, vec3 n) {
     float step = cam_block.near * 1.5;
     float ao = 0.0;
     float dist;
 
-    for(int i=1; i<=8; i++) {
-        dist = step;
-        float weight = exp(-float(i) * 0.5);
-        ao += weight * max((dist - sampleDistance(p + n * dist)) / dist, 0.0);
+    for(int i=1; i<=ao_max_iterations; i++) {
+        dist = step * float(i);
+        ao += max((dist - sampleDistance(p + n * dist)) / dist, 0.0);
     }
 
-    return 1.0 - ao * 0.3; // Scale the AO value
+    return 1.0 - ao * ao_intensity; // Scale the AO value
 }
 
 vec4 render(vec2 uv, vec4 tex) {
@@ -203,9 +203,10 @@ vec4 render(vec2 uv, vec4 tex) {
 void main() {
     vec2 uv = (gl_FragCoord.xy / u_resolution.xy) * 2.0 - 1.0;
     vec4 tex = texture(u_texture, v_position / u_resolution.xy);
+    vec4 skybox_tex = texture(u_skybox_tex, v_position / u_resolution.xy);
 
     if (tex.a == 0.0) {
-        fragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        fragColor = skybox_tex;
         return;
     }
 
