@@ -21,11 +21,6 @@
 
 
 #ifdef HAS_GEOMETRY_PASS
-    #if USE_FBO_CUBEMAP == 1
-    #include <cubemap.h>
-    static geometry_pass cube_pass;
-    #endif
-
     #if USE_FBO_WORLD == 1
     #include <gl_dfao.h>
     static geometry_pass g_pass;
@@ -125,19 +120,6 @@ void world_init(int w, int h) {
 
     dfao_test_world(&g_pass);
     #endif
-
-    #if USE_FBO_CUBEMAP == 1
-    RenderCallback cube_callback = cubemap_render;
-
-    cube_pass = geometry_pass_init(
-        cube_callback,
-        w * program_get_pixel_density(),
-        h * program_get_pixel_density(),
-        1
-    );
-
-    cubemap_init(&cube_pass);
-    #endif
 #endif
 
     static InputCallback world_input_callback = world_input_callback_impl;
@@ -165,11 +147,6 @@ void world_setup_uniforms() {
     #if USE_FBO_WORLD == 1
     set_uniform_vec3("u_aabb_min", g_pass.aabb.min[0], g_pass.aabb.min[1], g_pass.aabb.min[2]);
     set_uniform_vec3("u_aabb_max", g_pass.aabb.max[0], g_pass.aabb.max[1], g_pass.aabb.max[2]);
-    #endif
-
-    #if USE_FBO_CUBEMAP == 1
-    set_uniform_vec3("u_aabb_min", cube_pass.aabb.min[0], cube_pass.aabb.min[1], cube_pass.aabb.min[2]);
-    set_uniform_vec3("u_aabb_max", cube_pass.aabb.max[0], cube_pass.aabb.max[1], cube_pass.aabb.max[2]);
     #endif
 #endif
 }
@@ -200,13 +177,9 @@ void world_begin(graphics_pipeline* pipe) {
         #if USE_FBO_WORLD == 1
         g_pass.pipeline,
         #endif
-
-        #if USE_FBO_CUBEMAP == 1
-        cube_pass.pipeline
-        #endif
     };
 
-    pipe_count = 1 + USE_FBO_WORLD + USE_FBO_CUBEMAP;
+    pipe_count = 1 + USE_FBO_WORLD;
     #else
     graphics_pipeline* pipelines[] = {pipe};
     #endif
@@ -217,11 +190,6 @@ void world_begin(graphics_pipeline* pipe) {
     #if defined(HAS_GEOMETRY_PASS) && USE_FBO_WORLD == 1
     geometry_pass_render(g_pass, texture_count);
     texture_count += g_pass.texture_count;
-    #endif
-
-    #if defined(HAS_GEOMETRY_PASS) && USE_FBO_CUBEMAP == 1
-    geometry_pass_render(cube_pass, texture_count);
-    texture_count += cube_pass.texture_count;
     #endif
 }
 
@@ -235,13 +203,9 @@ void world_end(graphics_pipeline* pipe) {
         #if USE_FBO_WORLD == 1
         g_pass.pipeline,
         #endif
-
-        #if USE_FBO_CUBEMAP == 1
-        cube_pass.pipeline
-        #endif
     };
 
-    pipe_count = 1 + USE_FBO_WORLD + USE_FBO_CUBEMAP;
+    pipe_count = 1 + USE_FBO_WORLD;
     #else
     graphics_pipeline* pipelines[] = {pipe};
     #endif
@@ -273,10 +237,6 @@ void world_toggle_wireframe() {
 
 void world_destroy() {
 #ifdef HAS_GEOMETRY_PASS
-    #if USE_FBO_CUBEMAP == 1
-    geometry_pass_destroy(cube_pass);
-    #endif
-
     #if USE_FBO_WORLD == 1
     geometry_pass_destroy(g_pass);
     #endif

@@ -1,5 +1,6 @@
 #pragma once
 
+
 // This file is suppose to be used for
 // compile time configurations
 
@@ -10,7 +11,7 @@
 
 // Control Type of FBO that gets preprocessed
 #define USE_FBO_WORLD 1
-#define USE_FBO_CUBEMAP 0
+
 
 // Shader locations
 // These are the locations of the attributes in the shader

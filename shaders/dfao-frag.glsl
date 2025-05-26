@@ -17,10 +17,12 @@ layout(std140) uniform CamBlock {
 
 uniform sampler2D u_texture;
 uniform sampler3D u_volume_tex;
-uniform sampler2D u_skybox_tex;
 uniform vec3 u_aabb_min;
 uniform vec3 u_aabb_max;
 uniform vec2 u_resolution;
+
+const vec3 c = vec3(0.0, 0.0, 3.0);
+const vec3 light_pos = vec3(3.0, 60.0, -60.0);
 
 in vec2 v_position;
 
@@ -94,8 +96,20 @@ vec3 get_tex_coord(vec3 pos) {
 }
 
 float sampleDistance(vec3 pos) {
-    vec3 tex_coord = clamp(get_tex_coord(pos), vec3(0.001), vec3(0.999));
-    return texture(u_volume_tex, tex_coord).r * (length(u_aabb_max - u_aabb_min));
+    vec3 tex_coord = get_tex_coord(pos);
+    return texture(u_volume_tex, tex_coord).r;
+}
+
+// Most basic writing for lighting
+// TO WRITE: How this works and the basics of lighting
+// @param n - The normal of the surface
+// @var w_i - The negative direction of the incoming light
+// (aka. the direction from the light to the surface)
+float weaking(vec3 p, vec3 n) {
+    vec3 w_i = normalize(light_pos - p);
+    float diff = dot(w_i, n);
+
+    return diff;
 }
 
 vec3 sdf_normal(vec3 p) {
@@ -112,14 +126,11 @@ float sdf_dist(vec3 pos, float t, inout int iter, vec3 ray_origin, vec3 ray_dire
     float step_size = cam_block.near;
     while(iter <= MAX_STEPS) {
         vec3 p = ray_origin + t * ray_direction;
-        float dist = texture(u_volume_tex, get_tex_coord(p)).r;
+        float dist = sampleDistance(p);
 
         if(dist < cam_block.near * cam_block.near) {
             return t;
         }
-
-        // Prevent infinite loop from zero/negative distances
-        dist = max(dist, 0.02);
 
         if(t > far) {
             break;
@@ -138,39 +149,6 @@ float raymarching(vec3 pos, float t_i, float t_f, vec3 ray_origin, vec3 ray_dire
     t = sdf_dist(pos, t, iter, ray_origin, ray_direction, min(cam_block.far, t_f));
 
     return t;
-}
-
-// Basically a hemisphere sampling
-// I literally learned this from my Calc III class
-// So it was pretty easy to implement
-vec3 sample_hemisphere(vec3 normal, int i, int total) {
-    float phi = TAU * float(i) / float(total); // full circle
-    float cos_theta = float(i + 0.5) / float(total);
-    float sin_theta = sqrt(1.0 - cos_theta * cos_theta);
-
-    // Local tangent space (TBN) + I used 0.999 for float precision
-    vec3 up = abs(normal.y) < 0.999 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
-    vec3 tangent = normalize(cross(up, normal));
-    vec3 bitangent = cross(normal, tangent);
-
-    // Spherical to Cartesian
-    vec3 sampleDir = sin_theta * cos(phi) * tangent +
-                     sin_theta * sin(phi) * bitangent +
-                     cos_theta * normal;
-    return normalize(sampleDir);
-}
-
-float compute_AO(vec3 p, vec3 n) {
-    float step = cam_block.near;
-    float ao = 0.0;
-    float dist;
-
-    for(int i=1; i<=ao_max_iterations; i++) {
-        dist = step * float(i);
-        ao += max((dist - sampleDistance(p + n * dist)) / dist, 0.0);
-    }
-
-    return 1.0 - (ao * ao_intensity); // Scale the AO value
 }
 
 vec4 render(vec2 uv, vec4 tex) {
@@ -193,7 +171,7 @@ vec4 render(vec2 uv, vec4 tex) {
         float t = raymarching(vec3(0.0), t0, t1, ray_origin, ray_direction);
         if(t != -1.0) {
             vec3 p = ray_origin + t * ray_direction;
-            color = /*tex.rgb*/ vec3(1.0) * compute_AO(p, sdf_normal(p));
+            color = /*tex.rgb*/ vec3(1.0, 0.0, 0.0) * weaking(p, sdf_normal(p));
         }
 
     }
@@ -204,11 +182,9 @@ vec4 render(vec2 uv, vec4 tex) {
 void main() {
     vec2 uv = (gl_FragCoord.xy / u_resolution.xy) * 2.0 - 1.0;
     vec4 tex = texture(u_texture, v_position / u_resolution.xy);
-    vec4 skybox_tex = texture(u_skybox_tex, v_position / u_resolution.xy);
 
     if (tex.a == 0.0) {
-        fragColor = skybox_tex;
-        return;
+        discard;
     }
 
     fragColor = render(uv, tex);

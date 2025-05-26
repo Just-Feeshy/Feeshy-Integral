@@ -81,10 +81,6 @@ void screen_init(int w, int h) {
     create_constant_location(pipeline, "u_volume_tex");
     #endif
 
-    #if defined(HAS_GEOMETRY_PASS) && USE_FBO_CUBEMAP == 1
-    create_constant_location(pipeline, "u_cube_tex");
-    #endif
-
     #ifdef HAS_GEOMETRY_PASS
     create_constant_location(pipeline, "u_texture");
     create_constant_location(pipeline, "u_aabb_min");
@@ -109,10 +105,6 @@ void screen_render() {
     #if defined(HAS_GEOMETRY_PASS) && USE_FBO_WORLD == 1
     set_uniform_int("u_volume_tex", 1);
     #endif
-
-    #if defined(HAS_GEOMETRY_PASS) && USE_FBO_CUBEMAP == 1
-    set_uniform_int("u_cube_tex", 2);
-#endif
 
     #ifndef HAS_GEOMETRY_PASS
     set_uniform_float("u_time", SDL_GetTicks() / 5000.0f);

@@ -59,8 +59,6 @@ void geometry_pass_render(geometry_pass pass, uint32_t texture_offset) {
     glDepthFunc(GL_LESS);
     glDepthMask(GL_TRUE);
     glEnable(GL_BLEND);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -80,7 +78,7 @@ void geometry_pass_render(geometry_pass pass, uint32_t texture_offset) {
 
     for(uint32_t i=0; i<pass.texture_count; i++) {
         texture_bind(&pass.textures[i], i + texture_offset);
-        // printf("Texture %d bound to unit %d\n", i, i + texture_offset);
+        // printf("Texture %d bound to unit %d\n", pass.textures[i].texture, i + texture_offset);
     }
 }
 

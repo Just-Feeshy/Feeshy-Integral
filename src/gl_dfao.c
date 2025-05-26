@@ -6,7 +6,7 @@
 #include <timer_query.h>
 #include <utils.h>
 
-#define EPSILON 0.05f
+#define EPSILON 0.1f
 
 static Model model;
 static Mesh mesh_b;
