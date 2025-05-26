@@ -64,7 +64,7 @@ void screen_init(int w, int h) {
     load_shader("shaders/vert.glsl", &vert_shader, SHADER_VERTEX, 1, vert_attrs);
 
     #if FRAGMENT_SELECTOR == 1
-    load_shader("shaders/frag-sec.glsl", &frag_shader, SHADER_FRAGMENT, 0, frag_attrs);
+    fprintf(stderr, "Not yet implemented\n");
     #elif FRAGMENT_SELECTOR == 2
     load_shader("shaders/dfao-frag.glsl", &frag_shader, SHADER_FRAGMENT, 0, frag_attrs);
     #else
