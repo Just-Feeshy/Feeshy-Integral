@@ -22,6 +22,7 @@ const vec3 light_pos = vec3(3.0, 60.0, -60.0);
 
 #define MAX_STEPS 99
 #define NEW_RAYMARCH 1
+#define MIN_GROWTH 0.0076
 
 // Mandelbox Fractal
 float sdfFractal(vec3 p) {
@@ -69,11 +70,11 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
     float t = 0.0;
 
     #if NEW_RAYMARCH == 1
-    #define MIN_GROWTH 0.0076
 
     float t_j = cam_block.far;
     float min_dist = cam_block.far;
     int i = int((MAX_STEPS & 1) == 0);
+    int first_cases = 0;
 
     #if (MAX_STEPS & 1) == 0
     t = sdfFractal(ray_origin + t * ray_direction);
