@@ -1,8 +1,10 @@
 #pragma once
 
-#define UNIFORM_GRID_X 128
-#define UNIFORM_GRID_Y 128
-#define UNIFORM_GRID_Z 128
+#include <config.h>
+
+#define UNIFORM_GRID_X GRID_SIZE
+#define UNIFORM_GRID_Y GRID_SIZE
+#define UNIFORM_GRID_Z GRID_SIZE
 
 typedef float vec3[3];
 

@@ -195,9 +195,9 @@ float raymarching(vec3 pos, float t_i, float t_f, vec3 ray_origin, vec3 ray_dire
             }
 
             t_j -= dist_j;
-        } else {
+        } else { // Though this is suppose to be 'j' in the paper, it is 'i' in the code
             t += get_accomodated_distance(dist_i);
-            dist_i = sampleDistance(ray_origin + t * ray_direction);
+            float dist_j = sampleDistance(ray_origin + t * ray_direction);
 
             if(dist_i < cam_block.near * cam_block.near) {
                 return t;

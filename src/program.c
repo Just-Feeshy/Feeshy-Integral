@@ -48,7 +48,6 @@ update_package main_update;
 
 static void create_window(const char* title, int w, int h) {
     main_program.window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
-
     main_program.context = SDL_GL_CreateContext(main_program.window);
 
     if (main_program.window == NULL) {
@@ -145,6 +144,7 @@ static void program_update() {
     nk_sdl_handle_grab();
     nk_input_end(ctx);
 
+    /*
     if (nk_begin(ctx, "Settings Menu", nk_rect(50, 50, 230, 250),
         NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|
         NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
@@ -180,6 +180,7 @@ static void program_update() {
         #endif
     }
     nk_end(ctx);
+    */
 
     int64_t current_time = program_get_time();
     main_update.nextUpdate = frame_period + main_update.lastUpdate;

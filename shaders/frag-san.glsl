@@ -18,11 +18,16 @@ uniform vec2 u_resolution;
 uniform float u_time;
 
 const vec3 c = vec3(0.0, 0.0, 3.0);
-const vec3 light_pos = vec3(3.0, 60.0, -60.0);
+const vec3 light_pos = vec3(30.0, 60.0, -60.0);
 
 #define MAX_STEPS 99
 #define NEW_RAYMARCH 1
 #define MIN_GROWTH 0.0076
+#define SDF_FUNC sdfSphere
+
+float sdfSphere(vec3 p) {
+    return length(p) - 1.0;
+}
 
 // Mandelbox Fractal
 float sdfFractal(vec3 p) {
@@ -40,16 +45,16 @@ float sdfFractal(vec3 p) {
 vec3 calcNormal(in vec3 p) {
     const float h = 0.0001;
     const vec2 k = vec2(1,-1);
-    return normalize( k.xyy*sdfFractal( p + k.xyy*h ) +
-                      k.yyx*sdfFractal( p + k.yyx*h ) +
-                      k.yxy*sdfFractal( p + k.yxy*h ) +
-                      k.xxx*sdfFractal( p + k.xxx*h ) );
+    return normalize( k.xyy*SDF_FUNC( p + k.xyy*h ) +
+                      k.yyx*SDF_FUNC( p + k.yyx*h ) +
+                      k.yxy*SDF_FUNC( p + k.yxy*h ) +
+                      k.xxx*SDF_FUNC( p + k.xxx*h ) );
 }
 
 float SDF_distance(float t, inout int iter, vec3 ray_origin, vec3 ray_direction) {
     while(iter <= MAX_STEPS) {
         vec3 p = ray_origin + t * ray_direction;
-        float dist = sdfFractal(p);
+        float dist = SDF_FUNC(p);
 
         if(dist < cam_block.near) {
             return t;
@@ -69,7 +74,9 @@ float SDF_distance(float t, inout int iter, vec3 ray_origin, vec3 ray_direction)
 float raymarch(vec3 ray_origin, vec3 ray_direction) {
     float t = 0.0;
 
-    #if NEW_RAYMARCH == 1
+    #if NEW_RAYMARCH == 2
+
+    #elif NEW_RAYMARCH == 1
 
     float t_j = cam_block.far;
     float min_dist = cam_block.far;
@@ -77,7 +84,7 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
     int first_cases = 0;
 
     #if (MAX_STEPS & 1) == 0
-    t = sdfFractal(ray_origin + t * ray_direction);
+    t = SDF_FUNC(ray_origin + t * ray_direction);
 
     if(t < cam_block.near) {
         return t;
@@ -86,7 +93,7 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
 
     while(i <= (MAX_STEPS >> 1)) {
         vec3 p_i = ray_origin + t * ray_direction;
-        float dist_i = sdfFractal(p_i);
+        float dist_i = SDF_FUNC(p_i);
 
         if(dist_i < cam_block.near) {
             return t;
@@ -98,7 +105,7 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
 
         if(dist_i - min_dist > MIN_GROWTH) {
             vec3 p_j = ray_origin + t_j * ray_direction;
-            float dist_j = sdfFractal(p_j);
+            float dist_j = SDF_FUNC(p_j);
 
             if((dist_i + dist_j) >= abs(t_j - t)) {
                 return -1.0;
@@ -107,7 +114,7 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
             t_j -= dist_j;
         }else {
             t += dist_i;
-            dist_i = sdfFractal(ray_origin + t * ray_direction);
+            dist_i = SDF_FUNC(ray_origin + t * ray_direction);
 
             if(dist_i < cam_block.near) {
                 return t;
@@ -162,7 +169,7 @@ vec4 render(vec2 uv) {
     vec3 color = vec3(0.0);
 
     if(t != -1.0) {
-        color = vec3(1.0, 0.0, 0.0) * weaking(ray_origin + t * ray_direction, calcNormal(ray_origin + t * ray_direction));
+        color = vec3(1.0, 0.0, 0.0);
         //color = vec3(1.0, 0.0, 0.0);
     }
 
