@@ -20,7 +20,6 @@ LANG = "C"
 SOLUTION_NAME = "program"
 SOLUTION_DIR = ".."
 PROJECT_NAME = "program"
-PROJECT_BACKEND = "kinc"
 PROJECT_DIR = "../"
 PROJECT_KIND = "ConsoleApp"
 OBJ_DIR = "../bin/obj"
@@ -30,27 +29,13 @@ LIBRARY_DIR = "../third_party/libraries"
 
 ENABLE_VSYNC = true
 
-function sdl_config()
-    includedirs {
-        "../third_party/SDL/include"
-    }
-
-    filter "configurations:Release"
-        libdirs (LIBRARY_DIR)
-        links { "SDL2" }
-
-    filter "configurations:Debug"
-        libdirs (LIBRARY_DIR)
-        links { "SDL2" }
-        debugdir(TARGET_DIR)
-end
-
 function third_party_config()
     local curl_config = require("config/curl_config")
 
     -- ZLIB
     project "zlib-lib"
         language "C"
+
         kind "StaticLib"
         defines { "N_FSEEKO", "_LARGEFILE64_SOURCE" }
         warnings "off"
@@ -241,11 +226,7 @@ function solution_config()
         systemversion "latest"
         language(LANG)
         configurations { "Debug", "Release" }
-        architecture "x86_64"
-
-        filter "system:macosx"
-            buildoptions { "-arch x86_64" }
-            linkoptions  { "-arch x86_64" }
+        architecture "arm64"
 
         flags { "MultiProcessorCompile" }
         optimize(OPTIMIZE)
@@ -280,7 +261,7 @@ function project_config()
 
         files {
             "../include/**.h",
-            "../" .. PROJECT_BACKEND .. "_backend/**.c",
+            -- "../" .. PROJECT_BACKEND .. "_backend/**.c",
             "../src/**.c",
             "../third_party/hashmap/hashmap.c",
             "../third_party/hashmap/hashmap.h",
@@ -300,6 +281,7 @@ function project_config()
             "../third_party/zlib",
             "../third_party/curl/include",
             "../third_party/nuklear",
+            "../third_party/sdl/include",
             "../nuklear_bindings/gl3",
         }
 
@@ -315,7 +297,6 @@ function project_config()
 
         if os.target() ~= "emscripten" then
             targetdir(TARGET_DIR)
-            sdl_config()
         end
 
         filter { "system:not windows" }
@@ -325,12 +306,15 @@ function project_config()
             defines { "MACOSX" }
 
             linkoptions {
-                "-Wl,-rpath,@executable_path/../third_party/angle/out/Release",
+                "-framework CoreAudio",
+                "-framework CoreVideo",
+                "-framework AudioToolbox",
+                "-framework AudioUnit",
                 "-framework IOKit",
                 "-framework SystemConfiguration",
+                "-framework ForceFeedback",
                 "-framework CoreFoundation",
                 "-framework CoreGraphics",
-                "-framework AudioToolbox",
                 "-framework QuartzCore",
                 "-framework AppKit",
                 "-framework Carbon",
@@ -353,9 +337,20 @@ function project_config()
                 "EMSCRIPTEN",
             }
 
-            linkoptions { "-sWASM=1 -sFULL_ES3 -sMIN_WEBGL_VERSION=2 -sINITIAL_MEMORY=128MB -sMAXIMUM_MEMORY=512MB -sALLOW_MEMORY_GROWTH=1 -s-sMAX_WEBGL_VERSION=2 -sUSE_SDL=2 -sASSERTIONS=1 --preload-file shaders" }
+            linkoptions {
+                "-sWASM=1 -sFULL_ES3 -sMIN_WEBGL_VERSION=2 -sINITIAL_MEMORY=128MB -sUSE_SDL=2 -sMAXIMUM_MEMORY=512MB -sALLOW_MEMORY_GROWTH=1 -s-sMAX_WEBGL_VERSION=2 -sASSERTIONS=1 --preload-file shaders" }
+end
+
+function build_sdl()
+    if os.target() ~= "emscripten" then
+        include "config/sdl2"
+        links {
+            "SDL",
+        }
+    end
 end
 
 solution_config()
 third_party_config()
+build_sdl()
 project_config()

@@ -8,6 +8,7 @@
 #define FRAGMENT_SELECTOR 2
 #define DEFAULT_BUFFER_SIZE 128
 #define MAX_ITERATIONS 10000
+#define ENABLE_NUKLEAR 1
 
 // Control Type of FBO that gets preprocessed
 #define USE_FBO_WORLD 1

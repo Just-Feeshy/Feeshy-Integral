@@ -100,8 +100,19 @@ vec3 get_tex_coord(vec3 pos) {
 
 float sampleDistance(vec3 pos) {
     vec3 tex_coord = get_tex_coord(pos);
-    return texture(u_volume_tex, tex_coord).r; 
+    return texture(u_volume_tex, tex_coord).r;
     // return max(texture(u_volume_tex, tex_coord).r, 0.0);
+}
+
+float ambientOcclusion(vec3 p, vec3 n){
+    float step = 0.1;
+    float ao = 0.0;
+    float dist;
+    for(int i = 1; i <= ao_max_iterations; i++){
+        dist = step * i;
+        ao += max((dist - sampleDistance(p + n * dist)) / dist, 0.0);
+    }
+    return (1.0 - ao * ao_intensity);
 }
 
 // Most basic writing for lighting
@@ -245,7 +256,8 @@ vec4 render(vec2 uv, vec4 tex) {
         float t = raymarching(vec3(0.0), t0, t1, ray_origin, ray_direction);
         if(t != -1.0) {
             vec3 p = ray_origin + t * ray_direction;
-            color = /*tex.rgb*/ vec3(1.0, 0.0, 0.0) * weaking(p, sdf_normal(p));
+            vec3 n = sdf_normal(p);
+            color = tex.rgb * ambientOcclusion(p, n) * (weaking(p, n) * 0.5 + 0.5);
         }
 
     }

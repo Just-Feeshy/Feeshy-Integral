@@ -5,4 +5,5 @@ third_party/libraries/
 program.make
 Makefile
 obj/
+.zig-cache/
 *.make

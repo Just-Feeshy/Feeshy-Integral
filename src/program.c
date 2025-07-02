@@ -144,7 +144,7 @@ static void program_update() {
     nk_sdl_handle_grab();
     nk_input_end(ctx);
 
-    /*
+#if ENABLE_NUKLEAR == 1
     if (nk_begin(ctx, "Settings Menu", nk_rect(50, 50, 230, 250),
         NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|
         NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
@@ -180,7 +180,7 @@ static void program_update() {
         #endif
     }
     nk_end(ctx);
-    */
+#endif
 
     int64_t current_time = program_get_time();
     main_update.nextUpdate = frame_period + main_update.lastUpdate;

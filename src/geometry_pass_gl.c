@@ -63,16 +63,20 @@ void geometry_pass_render(geometry_pass pass, uint32_t texture_offset) {
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+#ifndef EMSCRIPTEN
     if(pass.activate_wireframe) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
+#endif
 
     pipeline_set(pass.pipeline);
     pass.render_callback(); // Here
 
+#ifndef EMSCRIPTEN
     if(pass.activate_wireframe) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
+#endif
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
