@@ -21,8 +21,6 @@ jobs:
       run: sudo apt install ninja-build --yes --quiet
     - name: Get Submodules
       run: git submodule update --init
-    - name: Compile (emscripten)
-      run: git clone https://github.com/emscripten-core/emsdk.git && cd emsdk && ./emsdk install latest && ./emsdk activate latest && source ./emsdk_env.sh && cd ../ && ninja
     - name: Install Emscripten SDK
       run: |
         git clone https://github.com/emscripten-core/emsdk.git
