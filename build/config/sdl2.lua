@@ -151,12 +151,15 @@ project "SDL"
     -- Non-Windows platforms (Unix-like)
     filter "not system:windows"
         files {
-            NATIVE_PATH .. "/sdl/src/thread/pthread/**.c",
+            NATIVE_PATH .. "/sdl/src/thread/pthread/SDL_syscond.c",
+            NATIVE_PATH .. "/sdl/src/thread/pthread/SDL_sysmutex.c",
+            NATIVE_PATH .. "/sdl/src/thread/pthread/SDL_syssem.c",
+            NATIVE_PATH .. "/sdl/src/thread/pthread/SDL_systhread.c",
             NATIVE_PATH .. "/sdl/src/timer/unix/SDL_systimer.c"
         }
 
     -- OpenGL ES platforms (including macOS now)
-    filter "system:windows or system:macosx"
+    filter "system:windows"
         files {
             NATIVE_PATH .. "/sdl/src/render/opengles/SDL_render_gles.c",
             NATIVE_PATH .. "/sdl/src/render/opengles2/SDL_render_gles2.c",
@@ -251,7 +254,9 @@ project "SDL"
     -- macOS-specific files
     filter "system:macosx"
         buildoptions { "-fobjc-arc" }
+        -- buildoptions { "-mmmx", "-msse", "-msse2", "-msse3", "-mssse3" }
         files {
+            NATIVE_PATH .. "/sdl/src/thread/pthread/SDL_systls.c",
             NATIVE_PATH .. "/sdl/src/audio/coreaudio/SDL_coreaudio.m",
             NATIVE_PATH .. "/sdl/src/file/cocoa/SDL_rwopsbundlesupport.m",
             NATIVE_PATH .. "/sdl/src/filesystem/cocoa/SDL_sysfilesystem.m",
@@ -286,5 +291,3 @@ project "SDL"
             NATIVE_PATH .. "/sdl/src/power/emscripten/SDL_syspower.c",
             NATIVE_PATH .. "/sdl/src/video/emscripten/**.c"
         }
-
-    filter {}

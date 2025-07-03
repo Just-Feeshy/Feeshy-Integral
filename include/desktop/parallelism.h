@@ -6,7 +6,7 @@
 
 #ifdef USE_OPENCL
 
-#ifdef __APPLE__
+#if defined(MACOSX)
 #include <OpenCL/opencl.h>
 #else
 #include <CL/cl.h>

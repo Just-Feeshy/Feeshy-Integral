@@ -1,19 +1,45 @@
 #pragma once
 
-#include <stdbool.h>
-
-#ifndef EMSCRIPTEN
+#ifdef EMSCRIPTEN
+#include <SDL2/SDL.h>
+#else
 #include <SDL.h>
 #endif
 
-#ifdef EMSCRIPTEN
+#include <stdbool.h>
+
+#if defined(EMSCRIPTEN)
 #include <SDL2/SDL.h>
 #include <GLES3/gl3.h>
 #define GL_TIME_ELAPSED 0x88BF
+
 #elif defined(MACOSX)
+
 #define GL_GLEXT_PROTOTYPES
+#define NEED_EXTENSIONS
+#define DYNAMIC_OGL
+
 #include <SDL_opengl.h>
 #include <SDL_opengl_glext.h>
+
+#define FORCE_NON_PO2
+#define glBindFramebuffer glBindFramebufferEXT
+#define glBindRenderbuffer glBindRenderbufferEXT
+#define glGenFramebuffers glGenFramebuffersEXT
+#define glDeleteFramebuffers glDeleteFramebuffersEXT
+#define glGenRenderbuffers glGenRenderbuffersEXT
+#define glDeleteRenderbuffers glDeleteRenderbuffersEXT
+#define glFramebufferRenderbuffer glFramebufferRenderbufferEXT
+#define glFramebufferTexture2D glFramebufferTexture2DEXT
+#define glRenderbufferStorage glRenderbufferStorageEXT
+#define glCheckFramebufferStatus glCheckFramebufferStatusEXT
+#define glCheckFramebufferStatus glCheckFramebufferStatusEXT
+#define glGenerateMipmap glGenerateMipmapEXT
+#define glGetFramebufferAttachmentParameteriv glGetFramebufferAttachmentParameterivEXT
+#define glGetRenderbufferParameteriv glGetRenderbufferParameterivEXT
+#define glIsFramebuffer glIsFramebufferEXT
+#define glIsRenderbuffer glIsRenderbufferEXT
+
 #else
 #include <SDL_opengl.h>
 #endif
@@ -47,7 +73,7 @@ typedef struct constant_location_core_gl {
     unsigned type;
 } CONSTANT_LOCATION_CORE;
 
-void opengl_init(SDL_Window* window);
+void opengl_init();
 void opengl_begin(SDL_Window* window);
 unsigned opengl_load_vertex_buffer(const void* buffer, size_t size);
 void opengl_gen_vertex_arrays(GLsizei n, GLuint* arrays);
