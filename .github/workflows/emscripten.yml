@@ -23,7 +23,19 @@ jobs:
       run: git submodule update --init
     - name: Compile (emscripten)
       run: git clone https://github.com/emscripten-core/emsdk.git && cd emsdk && ./emsdk install latest && ./emsdk activate latest && source ./emsdk_env.sh && cd ../ && ninja
-    - name: Compile (Premake)
+    - name: Install Emscripten SDK
       run: |
-        premake5 --os=emscripten --file=build/premake5.lua gmake
-        emmake make
+        git clone https://github.com/emscripten-core/emsdk.git
+        cd emsdk
+        ./emsdk install latest
+        ./emsdk activate latest
+        echo "source $PWD/emsdk_env.sh" >> $GITHUB_ENV
+    
+    - name: Set up Emscripten Environment
+      run: source emsdk/emsdk_env.sh
+    
+    - name: Generate Makefiles with Premake
+      run: premake5 --os=emscripten --file=build/premake5.lua gmake
+    
+    - name: Compile with emmake + make
+      run: emmake make
