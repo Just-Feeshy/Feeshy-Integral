@@ -30,7 +30,10 @@ LIBRARY_DIR = "../third_party/libraries"
 ENABLE_VSYNC = true
 
 function third_party_config()
-    include "config/sdl2"
+    if os.target() ~= "emscripten" then
+        include "config/sdl2"
+    end
+
     -- local curl_config = require("config/curl_config")
 
     -- ZLIB
@@ -292,10 +295,10 @@ function project_config()
         links {
             "zlib-lib",
             -- "curl-lib",
-            "SDL",
         }
 
         if os.target() ~= "emscripten" then
+            links { "SDL" }
             targetdir(TARGET_DIR)
         end
 

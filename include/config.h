@@ -4,15 +4,30 @@
 // This file is suppose to be used for
 // compile time configurations
 
-#define GRID_SIZE 128
+#ifndef FRAGMENT_SELECTOR
 #define FRAGMENT_SELECTOR 2
+#endif
+
+#ifndef GRID_SIZE
+#define GRID_SIZE 128
+#endif
+
+#ifndef DEFAULT_BUFFER_SIZE
 #define DEFAULT_BUFFER_SIZE 128
+#endif
+
+#ifndef MAX_ITERATIONS
 #define MAX_ITERATIONS 10000
+#endif
+
+#ifndef ENABLE_NUKLEAR
 #define ENABLE_NUKLEAR 1
+#endif
 
 // Control Type of FBO that gets preprocessed
+#ifndef USE_FBO_WORLD
 #define USE_FBO_WORLD 1
-
+#endif
 
 // Shader locations
 // These are the locations of the attributes in the shader

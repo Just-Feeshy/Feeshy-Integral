@@ -40,4 +40,12 @@ static FORCE_INLINE int __builtin_ctz(unsigned x)
 
 #ifndef EMSCRIPTEN
 #define USE_OPENCL
+
+#else
+
+#if FRAGMENT_SELECTOR == 2
+#error "Fragment Selector 2 is not supported in Emscripten due to OpenCL not being available."
+
+#endif
+
 #endif
