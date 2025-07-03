@@ -22,7 +22,7 @@ jobs:
     - name: Get Submodules
       run: git submodule update --init
     - name: Compile (emscripten)
-      run: git clone https://github.com/emscripten-core/emsdk.git && cd emsdk && ./emsdk install latest && ./emsdk activate latest && source ./emsdk_env.sh && cd ../build/release && ninja
+      run: git clone https://github.com/emscripten-core/emsdk.git && cd emsdk && ./emsdk install latest && ./emsdk activate latest && source ./emsdk_env.sh && cd ../ && ninja
     - name: Compile (Premake)
       run: |
         premake5 --os=emscripten --file=build/premake5.lua gmake
