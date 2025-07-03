@@ -11,7 +11,10 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <time.h>
-#include <curl/curl.h>
+
+#ifdef EMSCRIPTEN
+#include <emscripten.h>
+#endif
 
 #define TIME_RESOLUTION UINT64_C(1000000000)
 #define NAP_MULT 1
@@ -30,7 +33,6 @@ typedef struct program_package {
     struct inputs* in;
     struct SDL_Window* window;
     struct GL_Context* context;
-    CURL* curl;
     bool active;
     bool dirty_event;
 } program_package;

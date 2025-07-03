@@ -34,18 +34,20 @@ static FORCE_INLINE int __builtin_ctz(unsigned x)
 
 // There can be multiple cases where geometry pass is used
 
-#if FRAGMENT_SELECTOR == 2
-#define HAS_GEOMETRY_PASS
-#endif
-
 #ifndef EMSCRIPTEN
 #define USE_OPENCL
 
 #else
 
 #if FRAGMENT_SELECTOR == 2
-#error "Fragment Selector 2 is not supported in Emscripten due to OpenCL not being available."
+#undef FRAGMENT_SELECTOR
+#define FRAGMENT_SELECTOR 1
+#warning "Fragment Selector 2 is not supported in Emscripten due to OpenCL not being available. Falling back to Fragment Selector 1."
 
+#endif
+
+#if FRAGMENT_SELECTOR == 2
+#define HAS_GEOMETRY_PASS
 #endif
 
 #endif

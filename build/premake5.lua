@@ -300,6 +300,14 @@ function project_config()
         if os.target() ~= "emscripten" then
             links { "SDL" }
             targetdir(TARGET_DIR)
+
+            files {
+                "../desktop/src/**.c"
+            }
+
+            includedirs {
+                "../desktop/include",
+            }
         end
 
         filter "system:not windows"

@@ -20,7 +20,7 @@
 */
 
 
-#ifdef HAS_GEOMETRY_PASS
+#if HAS_GEOMETRY_PASS
     #if USE_FBO_WORLD == 1
     #include <gl_dfao.h>
     static geometry_pass g_pass;
