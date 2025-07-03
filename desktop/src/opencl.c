@@ -1,4 +1,4 @@
-#include <desktop/parallelism.h>
+#include <parallelism.h>
 #include <config.h>
 #include <assert.h>
 
