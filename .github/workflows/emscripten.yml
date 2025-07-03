@@ -15,25 +15,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - uses: abel0b/setup-premake@v2.4
+      with:
+        version: "5.0.0-beta2"
+        
     - name: Apt Update
       run: sudo apt update
-    - name: Apt Install
-      run: sudo apt install ninja-build --yes --quiet
     - name: Get Submodules
       run: git submodule update --init
-    - name: Install Emscripten SDK
-      run: |
-        git clone https://github.com/emscripten-core/emsdk.git
-        cd emsdk
-        ./emsdk install latest
-        ./emsdk activate latest
-        echo "source $PWD/emsdk_env.sh" >> $GITHUB_ENV
-    
-    - name: Set up Emscripten Environment
-      run: source emsdk/emsdk_env.sh
-    
-    - name: Generate Makefiles with Premake
+    - name: Premake Compile
       run: premake5 --os=emscripten --file=build/premake5.lua gmake
-    
-    - name: Compile with emmake + make
-      run: emmake make
+    - name: Compile (emscripten)
+      run: git clone https://github.com/emscripten-core/emsdk.git && cd emsdk && ./emsdk install latest && ./emsdk activate latest && source ./emsdk_env.sh && cd ../ && make
