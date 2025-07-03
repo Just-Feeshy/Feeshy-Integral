@@ -21,4 +21,4 @@ jobs:
 
       - name: Compile (Premake)
         run: |
-          premake5 --os=windows --file=build/premake5.lua gmake
+          premake5 --os=windows --file=build/premake5.lua vs2022
