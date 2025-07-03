@@ -1,0 +1,29 @@
+name: Emscripten (WebGL)
+
+on:
+  push:
+    branches:
+    - Init
+  pull_request:
+    branches:
+    - Init
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Apt Update
+      run: sudo apt update
+    - name: Apt Install
+      run: sudo apt install ninja-build --yes --quiet
+    - name: Get Submodules
+      run: git submodule update --init
+    - name: Compile (emscripten)
+      run: git clone https://github.com/emscripten-core/emsdk.git && cd emsdk && ./emsdk install latest && ./emsdk activate latest && source ./emsdk_env.sh && cd ../build/release && ninja
+    - name: Compile (Premake)
+      run: |
+        premake5 --os=emscripten --file=build/premake5.lua gmake
+        emmake make
