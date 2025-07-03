@@ -1,0 +1,24 @@
+on:
+  push:
+    branches:
+      - Init
+  pull_request:
+    branches:
+      - Init
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: abel0b/setup-premake@v2.4
+        with:
+          version: "5.0.0-beta2"
+
+      - name: Get Submodules
+        run: git submodule update --init
+
+      - name: Compile (Premake)
+        run: |
+          premake5 --os=windows --file=build/premake5.lua gmake
