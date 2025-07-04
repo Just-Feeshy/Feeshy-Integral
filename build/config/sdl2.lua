@@ -53,18 +53,17 @@ project "SDL"
         defines {
             "HAVE_LIBC",
             "SDL_HIDAPI_DISABLED",
-            "SDL_AUDIO=OFF",
+            "SDL_AUDIO_DISABLED",
+            "SDL_JOYSTICK_XINPUT",
+            "SDL_JOYSTICK_DISABLED_DINPUT",
+            "SDL_HAPTIC_XINPUT",
             "_WIN32",
             "WIN32",
-            "__WIN32__",
             "HAVE_STDINT_H",
             "HAVE_STDDEF_H",
-            "HAVE_STDARG_H",
             "SDL_THREAD_WINDOWS",
             "SDL_TIMER_WINDOWS",
-            "SDL_VIDEO_DRIVER_WINDOWS",
-            "SDL_JOYSTICK_DINPUT",
-            "SDL_HAPTIC_DINPUT"
+            "SDL_VIDEO_DRIVER_WINDOWS"
         }
 
     filter "system:linux"
