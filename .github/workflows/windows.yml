@@ -19,9 +19,10 @@ jobs:
           msystem: MINGW64
           update: true
           install: >-
-            mingw-w64-x86_64-gcc
-            mingw-w64-x86_64-make
+            choco install make -y
+            choco install mingw -y
             mingw-w64-x86_64-pkg-config
+            
             git
             curl
             unzip
