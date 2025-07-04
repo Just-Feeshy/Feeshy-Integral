@@ -1,3 +1,7 @@
+#ifdef WINDOWS
+#include <SDL.h>
+#endif
+
 #include <program.h>
 #include <uniform_manager.h>
 
