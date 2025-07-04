@@ -388,6 +388,7 @@ function project_config()
                 "_CRT_SECURE_NO_WARNINGS",
                 "WIN32_LEAN_AND_MEAN",
                 "NOMINMAX",
+                "CL_TARGET_OPENCL_VERSION=120"
             }
 
             filter { "system:windows", "action:vs*" }
