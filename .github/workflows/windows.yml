@@ -1,5 +1,4 @@
 name: Windows - OpenGL
-
 on:
   push:
     branches:
@@ -11,15 +10,10 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-
     steps:
       - uses: actions/checkout@v4
-      - uses: microsoft/setup-msbuild@v2
-      - uses: abel0b/setup-premake@v2.4
-        with:
-          version: "5.0.0-beta2"
-
-      - name: Setup MSYS2 build environment
+      
+      - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
@@ -27,21 +21,66 @@ jobs:
           install: >-
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-make
-            mingw-w64-x86_64-opencl-headers
-            mingw-w64-x86_64-opencl-icd-loader
             mingw-w64-x86_64-pkg-config
+            curl
+            unzip
+
+      - name: Setup OpenCL
+        shell: msys2 {0}
+        run: |
+          # Download OpenCL headers
+          curl -L "https://github.com/KhronosGroup/OpenCL-Headers/archive/refs/heads/main.zip" -o opencl.zip
+          unzip opencl.zip
+          mkdir -p /mingw64/include
+          cp -r OpenCL-Headers-main/CL /mingw64/include/
+          
+          # Create OpenCL import library
+          cat > opencl.def << 'EOF'
+          LIBRARY OpenCL
+          EXPORTS
+          clGetPlatformIDs
+          clGetDeviceIDs
+          clCreateContext
+          clCreateCommandQueue
+          clCreateBuffer
+          clCreateProgramWithSource
+          clBuildProgram
+          clCreateKernel
+          clSetKernelArg
+          clEnqueueNDRangeKernel
+          clEnqueueReadBuffer
+          clEnqueueWriteBuffer
+          clReleaseMemObject
+          clReleaseKernel
+          clReleaseProgram
+          clReleaseCommandQueue
+          clReleaseContext
+          EOF
+          
+          dlltool -d opencl.def -l /mingw64/lib/libOpenCL.a
+          rm -rf opencl.zip OpenCL-Headers-main opencl.def
 
       - name: Install OpenCL runtime
         run: choco install opencl-intel-cpu-runtime -y
-        
+
       - name: Get Submodules
+        shell: msys2 {0}
         run: git submodule update --init
 
-      - name: Compile (Premake)
-        run: |
-          premake5 --os=windows --file=build/premake5.lua gmake
-
-      - name: Compile (VS2022)
+      - name: Install Premake
         shell: msys2 {0}
         run: |
-          msbuild program-solution.sln /p:Configuration=Debug /p:Platform=x64
+          curl -L "https://github.com/premake/premake-core/releases/download/v5.0.0-beta2/premake-5.0.0-beta2-windows.zip" -o premake.zip
+          unzip premake.zip
+          chmod +x premake5.exe
+
+      - name: Generate Makefiles
+        shell: msys2 {0}
+        run: |
+          ./premake5.exe --os=windows --file=build/premake5.lua gmake
+
+      - name: Build with make
+        shell: msys2 {0}
+        run: |
+          cd program-solution
+          make config=debug_x64
