@@ -265,10 +265,10 @@ project "SDL"
             NATIVE_PATH .. "/sdl/src/thread/windows/SDL_systhread.c",
             NATIVE_PATH .. "/sdl/src/thread/windows/SDL_syssem.c",
             NATIVE_PATH .. "/sdl/src/thread/generic/SDL_syscond.c",
+            NATIVE_PATH .. "/sdl/src/thread/windows/SDL_systls.c",
             NATIVE_PATH .. "/sdl/src/timer/windows/SDL_systimer.c"
         }
 
-    filter "system:windows and not winrt"
         files {
             NATIVE_PATH .. "/sdl/src/filesystem/windows/SDL_sysfilesystem.c",
             NATIVE_PATH .. "/sdl/src/locale/windows/SDL_syslocale.c",
