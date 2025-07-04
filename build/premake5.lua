@@ -256,6 +256,7 @@ function solution_config()
         configurations { "Debug", "Release" }
 
         filter "system:windows"
+            buildoptions { "/std:c17" }
             platforms { "Win32", "x64" }
             architecture "x64"  -- Default to x64 on Windows
 
