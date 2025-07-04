@@ -405,18 +405,21 @@ function project_config()
 
             filter { "system:windows" }
                 links {
-                    "opengl32",
                     "gdi32",
+                    "opengl32",
                     "user32",
                     "kernel32",
-                    "shell32",
+                    "advapi32",
+                    "winmm",
+                    "imm32",
                     "ole32",
                     "oleaut32",
-                    "imm32",
-                    "winmm",
                     "version",
+                    "ws2_32",
+                    "wldap32",
+                    "shell32",
+                    "comdlg32",
                     "setupapi",
-                    "advapi32",
                     "OpenCL"
                 }
 
