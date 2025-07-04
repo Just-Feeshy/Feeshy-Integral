@@ -30,7 +30,7 @@ LIBRARY_DIR = "../third_party/libraries"
 ENABLE_VSYNC = true
 
 function third_party_config()
-    if os.target() ~= "emscripten" then
+    if os.target() ~= "emscripten" and os.target() ~= "windows" then
         include "config/sdl2"
     end
 
@@ -300,8 +300,6 @@ function project_config()
         objdir(OBJ_DIR)
         kind(PROJECT_KIND)
 
-        dependson { "SDL" }
-
         if ENABLE_VSYNC then
             defines { "ENABLE_VSYNC=1" }
         end
@@ -327,6 +325,12 @@ function project_config()
             "../third_party/cgltf/cgltf_write.h",
         }
 
+        filter "system:windows"
+            includedirs { "/mingw64/include/SDL2" }
+        filter "not system:windows"
+            includedirs { "../third_party/sdl/include" }
+        filter {}
+
         includedirs {
             "../include",
             "../third_party/cgltf",
@@ -336,7 +340,6 @@ function project_config()
             "../third_party/zlib",
             -- "../third_party/curl/include",
             "../third_party/nuklear",
-            "../third_party/sdl/include",
             "../nuklear_bindings/gl3",
         }
 
@@ -407,7 +410,8 @@ function project_config()
 
             filter { "system:windows" }
                 links {
-                    "SDL",
+                    "SDL2main",
+                    "SDL2",
                     "gdi32",
                     "opengl32",
                     "user32",
