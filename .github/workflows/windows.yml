@@ -16,18 +16,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: microsoft/setup-msbuild@v2
 
-      - name: Download Intel OpenCL SDK (Windows)
+      - name: Install Intel CPU OpenCL Runtime
         run: |
-          Invoke-WebRequest -Uri "https://github.com/intel/compute-runtime/releases/download/24.17.27041.6/intel_sdk_for_opencl_windows_2020.2.487.zip" -OutFile "opencl_sdk.zip"
-          Expand-Archive -Path "opencl_sdk.zip" -DestinationPath "opencl_sdk"
-        shell: pwsh
-
-      - name: Set up OpenCL env
-        run: |
-          echo "INCLUDE=$env:GITHUB_WORKSPACE/opencl_sdk/intel_sdk_for_opencl/include" >> $env:GITHUB_ENV
-          echo "LIB=$env:GITHUB_WORKSPACE/opencl_sdk/intel_sdk_for_opencl/lib/x64" >> $env:GITHUB_ENV
-          echo "$env:GITHUB_WORKSPACE/opencl_sdk/intel_sdk_for_opencl/bin/x64" >> $env:GITHUB_PATH
-        shell: pwsh
+          choco install intel-opencl-sdk -y
         
       - uses: abel0b/setup-premake@v2.4
         with:
