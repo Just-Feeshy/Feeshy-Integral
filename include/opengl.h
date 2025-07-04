@@ -16,13 +16,9 @@
 #elif defined(MACOSX)
 
 #define GL_GLEXT_PROTOTYPES
-#define NEED_EXTENSIONS
-#define DYNAMIC_OGL
-
 #include <SDL_opengl.h>
 #include <SDL_opengl_glext.h>
 
-#define FORCE_NON_PO2
 #define glBindFramebuffer glBindFramebufferEXT
 #define glBindRenderbuffer glBindRenderbufferEXT
 #define glGenFramebuffers glGenFramebuffersEXT
@@ -39,6 +35,14 @@
 #define glGetRenderbufferParameteriv glGetRenderbufferParameterivEXT
 #define glIsFramebuffer glIsFramebufferEXT
 #define glIsRenderbuffer glIsRenderbufferEXT
+
+#elif defined(WINDOWS)
+
+#include <windows.h>
+
+#define GL_GLEXT_PROTOTYPES
+#include <SDL_opengl.h>
+#include <SDL_opengl_glext.h>
 
 #else
 #include <SDL_opengl.h>
