@@ -19,7 +19,16 @@
 local NATIVE_PATH = "../../third_party"
 
 project "SDL"
-    kind "StaticLib"
+    filter "system:windows"
+        kind "SharedLib"
+        staticruntime "off"
+
+    filter "system:linux or system:macosx or system:winrt or system:emscripten"
+        kind "StaticLib"
+        staticruntime "on"
+
+    filter {}
+
     language "C"
     cdialect "gnu99"
 

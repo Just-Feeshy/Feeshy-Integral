@@ -316,7 +316,6 @@ function project_config()
             "CGLM_STATIC",
             "CGLM_ALL_UNALIGNED",
             "SDL_MAIN_HANDLED",
-            "SDL_STATIC"
         }
 
         files {
