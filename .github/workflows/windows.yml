@@ -18,15 +18,15 @@ jobs:
 
       - name: Download Intel OpenCL SDK (Windows)
         run: |
-          curl -L -o opencl_sdk.zip https://github.com/intel/compute-runtime/releases/download/24.17.27041.6/intel_sdk_for_opencl_windows_2020.2.487.zip
-          tar -xf opencl_sdk.zip
+          Invoke-WebRequest -Uri "https://github.com/intel/compute-runtime/releases/download/24.17.27041.6/intel_sdk_for_opencl_windows_2020.2.487.zip" -OutFile "opencl_sdk.zip"
+          Expand-Archive -Path "opencl_sdk.zip" -DestinationPath "opencl_sdk"
         shell: pwsh
 
       - name: Set up OpenCL env
         run: |
-          echo "INCLUDE=$env:GITHUB_WORKSPACE/intel_sdk_for_opencl_windows_2020.2.487/include" >> $env:GITHUB_ENV
-          echo "LIB=$env:GITHUB_WORKSPACE/intel_sdk_for_opencl_windows_2020.2.487/lib/x64" >> $env:GITHUB_ENV
-          echo "$env:GITHUB_WORKSPACE/intel_sdk_for_opencl_windows_2020.2.487/bin/x64" >> $env:GITHUB_PATH
+          echo "INCLUDE=$env:GITHUB_WORKSPACE/opencl_sdk/intel_sdk_for_opencl/include" >> $env:GITHUB_ENV
+          echo "LIB=$env:GITHUB_WORKSPACE/opencl_sdk/intel_sdk_for_opencl/lib/x64" >> $env:GITHUB_ENV
+          echo "$env:GITHUB_WORKSPACE/opencl_sdk/intel_sdk_for_opencl/bin/x64" >> $env:GITHUB_PATH
         shell: pwsh
         
       - uses: abel0b/setup-premake@v2.4
