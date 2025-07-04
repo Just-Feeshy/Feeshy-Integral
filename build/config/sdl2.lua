@@ -59,6 +59,7 @@ project "SDL"
             "SDL_HAPTIC_XINPUT",
             "SDL_DYNAMIC_API=0",
             "SDL_LOADSO_WINDOWS",
+            "SDL_DYNAPI_DISABLED",
             "_WIN32",
             "WIN32",
             "HAVE_STDARG_H",
