@@ -12,43 +12,54 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: microsoft/setup-msbuild@v2
       - uses: abel0b/setup-premake@v2.4
         with:
           version: "5.0.0-beta2"
 
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-make
+            curl
+            unzip
+
       - name: Get Submodules
         run: git submodule update --init
 
-      - name: Setup OpenCL
+      - name: Setup OpenCL headers
+        shell: msys2 {0}
         run: |
-          # Install Intel OpenCL runtime
-          choco install opencl-intel-cpu-runtime -y
-          
-          # Download and install OpenCL headers
-          Invoke-WebRequest -Uri "https://github.com/KhronosGroup/OpenCL-Headers/archive/refs/heads/main.zip" -OutFile "opencl-headers.zip"
-          Expand-Archive -Path "opencl-headers.zip" -DestinationPath "temp"
-          
-          # Create OpenCL directory
-          New-Item -ItemType Directory -Force -Path "C:\OpenCL\include"
-          Copy-Item -Path "temp\OpenCL-Headers-main\CL" -Destination "C:\OpenCL\include" -Recurse
-          
-          # Clean up
-          Remove-Item "opencl-headers.zip" -Force
-          Remove-Item "temp" -Recurse -Force
-          
-          # Verify installation (The testcases fail too much)
-          if (Test-Path "C:\OpenCL\include\CL\cl.h") {
-              Write-Host "✅ OpenCL headers installed successfully"
-          } else {
-              Write-Host "❌ OpenCL headers installation failed"
+          curl -L "https://github.com/KhronosGroup/OpenCL-Headers/archive/refs/heads/main.zip" -o opencl-headers.zip
+          unzip opencl-headers.zip
+          mkdir -p /mingw64/include
+          cp -r OpenCL-Headers-main/CL /mingw64/include/
+          rm -rf opencl-headers.zip OpenCL-Headers-main
+
+      - name: Install OpenCL runtime
+        run: choco install opencl-intel-cpu-runtime -y
+
+      - name: Generate Makefiles
+        run: |
+          premake5 --os=windows --file=build/premake5.lua gmake
+
+      - name: Build with make
+        shell: msys2 {0}
+        run: |
+          echo "Trying to detect make..."
+          if command -v make >/dev/null 2>&1; then
+              echo "Found 'make'"
+              make config=debug_x64
+          elif command -v mingw32-make >/dev/null 2>&1; then
+              echo "Found 'mingw32-make'"
+              mingw32-make config=debug_x64
+          elif command -v gmake >/dev/null 2>&1; then
+              echo "Found 'gmake'"
+              gmake config=debug_x64
+          else
+              echo "No make variant found!"
               exit 1
-          }
-
-      - name: Generate Visual Studio Solution
-        run: |
-          premake5 --os=windows --file=build/premake5.lua vs2022
-
-      - name: Build with MSBuild
-        run: |
-          msbuild program-solution.sln /p:Configuration=Debug /p:Platform=x64
+          fi
