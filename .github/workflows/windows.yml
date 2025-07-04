@@ -15,6 +15,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: microsoft/setup-msbuild@v2
+
+      - name: Install OpenCL SDK (Windows)
+        run: |
+          # Create OpenCL directory structure
+          New-Item -ItemType Directory -Force -Path "C:\opencl\include\CL"
+          New-Item -ItemType Directory -Force -Path "C:\opencl\lib\x64"
+          New-Item -ItemType Directory -Force -Path "C:\opencl\lib\x86"
+          
+          # Download OpenCL headers
+          $headers = @(
+              "https://raw.githubusercontent.com/KhronosGroup/OpenCL-Headers/main/CL/cl.h",
+              "https://raw.githubusercontent.com/KhronosGroup/OpenCL-Headers/main/CL/cl_platform.h",
+              "https://raw.githubusercontent.com/KhronosGroup/OpenCL-Headers/main/CL/opencl.h",
+              "https://raw.githubusercontent.com/KhronosGroup/OpenCL-Headers/main/CL/cl_ext.h"
+          )
+          
+          foreach ($header in $headers) {
+              $filename = Split-Path $header -Leaf
+              Invoke-WebRequest -Uri $header -OutFile "C:\opencl\include\CL\$filename"
+          }
+          
+          # Download Intel OpenCL runtime
+          Invoke-WebRequest -Uri "https://registrationcenter-download.intel.com/akdlm/irc_nas/18342/w_opencl_runtime_p_2021.4.0.3504_offline.exe" -OutFile "opencl_runtime.exe"
+          Start-Process -FilePath "opencl_runtime.exe" -ArgumentList "-s" -Wait
+          
+          # Set environment variables
+          echo "OPENCL_ROOT=C:\opencl" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "OPENCL_INCLUDE_DIR=C:\opencl\include" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        shell: powershell
+        
       - uses: abel0b/setup-premake@v2.4
         with:
           version: "5.0.0-beta2"
