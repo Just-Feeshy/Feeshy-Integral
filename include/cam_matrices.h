@@ -6,8 +6,8 @@ typedef struct {
     mat4 projection;
     mat4 view;
     vec3 position;
-    float far;
-    float near;
+    float far_plane;
+    float near_plane;
 } cam_block;
 
 typedef struct cam_matrices {

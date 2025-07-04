@@ -35,7 +35,7 @@ void update_view_matrix(cam_matrices* cam) {
 
 void update_projection_matrix(cam_matrices* cam, float aspect_ratio, float fov) {
     glm_mat4_identity(cam->cam.projection);
-    glm_perspective(glm_rad(fov), aspect_ratio, cam->cam.near, cam->cam.far, cam->cam.projection);
+    glm_perspective(glm_rad(fov), aspect_ratio, cam->cam.near_plane, cam->cam.far_plane, cam->cam.projection);
 }
 
 cam_matrices create_cam_matrices() {
@@ -45,11 +45,11 @@ cam_matrices create_cam_matrices() {
         .position = {0.0f, 0.0f, 0.0f},
 
         #ifndef HAS_GEOMETRY_PASS
-        .far = 960.0f,
-        .near = 0.001f
+        .far_plane = 960.0f,
+        .near_plane = 0.001f
         #else
-        .far = 100.0f,
-        .near = 0.1f
+        .far_plane = 100.0f,
+        .near_plane = 0.1f
         #endif
     };
 
