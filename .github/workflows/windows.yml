@@ -29,10 +29,6 @@ jobs:
           
           echo "OPENCL_ROOT=C:\OpenCL" >> $env:GITHUB_ENV
           echo "OPENCL_INCLUDE_DIRS=C:\OpenCL\include" >> $env:GITHUB_ENV
-            
-      - name: Verify OpenCL installation
-        run: |
-          clinfo
         
       - uses: abel0b/setup-premake@v2.4
         with:
