@@ -260,8 +260,11 @@ project "SDL"
             NATIVE_PATH .. "/sdl/src/render/direct3d11/SDL_render_d3d11.c",
             NATIVE_PATH .. "/sdl/src/render/direct3d12/SDL_render_d3d12.c",
             NATIVE_PATH .. "/sdl/src/render/SDL_d3dmath.c",
+            NATIVE_PATH .. "/sdl/src/thread/SDL_thread.c",
+            NATIVE_PATH .. "/sdl/src/thread/windows/SDL_sysmutex.c",
+            NATIVE_PATH .. "/sdl/src/thread/windows/SDL_systhread.c",
+            NATIVE_PATH .. "/sdl/src/thread/windows/SDL_syssem.c",
             NATIVE_PATH .. "/sdl/src/thread/generic/SDL_syscond.c",
-            NATIVE_PATH .. "/sdl/src/thread/windows/**.c",
             NATIVE_PATH .. "/sdl/src/timer/windows/SDL_systimer.c"
         }
 
