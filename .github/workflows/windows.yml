@@ -19,8 +19,6 @@ jobs:
           msystem: MINGW64
           update: true
           install: >-
-            choco install make -y
-            choco install mingw -y
             mingw-w64-x86_64-pkg-config
             
             git
@@ -63,7 +61,10 @@ jobs:
           rm -rf opencl.zip OpenCL-Headers-main opencl.def
 
       - name: Install OpenCL runtime
-        run: choco install opencl-intel-cpu-runtime -y
+        run: |
+          choco install make -y
+          choco install mingw -y
+          choco install opencl-intel-cpu-runtime -y
 
       - name: Get Submodules
         shell: msys2 {0}
