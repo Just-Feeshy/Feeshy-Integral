@@ -52,13 +52,13 @@ jobs:
           echo "Trying to detect make..."
           if command -v make >/dev/null 2>&1; then
               echo "Found 'make'"
-              make config=debug_x64
+              make
           elif command -v mingw32-make >/dev/null 2>&1; then
               echo "Found 'mingw32-make'"
-              mingw32-make config=debug_x64
+              mingw32-make
           elif command -v gmake >/dev/null 2>&1; then
               echo "Found 'gmake'"
-              gmake config=debug_x64
+              gmake
           else
               echo "No make variant found!"
               exit 1
