@@ -49,6 +49,24 @@ project "SDL"
             "SDL_BUILDING_WINRT=1"
         }
 
+    filter "system:windows"
+        defines {
+            "HAVE_LIBC",
+            "SDL_HIDAPI_DISABLED",
+            "SDL_AUDIO=OFF",
+            "_WIN32",
+            "WIN32",
+            "__WIN32__",
+            "HAVE_STDINT_H",
+            "HAVE_STDDEF_H",
+            "HAVE_STDARG_H",
+            "SDL_THREAD_WINDOWS",
+            "SDL_TIMER_WINDOWS",
+            "SDL_VIDEO_DRIVER_WINDOWS",
+            "SDL_JOYSTICK_DINPUT",
+            "SDL_HAPTIC_DINPUT"
+        }
+
     filter "system:linux"
         defines {
             "HAVE_LINUX_INPUT_H",
