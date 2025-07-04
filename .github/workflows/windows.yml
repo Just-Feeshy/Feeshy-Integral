@@ -16,28 +16,37 @@ jobs:
         with:
           version: "5.0.0-beta2"
 
-      - name: Install MinGW toolchain
-        run: |
-          choco install mingw -y
-          choco install opencl-intel-cpu-runtime -y
-          echo "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin" >> $env:GITHUB_PATH
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-make
+            curl
+            unzip
 
       - name: Get Submodules
         run: git submodule update --init
 
       - name: Setup OpenCL headers
+        shell: msys2 {0}
         run: |
-          Invoke-WebRequest -Uri "https://github.com/KhronosGroup/OpenCL-Headers/archive/refs/heads/main.zip" -OutFile "opencl-headers.zip"
-          Expand-Archive -Path "opencl-headers.zip" -DestinationPath "temp"
-          New-Item -ItemType Directory -Force -Path "C:\OpenCL\include"
-          Copy-Item -Path "temp\OpenCL-Headers-main\CL" -Destination "C:\OpenCL\include" -Recurse
-          Remove-Item "opencl-headers.zip" -Force
-          Remove-Item "temp" -Recurse -Force
+          curl -L "https://github.com/KhronosGroup/OpenCL-Headers/archive/refs/heads/main.zip" -o opencl-headers.zip
+          unzip opencl-headers.zip
+          mkdir -p /mingw64/include
+          cp -r OpenCL-Headers-main/CL /mingw64/include/
+          rm -rf opencl-headers.zip OpenCL-Headers-main
 
-      - name: Generate Makefiles for MinGW
+      - name: Install OpenCL runtime
+        run: choco install opencl-intel-cpu-runtime -y
+
+      - name: Generate Makefiles
         run: |
           premake5 --os=windows --file=build/premake5.lua gmake
 
-      - name: Build with MinGW make
+      - name: Build with make
+        shell: msys2 {0}
         run: |
-          mingw32-make config=debug_x64
+          make config=debug_x64
