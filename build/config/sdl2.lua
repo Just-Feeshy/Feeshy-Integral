@@ -19,16 +19,9 @@
 local NATIVE_PATH = "../../third_party"
 
 project "SDL"
-    filter "system:windows"
-        kind "SharedLib"
-        staticruntime "off"
-        language "C++"
-        cppdialect "C++17"
-
-    filter "system:linux or system:macosx or system:winrt or system:emscripten"
-        kind "StaticLib"
-        staticruntime "on"
-        language "C"
+    kind "StaticLib"
+    staticruntime "on"
+    language "C"
 
     filter {}
     cdialect "gnu99"
@@ -52,36 +45,6 @@ project "SDL"
     filter "system:linux"
         defines { "USING_GENERATED_CONFIG_H" }
 
-    filter "system:winrt"
-        defines {
-            "__WINRT__",
-            "UNICODE",
-            "SDL_BUILDING_WINRT=1"
-        }
-
-    filter "system:windows"
-        defines {
-            "HAVE_LIBC",
-            "SDL_HIDAPI_DISABLED",
-            "SDL_AUDIO_DISABLED",
-            "SDL_JOYSTICK_XINPUT",
-            "SDL_JOYSTICK_DISABLED_DINPUT",
-            "SDL_HAPTIC_XINPUT",
-            "DLL_EXPORT",
-            "_WIN32",
-            "WIN32",
-            "HAVE_STDARG_H",
-            "HAVE_STDINT_H",
-            "HAVE_STDDEF_H",
-            "HAVE_STDIO_H",
-            "HAVE_STDLIB_H",
-            "HAVE_STRING_H",
-            "SDL_THREAD_WINDOWS",
-            "SDL_TIMER_WINDOWS",
-            "SDL_VIDEO_DRIVER_WINDOWS"
-        }
-
-    filter "system:linux"
         defines {
             "HAVE_LINUX_INPUT_H",
             "HAVE_LINUX_VERSION_H",
@@ -199,30 +162,18 @@ project "SDL"
     }
 
     -- Non-Windows platforms (Unix-like)
-    filter "not system:windows"
-        files {
-            NATIVE_PATH .. "/sdl/src/thread/pthread/SDL_syscond.c",
-            NATIVE_PATH .. "/sdl/src/thread/pthread/SDL_sysmutex.c",
-            NATIVE_PATH .. "/sdl/src/thread/pthread/SDL_syssem.c",
-            NATIVE_PATH .. "/sdl/src/thread/pthread/SDL_systhread.c",
-            NATIVE_PATH .. "/sdl/src/timer/unix/SDL_systimer.c"
-        }
+    filter {}
 
-    -- OpenGL ES platforms (including macOS now)
-    filter "system:windows"
-        files {
-            NATIVE_PATH .. "/sdl/src/render/opengles/SDL_render_gles.c",
-            NATIVE_PATH .. "/sdl/src/render/opengles2/SDL_render_gles2.c",
-            NATIVE_PATH .. "/sdl/src/render/opengles2/SDL_shaders_gles2.c"
-        }
-
-    -- Optional EGL for Windows and macOS (uncomment if you have EGL libraries)
-    -- filter "system:windows or system:macosx"
-    --     files { NATIVE_PATH .. "/sdl/src/video/SDL_egl.c" }
-    --     defines { "SDL_VIDEO_DRIVER_EGL=1" }
-
+    files {
+        NATIVE_PATH .. "/sdl/src/thread/pthread/SDL_syscond.c",
+        NATIVE_PATH .. "/sdl/src/thread/pthread/SDL_sysmutex.c",
+        NATIVE_PATH .. "/sdl/src/thread/pthread/SDL_syssem.c",
+        NATIVE_PATH .. "/sdl/src/thread/pthread/SDL_systhread.c",
+        NATIVE_PATH .. "/sdl/src/timer/unix/SDL_systimer.c"
+    }
+    --
     -- HID API platforms (expanded list)
-    filter "system:windows or system:macosx"
+    filter "system:macosx"
         files {
             NATIVE_PATH .. "/sdl/src/joystick/hidapi/SDL_hidapi_gamecube.c",
             NATIVE_PATH .. "/sdl/src/joystick/hidapi/SDL_hidapi_luna.c",
@@ -256,52 +207,6 @@ project "SDL"
             NATIVE_PATH .. "/sdl/src/misc/unix/SDL_sysurl.c",
             NATIVE_PATH .. "/sdl/src/power/linux/SDL_syspower.c",
             NATIVE_PATH .. "/sdl/src/video/x11/**.c"
-        }
-
-    -- Windows-specific files
-    filter "system:windows"
-        files {
-            NATIVE_PATH .. "/sdl/src/core/windows/SDL_windows.c",
-            NATIVE_PATH .. "/sdl/src/core/windows/SDL_xinput.c",
-            NATIVE_PATH .. "/sdl/src/core/windows/SDL_immdevice.c",
-            NATIVE_PATH .. "/sdl/src/haptic/windows/**.c",
-            NATIVE_PATH .. "/sdl/src/hidapi/windows/hid.c",
-            NATIVE_PATH .. "/sdl/src/joystick/windows/**.c",
-            NATIVE_PATH .. "/sdl/src/loadso/windows/SDL_sysloadso.c",
-            NATIVE_PATH .. "/sdl/src/render/direct3d11/SDL_render_d3d11.c",
-            NATIVE_PATH .. "/sdl/src/render/direct3d12/SDL_render_d3d12.c",
-            NATIVE_PATH .. "/sdl/src/render/SDL_d3dmath.c",
-            NATIVE_PATH .. "/sdl/src/thread/SDL_thread.c",
-            NATIVE_PATH .. "/sdl/src/thread/windows/SDL_sysmutex.c",
-            NATIVE_PATH .. "/sdl/src/thread/windows/SDL_systhread.c",
-            NATIVE_PATH .. "/sdl/src/thread/windows/SDL_syssem.c",
-            NATIVE_PATH .. "/sdl/src/thread/generic/SDL_syscond.c",
-            NATIVE_PATH .. "/sdl/src/thread/windows/SDL_systls.c",
-            NATIVE_PATH .. "/sdl/src/timer/windows/SDL_systimer.c"
-        }
-
-        files {
-            NATIVE_PATH .. "/sdl/src/filesystem/windows/SDL_sysfilesystem.c",
-            NATIVE_PATH .. "/sdl/src/locale/windows/SDL_syslocale.c",
-            NATIVE_PATH .. "/sdl/src/misc/windows/SDL_sysurl.c",
-            NATIVE_PATH .. "/sdl/src/power/windows/SDL_syspower.c",
-            NATIVE_PATH .. "/sdl/src/render/direct3d/SDL_render_d3d.c",
-            NATIVE_PATH .. "/sdl/src/video/windows/**.c"
-        }
-
-    -- WinRT-specific files
-    filter "system:winrt"
-        files {
-            NATIVE_PATH .. "/sdl/src/core/winrt/**.cpp",
-            NATIVE_PATH .. "/sdl/src/filesystem/winrt/SDL_sysfilesystem.cpp",
-            NATIVE_PATH .. "/sdl/src/locale/winrt/SDL_syslocale.c",
-            NATIVE_PATH .. "/sdl/src/misc/winrt/SDL_sysurl.cpp",
-            NATIVE_PATH .. "/sdl/src/power/winrt/SDL_syspower.cpp",
-            NATIVE_PATH .. "/sdl/src/render/direct3d11/SDL_render_d3d11.c",
-            NATIVE_PATH .. "/sdl/src/render/direct3d12/SDL_render_d3d12.c",
-            NATIVE_PATH .. "/sdl/src/render/direct3d11/SDL_render_winrt.cpp",
-            NATIVE_PATH .. "/sdl/src/render/direct3d11/SDL_shaders_d3d11.c",
-            NATIVE_PATH .. "/sdl/src/video/winrt/**.cpp"
         }
 
     -- macOS-specific files
