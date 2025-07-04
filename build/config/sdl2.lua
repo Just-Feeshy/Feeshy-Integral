@@ -59,8 +59,12 @@ project "SDL"
             "SDL_HAPTIC_XINPUT",
             "_WIN32",
             "WIN32",
+            "HAVE_STDARG_H",
             "HAVE_STDINT_H",
             "HAVE_STDDEF_H",
+            "HAVE_STDIO_H",
+            "HAVE_STDLIB_H",
+            "HAVE_STRING_H",
             "SDL_THREAD_WINDOWS",
             "SDL_TIMER_WINDOWS",
             "SDL_VIDEO_DRIVER_WINDOWS"
