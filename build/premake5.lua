@@ -256,7 +256,6 @@ function solution_config()
         configurations { "Debug", "Release" }
 
         filter "system:windows"
-            buildoptions { "/std:c17" }
             platforms { "Win32", "x64" }
             architecture "x64"  -- Default to x64 on Windows
 
@@ -391,25 +390,32 @@ function project_config()
                 "NOMINMAX",
             }
 
-            links {
-                "opengl32",
-                "gdi32",
-                "user32",
-                "kernel32",
-                "shell32",
-                "ole32",
-                "oleaut32",
-                "imm32",
-                "winmm",
-                "version",
-                "setupapi",
-                "advapi32",
-                "OpenCL"
-            }
+            filter { "system:windows", "action:vs*" }
+                buildoptions { "/std:c17" }  -- MSVC syntax
 
-            includedirs {
-                "C:/OpenCL/include"
-            }
+            filter { "system:windows", "action:gmake*" }
+                buildoptions { "-std=c17" }   -- GCC syntax
+
+            filter { "system:windows" }
+                links {
+                    "opengl32",
+                    "gdi32",
+                    "user32",
+                    "kernel32",
+                    "shell32",
+                    "ole32",
+                    "oleaut32",
+                    "imm32",
+                    "winmm",
+                    "version",
+                    "setupapi",
+                    "advapi32",
+                    "OpenCL"
+                }
+
+                includedirs {
+                    "C:/OpenCL/include"
+                }
 
         filter { "system:linux" }
             links { "pthread", "GL", "X11", "Xrandr", "Xi", "dl", "m" }
