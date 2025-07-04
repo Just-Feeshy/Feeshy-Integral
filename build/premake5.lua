@@ -256,7 +256,7 @@ function solution_config()
         configurations { "Debug", "Release" }
 
         filter "system:windows"
-            platforms { "Win32", "x64" }
+            platforms { "x64" }
             architecture "x64"  -- Default to x64 on Windows
 
         filter "system:macosx"
@@ -289,9 +289,6 @@ function solution_config()
             defines { "_WIN32", "WIN32" }
             systemversion "latest"
             characterset "MBCS"
-
-        filter { "system:windows", "platforms:Win32" }
-            architecture "x86"
 
         filter { "system:windows", "platforms:x64" }
             architecture "x64"
