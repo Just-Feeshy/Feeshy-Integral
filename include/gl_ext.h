@@ -24,10 +24,12 @@
 #elif defined(DEFINE_EXTENSION)
 #define OGL_EXT(func,ret,args) ret (CALLING_CONVENTION *func)args = NULL;
 #elif defined(GET_EXTENSION)
-#define OGL_EXT(func,ret,args) \
-    func = (ret (CALLING_CONVENTION *)args)SDL_GL_GetProcAddress(#func); \
+
+#define OGL_EXT(func,ret,args) {\
+    *(void**)&func = (void*)SDL_GL_GetProcAddress(#func); \
     if (!func) \
-        func = (ret (CALLING_CONVENTION *)args)SDL_GL_GetProcAddress(#func "ARB");
+        *(void**)&func = (void*)SDL_GL_GetProcAddress(#func "ARB"); \
+    }
 #endif
 
 // Core OpenGL Extensions
