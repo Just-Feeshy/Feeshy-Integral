@@ -39,6 +39,7 @@ function third_party_config()
     -- CGLM
     project "cglm-lib"
         language "C"
+        cdialect "C99"
         kind "StaticLib"
         warnings "off"
 
@@ -386,7 +387,7 @@ function project_config()
                 "WINDOWS",
                 "_CRT_SECURE_NO_WARNINGS",
                 "WIN32_LEAN_AND_MEAN",
-                "NOMINMAX"
+                "NOMINMAX",
             }
 
             links {
@@ -402,6 +403,11 @@ function project_config()
                 "version",
                 "setupapi",
                 "advapi32",
+                "OpenCL"
+            }
+
+            includedirs {
+                "C:/OpenCL/include"
             }
 
         filter { "system:linux" }
