@@ -44,6 +44,18 @@ jobs:
 
       - name: Generate Makefiles
         run: |
+          which make || which mingw32-make || which gmake
+          
+          if command -v make >/dev/null 2>&1; then
+              make config=debug_x64
+          elif command -v mingw32-make >/dev/null 2>&1; then
+              mingw32-make config=debug_x64
+          elif command -v gmake >/dev/null 2>&1; then
+              gmake config=debug_x64
+          else
+              echo "No make command found!"
+              exit 1
+          fi
           premake5 --os=windows --file=build/premake5.lua gmake
 
       - name: Build with make
