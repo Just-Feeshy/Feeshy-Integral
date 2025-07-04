@@ -53,7 +53,7 @@ function third_party_config()
         }
 
         filter "system:windows"
-            defines { "_WINDOWS" }
+            defines { "_WINDOWS", "_CRT_SECURE_NO_WARNINGS" }
 
 
     -- CURL
@@ -231,7 +231,17 @@ function solution_config()
         systemversion "latest"
         language(LANG)
         configurations { "Debug", "Release" }
-        architecture "arm64"
+
+        -- Multi-platform architecture support
+        filter "system:windows"
+            platforms { "Win32", "x64" }
+            architecture "x64"  -- Default to x64 on Windows
+
+        filter "system:macosx"
+            architecture "arm64"
+
+        filter "system:linux"
+            architecture "x64"
 
         flags { "MultiProcessorCompile" }
         optimize(OPTIMIZE)
@@ -247,6 +257,19 @@ function solution_config()
 
         filter "configurations:Release"
             symbols "Off"
+            optimize "On"
+
+        -- Windows-specific configuration
+        filter "system:windows"
+            defines { "_WIN32", "WIN32" }
+            systemversion "latest"
+            characterset "MBCS"
+
+        filter { "system:windows", "platforms:Win32" }
+            architecture "x86"
+
+        filter { "system:windows", "platforms:x64" }
+            architecture "x64"
 end
 
 function project_config()
@@ -334,7 +357,31 @@ function project_config()
             }
 
         filter { "system:windows" }
-            defines { "WINDOWS" }
+            defines {
+                "WINDOWS",
+                "_CRT_SECURE_NO_WARNINGS",
+                "WIN32_LEAN_AND_MEAN",
+                "NOMINMAX"
+            }
+
+            -- Windows system libraries
+            links {
+                "opengl32",
+                "gdi32",
+                "user32",
+                "kernel32",
+                "shell32",
+                "ole32",
+                "oleaut32",
+                "imm32",
+                "winmm",
+                "version",
+                "setupapi",
+                "advapi32",
+            }
+
+        filter { "system:linux" }
+            links { "pthread", "GL", "X11", "Xrandr", "Xi", "dl", "m" }
 
         filter { "system:emscripten" }
             targetdir(TARGET_DIR .. "/Web")
