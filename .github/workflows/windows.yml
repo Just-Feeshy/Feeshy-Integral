@@ -46,14 +46,14 @@ jobs:
         run: |
           which make || which mingw32-make || which gmake
           
-          if [ -x "$(command -v make)" ]; then
+          if (Get-Command make -ErrorAction SilentlyContinue) {
               make config=debug_x64
-          elif [ -x "$(command -v mingw32-make)" ]; then
+          } elseif (Get-Command mingw32-make -ErrorAction SilentlyContinue) {
               mingw32-make config=debug_x64
-          else
-              echo "No make command found!"
+          } else {
+              Write-Host "No make command found!"
               exit 1
-          fi
+          }
           premake5 --os=windows --file=build/premake5.lua gmake
 
       - name: Build with make
