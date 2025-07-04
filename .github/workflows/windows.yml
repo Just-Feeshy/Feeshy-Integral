@@ -40,5 +40,4 @@ jobs:
 
       - name: Build with MinGW make
         run: |
-          cd program-solution
           mingw32-make config=debug_x64
