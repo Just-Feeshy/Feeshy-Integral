@@ -22,14 +22,15 @@ project "SDL"
     filter "system:windows"
         kind "SharedLib"
         staticruntime "off"
+        language "C++"
+        cppdialect "C++17"
 
     filter "system:linux or system:macosx or system:winrt or system:emscripten"
         kind "StaticLib"
         staticruntime "on"
+        language "C"
 
     filter {}
-
-    language "C"
     cdialect "gnu99"
 
     -- Include directories
