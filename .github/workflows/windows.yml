@@ -44,19 +44,22 @@ jobs:
 
       - name: Generate Makefiles
         run: |
-          which make || which mingw32-make || which gmake
-          
-          if (Get-Command make -ErrorAction SilentlyContinue) {
-              make config=debug_x64
-          } elseif (Get-Command mingw32-make -ErrorAction SilentlyContinue) {
-              mingw32-make config=debug_x64
-          } else {
-              Write-Host "No make command found!"
-              exit 1
-          }
           premake5 --os=windows --file=build/premake5.lua gmake
 
       - name: Build with make
         shell: msys2 {0}
         run: |
-          make config=debug_x64
+          echo "Trying to detect make..."
+          if command -v make >/dev/null 2>&1; then
+              echo "Found 'make'"
+              make config=debug_x64
+          elif command -v mingw32-make >/dev/null 2>&1; then
+              echo "Found 'mingw32-make'"
+              mingw32-make config=debug_x64
+          elif command -v gmake >/dev/null 2>&1; then
+              echo "Found 'gmake'"
+              gmake config=debug_x64
+          else
+              echo "No make variant found!"
+              exit 1
+          fi
