@@ -3,6 +3,16 @@
 #include <utils.h>
 #include <assert.h>
 
+int opengl_init_ext() {
+    #ifdef NEED_EXT
+    #define GET_EXTENSION
+    #include <gl_ext.h>
+    #undef GET_EXTENSION
+    #endif
+
+    return 0;
+}
+
 void opengl_init() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);

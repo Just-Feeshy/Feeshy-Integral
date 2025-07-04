@@ -40,6 +40,7 @@
 
 #include <windows.h>
 
+#define NEED_EXT
 #define GL_GLEXT_PROTOTYPES
 #include <SDL_opengl.h>
 #include <SDL_opengl_glext.h>
@@ -56,6 +57,12 @@
 #define GL_APP_PROFILE_MASK SDL_GL_CONTEXT_PROFILE_CORE
 #define GL_APP_MAJOR_VERSION 4
 #define GL_APP_MINOR_VERSION 1
+#endif
+
+#ifdef NEED_EXT
+#define DECLARE_EXTENSIONS
+#include <gl_ext.h>
+#undef DECLARE_EXTENSIONS
 #endif
 
 typedef enum {
