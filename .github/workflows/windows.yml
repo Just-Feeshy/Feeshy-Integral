@@ -16,24 +16,18 @@ jobs:
       - uses: actions/checkout@v4
       - uses: microsoft/setup-msbuild@v2
 
-      - name: Install OpenCL SDK (Windows)
+      - name: Download Intel OpenCL SDK (Windows)
         run: |
-          New-Item -ItemType Directory -Force -Path "third_party\opencl_headers\CL"
-          
-          $headers = @{
-              "cl.h" = "https://raw.githubusercontent.com/KhronosGroup/OpenCL-Headers/main/CL/cl.h"
-              "cl_platform.h" = "https://raw.githubusercontent.com/KhronosGroup/OpenCL-Headers/main/CL/cl_platform.h"
-              "opencl.h" = "https://raw.githubusercontent.com/KhronosGroup/OpenCL-Headers/main/CL/opencl.h"
-          }
-          
-          foreach ($header in $headers.GetEnumerator()) {
-              Write-Host "Downloading $($header.Key)..."
-              Invoke-WebRequest -Uri $header.Value -OutFile "third_party\opencl_headers\CL\$($header.Key)"
-          }
-          
-          echo "OPENCL_INCLUDE_DIR=$env:GITHUB_WORKSPACE\third_party\opencl_headers" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "OPENCL_HEADERS_ONLY=1" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        shell: powershell
+          curl -L -o opencl_sdk.zip https://github.com/intel/compute-runtime/releases/download/24.17.27041.6/intel_sdk_for_opencl_windows_2020.2.487.zip
+          tar -xf opencl_sdk.zip
+        shell: pwsh
+
+      - name: Set up OpenCL env
+        run: |
+          echo "INCLUDE=$env:GITHUB_WORKSPACE/intel_sdk_for_opencl_windows_2020.2.487/include" >> $env:GITHUB_ENV
+          echo "LIB=$env:GITHUB_WORKSPACE/intel_sdk_for_opencl_windows_2020.2.487/lib/x64" >> $env:GITHUB_ENV
+          echo "$env:GITHUB_WORKSPACE/intel_sdk_for_opencl_windows_2020.2.487/bin/x64" >> $env:GITHUB_PATH
+        shell: pwsh
         
       - uses: abel0b/setup-premake@v2.4
         with:
