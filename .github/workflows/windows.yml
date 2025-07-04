@@ -46,12 +46,10 @@ jobs:
         run: |
           which make || which mingw32-make || which gmake
           
-          if command -v make >/dev/null 2>&1; then
+          if [ -x "$(command -v make)" ]; then
               make config=debug_x64
-          elif command -v mingw32-make >/dev/null 2>&1; then
+          elif [ -x "$(command -v mingw32-make)" ]; then
               mingw32-make config=debug_x64
-          elif command -v gmake >/dev/null 2>&1; then
-              gmake config=debug_x64
           else
               echo "No make command found!"
               exit 1
