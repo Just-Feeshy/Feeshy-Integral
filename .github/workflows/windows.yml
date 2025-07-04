@@ -15,63 +15,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: microsoft/setup-msbuild@v2
-
-      - name: Setup OpenCL environment
-        run: |
-          # Install Intel OpenCL CPU runtime
-          choco install opencl-intel-cpu-runtime -y
-          
-          # Create OpenCL directory structure
-          New-Item -ItemType Directory -Force -Path "C:\OpenCL\include"
-          
-          # Download OpenCL headers
-          Write-Host "Downloading OpenCL headers..."
-          Invoke-WebRequest -Uri "https://github.com/KhronosGroup/OpenCL-Headers/archive/refs/heads/main.zip" -OutFile "opencl-headers.zip"
-          Expand-Archive -Path "opencl-headers.zip" -DestinationPath "temp"
-          
-          # Copy headers to standard location
-          Copy-Item -Path "temp\OpenCL-Headers-main\CL" -Destination "C:\OpenCL\include" -Recurse
-          
-          # Also copy to Windows SDK location (alternative)
-          $windowsKit = "C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um"
-          if (Test-Path $windowsKit) {
-              Copy-Item -Path "temp\OpenCL-Headers-main\CL" -Destination "$windowsKit" -Recurse -Force
-          }
-          
-          # Set environment variables for compiler
-          echo "OPENCL_ROOT=C:\OpenCL" >> $env:GITHUB_ENV
-          echo "OPENCL_INCLUDE_DIRS=C:\OpenCL\include" >> $env:GITHUB_ENV
-          echo "INCLUDE=C:\OpenCL\include;$env:INCLUDE" >> $env:GITHUB_ENV
-          
-          # Verify installation
-          if (Test-Path "C:\OpenCL\include\CL\cl.h") {
-              Write-Host "✅ OpenCL headers installed successfully"
-          } else {
-              Write-Host "❌ OpenCL headers installation failed"
-              exit 1
-          }
-          
-          # Clean up
-          Remove-Item "opencl-headers.zip" -Force
-          Remove-Item "temp" -Recurse -Force
-      
-      - name: Configure MSBuild for OpenCL
-        run: |
-          # Add OpenCL include path to MSBuild
-          $msbuildArgs = '/p:IncludePath="C:\OpenCL\include;$(IncludePath)"'
-          echo "MSBUILD_ARGS=$msbuildArgs" >> $env:GITHUB_ENV
-        
       - uses: abel0b/setup-premake@v2.4
         with:
           version: "5.0.0-beta2"
 
+      - name: Setup MSYS2 build environment
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-make
+            mingw-w64-x86_64-opencl-headers
+            mingw-w64-x86_64-opencl-icd-loader
+            mingw-w64-x86_64-pkg-config
+
+      - name: Install OpenCL runtime
+        run: choco install opencl-intel-cpu-runtime -y
+        
       - name: Get Submodules
         run: git submodule update --init
 
       - name: Compile (Premake)
         run: |
-          premake5 --os=windows --file=build/premake5.lua vs2022
+          premake5 --os=windows --file=build/premake5.lua gmake
 
       - name: Compile (VS2022)
+        shell: msys2 {0}
         run: |
           msbuild program-solution.sln /p:Configuration=Debug /p:Platform=x64
