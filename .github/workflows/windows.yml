@@ -40,4 +40,7 @@ jobs:
       - name: Compile (Premake)
         run: |
           premake5 --os=windows --file=build/premake5.lua vs2022
+
+      - name: Compile (VS2022)
+        run: |
           msbuild program-solution.sln /p:Configuration=Debug /p:Platform=x64
