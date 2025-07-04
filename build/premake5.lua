@@ -325,11 +325,6 @@ function project_config()
             "../third_party/cgltf/cgltf_write.h",
         }
 
-        filter "system:windows"
-            includedirs {
-                "/mingw64/include/SDL2",
-                "/mingw64/include",
-            }
         filter "not system:windows"
             includedirs { "../third_party/sdl/include" }
         filter {}
@@ -405,6 +400,10 @@ function project_config()
 
             filter { "system:windows", "action:gmake*" }
                 buildoptions { "-std=gnu17" }   -- GCC syntax
+                includedirs {
+                    "/mingw64/include/SDL2",
+                    "/mingw64/include",
+                }
                 libdirs {
                     "/mingw64/lib",
                     "lib",

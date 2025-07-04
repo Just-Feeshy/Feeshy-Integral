@@ -4,7 +4,6 @@
 #include <SDL2/SDL.h>
 #else
 #include <SDL.h>
-#include <SDL_opengl.h>
 #endif
 
 #ifndef GL_UNSIGNED_SHORT_4_4_4_4
