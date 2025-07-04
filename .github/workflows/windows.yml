@@ -51,4 +51,4 @@ jobs:
 
       - name: Build with MSBuild
         run: |
-          msbuild program-solution.sln /p:Configuration=Debug /p:Platform=x64 /p:IncludePath="C:\OpenCL\include;$(IncludePath)"
+          msbuild program-solution.sln /p:Configuration=Debug /p:Platform=x64
