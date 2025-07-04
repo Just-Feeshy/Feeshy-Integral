@@ -1,7 +1,11 @@
 #pragma once
 
+#ifdef EMSCRIPTEN
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
+#else
+#include <SDL.h>
+#include <SDL_opengl.h>
+#endif
 
 #ifndef GL_UNSIGNED_SHORT_4_4_4_4
 #define GL_UNSIGNED_SHORT_4_4_4_4 0x8033

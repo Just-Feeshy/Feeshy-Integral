@@ -326,7 +326,10 @@ function project_config()
         }
 
         filter "system:windows"
-            includedirs { "/mingw64/include/SDL2" }
+            includedirs {
+                "/mingw64/include/SDL2",
+                "/mingw64/include",
+            }
         filter "not system:windows"
             includedirs { "../third_party/sdl/include" }
         filter {}

@@ -209,7 +209,9 @@ void program_init(const char* name, int w, int h) {
         return;
     }
 
+    #ifdef NEED_EXT
     opengl_init_ext();
+    #endif
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
 		printf("SDL_Init failed: %s\n", SDL_GetError());
