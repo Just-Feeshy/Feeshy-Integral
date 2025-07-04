@@ -394,7 +394,7 @@ function project_config()
                 buildoptions { "/std:c17" }  -- MSVC syntax
 
             filter { "system:windows", "action:gmake*" }
-                buildoptions { "-std=c17" }   -- GCC syntax
+                buildoptions { "-std=gnu17" }   -- GCC syntax
 
             filter { "system:windows" }
                 links {
