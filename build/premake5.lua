@@ -351,7 +351,7 @@ function project_config()
 
         if os.target() ~= "emscripten" then
             if os.target() ~= "windows" then
-                links { "SDL2" }
+                links { "SDL" }
             end
 
             targetdir(TARGET_DIR)
