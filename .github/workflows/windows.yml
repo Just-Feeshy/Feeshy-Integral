@@ -83,5 +83,4 @@ jobs:
       - name: Build with make
         shell: msys2 {0}
         run: |
-          cd program-solution
           make config=debug_x64
