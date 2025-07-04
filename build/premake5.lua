@@ -36,6 +36,28 @@ function third_party_config()
 
     -- local curl_config = require("config/curl_config")
 
+    -- CGLM
+    project "cglm-lib"
+        language "C"
+        kind "StaticLib"
+        warnings "off"
+
+        defines {
+            "CGLM_STATIC",
+            "CGLM_ALL_UNALIGNED"
+        }
+
+        includedirs {
+            "../third_party/cglm/include"
+        }
+
+        files {
+            "../third_party/cglm/src/**.c"
+        }
+
+        filter "system:windows"
+            defines { "_CRT_SECURE_NO_WARNINGS" }
+
     -- ZLIB
     project "zlib-lib"
         language "C"
@@ -232,7 +254,6 @@ function solution_config()
         language(LANG)
         configurations { "Debug", "Release" }
 
-        -- Multi-platform architecture support
         filter "system:windows"
             platforms { "Win32", "x64" }
             architecture "x64"  -- Default to x64 on Windows
@@ -245,6 +266,10 @@ function solution_config()
 
         flags { "MultiProcessorCompile" }
         optimize(OPTIMIZE)
+
+        prebuildcommands {
+            "{MKDIR} %{cfg.objdir}"
+        }
 
         filter "system:macosx"
             defines { "MACOSX" }
@@ -259,7 +284,6 @@ function solution_config()
             symbols "Off"
             optimize "On"
 
-        -- Windows-specific configuration
         filter "system:windows"
             defines { "_WIN32", "WIN32" }
             systemversion "latest"
@@ -286,6 +310,8 @@ function project_config()
             "STB_IMAGE_IMPLEMENTATION",
             "STBI_SUPPORT_ZLIB",
             "NK_IMPLEMENTATION",
+            "CGLM_STATIC",
+            "CGLM_ALL_UNALIGNED",
         }
 
         files {
@@ -294,7 +320,6 @@ function project_config()
             "../src/**.c",
             "../third_party/hashmap/hashmap.c",
             "../third_party/hashmap/hashmap.h",
-            "../third_party/cglm/src/**.c",
             "../third_party/cglm/include/**.h",
             "../third_party/stb/stb_image.h",
             "../third_party/cgtlf/cgltf.h",
@@ -314,8 +339,8 @@ function project_config()
             "../nuklear_bindings/gl3",
         }
 
-        -- Third Party Libraries
         links {
+            "cglm-lib",
             "zlib-lib",
             -- "curl-lib",
         }
@@ -364,7 +389,6 @@ function project_config()
                 "NOMINMAX"
             }
 
-            -- Windows system libraries
             links {
                 "opengl32",
                 "gdi32",

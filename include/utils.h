@@ -37,17 +37,17 @@ static FORCE_INLINE int __builtin_ctz(unsigned x)
 #ifndef EMSCRIPTEN
 #define USE_OPENCL
 
+#if FRAGMENT_SELECTOR == 2
+#define HAS_GEOMETRY_PASS
+#endif
+
 #else
 
 #if FRAGMENT_SELECTOR == 2
 #undef FRAGMENT_SELECTOR
-#define FRAGMENT_SELECTOR 1
-#warning "Fragment Selector 2 is not supported in Emscripten due to OpenCL not being available. Falling back to Fragment Selector 1."
+#define FRAGMENT_SELECTOR 0
+#warning "Fragment Selector 2 is not supported in Emscripten due to OpenCL not being available. Falling back to Fragment Selector 0."
 
-#endif
-
-#if FRAGMENT_SELECTOR == 2
-#define HAS_GEOMETRY_PASS
 #endif
 
 #endif

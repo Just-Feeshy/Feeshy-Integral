@@ -20,7 +20,7 @@
 */
 
 
-#if HAS_GEOMETRY_PASS
+#ifdef HAS_GEOMETRY_PASS
     #if USE_FBO_WORLD == 1
     #include <gl_dfao.h>
     static geometry_pass g_pass;
@@ -109,6 +109,7 @@ void world_init(int w, int h) {
 
 #ifdef HAS_GEOMETRY_PASS
     #if USE_FBO_WORLD  == 1
+    printf("Using Geometry Pass with FBO\n");
     RenderCallback dfao_callback = dfao_test_world_render;
 
     g_pass = geometry_pass_init(
