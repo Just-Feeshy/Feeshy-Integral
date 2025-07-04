@@ -396,6 +396,11 @@ function project_config()
 
             filter { "system:windows", "action:gmake*" }
                 buildoptions { "-std=gnu17" }   -- GCC syntax
+                libdirs {
+                    "/mingw64/lib",
+                    "lib",
+                    "C:/Windows/System32"
+                }
 
             filter { "system:windows" }
                 links {
