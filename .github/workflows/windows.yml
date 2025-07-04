@@ -3,9 +3,11 @@ on:
   push:
     branches:
       - Init
+      - OS
   pull_request:
     branches:
       - Init
+      - OS
 
 jobs:
   build:
