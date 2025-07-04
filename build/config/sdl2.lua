@@ -57,7 +57,6 @@ project "SDL"
             "SDL_JOYSTICK_XINPUT",
             "SDL_JOYSTICK_DISABLED_DINPUT",
             "SDL_HAPTIC_XINPUT",
-            "SDL_LOADSO_WINDOWS",
             "_WIN32",
             "WIN32",
             "HAVE_STDARG_H",
