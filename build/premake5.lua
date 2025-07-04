@@ -313,6 +313,7 @@ function project_config()
             "NK_IMPLEMENTATION",
             "CGLM_STATIC",
             "CGLM_ALL_UNALIGNED",
+            "SDL_MAIN_HANDLED"
         }
 
         files {
