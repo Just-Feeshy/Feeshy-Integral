@@ -303,6 +303,8 @@ function project_config()
         objdir(OBJ_DIR)
         kind(PROJECT_KIND)
 
+        dependson { "SDL" }
+
         if ENABLE_VSYNC then
             defines { "ENABLE_VSYNC=1" }
         end
@@ -313,7 +315,8 @@ function project_config()
             "NK_IMPLEMENTATION",
             "CGLM_STATIC",
             "CGLM_ALL_UNALIGNED",
-            "SDL_MAIN_HANDLED"
+            "SDL_MAIN_HANDLED",
+            "SDL_STATIC"
         }
 
         files {
@@ -348,7 +351,10 @@ function project_config()
         }
 
         if os.target() ~= "emscripten" then
-            links { "SDL" }
+            if os.target() ~= "windows" then
+                links { "SDL2" }
+            end
+
             targetdir(TARGET_DIR)
 
             files {
@@ -405,6 +411,7 @@ function project_config()
 
             filter { "system:windows" }
                 links {
+                    "SDL",
                     "gdi32",
                     "opengl32",
                     "user32",
