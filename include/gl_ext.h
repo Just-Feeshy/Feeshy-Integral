@@ -6,15 +6,15 @@
 #include <SDL.h>
 #endif
 
+#ifdef _WIN32
+#define CALLING_CONVENTION __stdcall
+#else
+#define CALLING_CONVENTION
+#endif
+
 #ifndef GL_UNSIGNED_SHORT_4_4_4_4
 #define GL_UNSIGNED_SHORT_4_4_4_4 0x8033
 #define GL_UNSIGNED_SHORT_5_6_5 0x8363
-#endif
-
-#ifdef _WIN32
-#define CALLING_CONVENTION APIENTRY
-#else
-#define CALLING_CONVENTION
 #endif
 
 // Function pointer declarations
