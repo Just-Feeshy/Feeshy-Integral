@@ -63,8 +63,8 @@ static void create_window(const char* title, int w, int h) {
     }
 
     #ifdef HAS_GLAD
-    if(gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress)) {
-        printf("Failed to initialize GLAD\n");
+    if (!glad_gl_load_GL_VERSION_4_1((GLADloadfunc)SDL_GL_GetProcAddress)) {
+        printf("Failed to load OpenGL 4.1\n");
         exit(EXIT_FAILURE);
     }
     #endif
