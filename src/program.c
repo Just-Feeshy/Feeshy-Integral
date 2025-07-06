@@ -1,4 +1,5 @@
 #define NK_SDL_GL3_IMPLEMENTATION 1
+#define GLAD_GL_IMPLEMENTATION
 
 #include <program.h>
 #include <screen.h>

@@ -42,7 +42,6 @@
 
 #define NEED_EXT
 #define GL_GLEXT_PROTOTYPES
-#define GLAD_GL_IMPLEMENTATION
 #define HAS_GLAD
 #include <glad.h>
 
