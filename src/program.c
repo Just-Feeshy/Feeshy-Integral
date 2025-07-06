@@ -61,13 +61,6 @@ static void create_window(const char* title, int w, int h) {
         printf("Failed to create context: %s\n", SDL_GetError());
         exit(EXIT_FAILURE);
     }
-
-    #ifdef HAS_GLAD
-    if (!gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress)) {
-        printf("Failed to load OpenGL 4.1\n");
-        exit(EXIT_FAILURE);
-    }
-    #endif
 }
 
 static void program_context_flip() {
@@ -220,6 +213,13 @@ void program_init(const char* name, int w, int h) {
 		printf("SDL_Init failed: %s\n", SDL_GetError());
 		return;
 	}
+
+    #ifdef HAS_GLAD
+    if (!gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress)) {
+        printf("Failed to load OpenGL 4.1\n");
+        exit(EXIT_FAILURE);
+    }
+    #endif
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, GL_APP_PROFILE_MASK);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, GL_APP_MAJOR_VERSION);
