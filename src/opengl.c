@@ -4,11 +4,11 @@
 #include <assert.h>
 
 int opengl_init_ext() {
-    #ifdef NEED_EXT
-    #define GET_EXTENSION
-    #include <gl_ext.h>
-    #undef GET_EXTENSION
-    #endif
+    // #ifdef NEED_EXT
+    // #define GET_EXTENSION
+    // #include <gl_ext.h>
+    // #undef GET_EXTENSION
+    // #endif
 
     return 0;
 }

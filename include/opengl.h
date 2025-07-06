@@ -44,6 +44,7 @@
 #define GL_GLEXT_PROTOTYPES
 #include <SDL_opengl.h>
 #include <SDL_opengl_glext.h>
+#include <GL/gl.h>
 
 #else
 #include <SDL_opengl.h>
@@ -59,11 +60,11 @@
 #define GL_APP_MINOR_VERSION 1
 #endif
 
-#ifdef NEED_EXT
-#define DECLARE_EXTENSIONS
-#include <gl_ext.h>
-#undef DECLARE_EXTENSIONS
-#endif
+// #ifdef NEED_EXT
+// #define DECLARE_EXTENSIONS
+// #include <gl_ext.h>
+// #undef DECLARE_EXTENSIONS
+// #endif
 
 #ifdef WINDOWS
 typedef HDC WinDC;
