@@ -44,7 +44,7 @@
 #define GL_GLEXT_PROTOTYPES
 #include <SDL_opengl.h>
 #include <SDL_opengl_glext.h>
-#include <GL/gl.h>
+#include <gl.h>
 
 #else
 #include <SDL_opengl.h>

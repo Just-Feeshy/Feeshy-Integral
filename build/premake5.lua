@@ -395,6 +395,10 @@ function project_config()
                 "CL_TARGET_OPENCL_VERSION=120"
             }
 
+            includedirs {
+                "../windows/include",
+            }
+
             filter { "system:windows", "action:vs*" }
                 buildoptions { "/std:c17" }  -- MSVC syntax
 
