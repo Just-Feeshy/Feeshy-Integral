@@ -215,9 +215,9 @@ void program_init(const char* name, int w, int h) {
 	}
 
     #ifdef HAS_GLAD
-    if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
+    if(gladLoadGL()) {
         printf("Failed to initialize GLAD\n");
-        return -1;
+        return;
     }
     #endif
 

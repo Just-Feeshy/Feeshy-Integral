@@ -43,6 +43,7 @@
 #define NEED_EXT
 #define GL_GLEXT_PROTOTYPES
 #define HAS_GLAD
+#include <SDL2/SDL_opengl.h>
 #include <gl.h>
 
 #else
