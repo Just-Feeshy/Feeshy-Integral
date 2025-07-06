@@ -42,6 +42,7 @@
 
 #define NEED_EXT
 #define GL_GLEXT_PROTOTYPES
+#define HAS_GLAD
 #include <gl.h>
 
 #else
