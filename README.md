@@ -20,14 +20,6 @@ Regarding prerequisites, [premake5](https://premake.github.io) is required to bu
 premake5 --os=<target> --file=build/premake5.lua gmake
 ```
 
-### Desktop
-**BEFORE BUILDING**: make sure to have [Haxe 4.3](https://haxe.org/download/list/) to compile SDL into a static library, in which Haxe can be installed via **Homebrew**. Once Haxe is installed, go to the build directory and run the script via:
-```
-cd build
-haxe build.hxml
-```
-And SDL used to produce a static library.
-
 To run the project:
 ```
 ./bin/program
