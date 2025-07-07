@@ -170,11 +170,11 @@ static void program_update() {
 
         nk_layout_row_static(ctx, 20, 200, 1);
 
-        {
-            char buffer[128];
-            snprintf(buffer, sizeof(buffer), "Elapsed Shader Time: %u", ms_time_elapsed / 1000000);
-            nk_label(ctx, buffer, NK_TEXT_LEFT);
-        }
+        // {
+        //     char buffer[128];
+        //     snprintf(buffer, sizeof(buffer), "Elapsed Shader Time: %u", ms_time_elapsed / 1000000);
+        //     nk_label(ctx, buffer, NK_TEXT_LEFT);
+        // }
 
         nk_layout_row_static(ctx, 5, 200, 1);  // Spacer
         nk_spacing(ctx, 1);
@@ -185,13 +185,13 @@ static void program_update() {
         nk_layout_row_static(ctx, 20, 200, 1);
         {
             char fps_buffer[64];
-            snprintf(fps_buffer, sizeof(fps_buffer), "Current FPS: %.1f", fps_get_current(&fps_data));
+            snprintf(fps_buffer, sizeof(fps_buffer), "Current FPS: %.0f", fps_get_current(&fps_data));
             nk_label(ctx, fps_buffer, NK_TEXT_LEFT);
         }
 
         {
             char fps_buffer[64];
-            snprintf(fps_buffer, sizeof(fps_buffer), "Average FPS: %.1f", fps_get_average(&fps_data));
+            snprintf(fps_buffer, sizeof(fps_buffer), "Average FPS: %.0f", fps_get_average(&fps_data));
             nk_label(ctx, fps_buffer, NK_TEXT_LEFT);
         }
 

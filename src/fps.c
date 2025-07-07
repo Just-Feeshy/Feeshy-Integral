@@ -73,7 +73,7 @@ static void fps_collect_results(struct fps_counter* fps) {
 
             if (gpu_time_ns > 0) {
                 float frame_time_seconds = (float)gpu_time_ns / 1000000000.0f;
-                fps->current_fps = 1.0f / frame_time_seconds;
+                fps->current_fps = ceilf(1.0f / frame_time_seconds);
             }
 
             fps_calculate_average(fps);
@@ -93,7 +93,7 @@ static void fps_calculate_average(struct fps_counter* fps) {
 
     if (total_time > 0) {
         float avg_frame_time = (float)total_time / (float)fps->time_count / 1000000000.0f;
-        fps->avg_fps = 1.0f / avg_frame_time;
+        fps->avg_fps = ceilf(1.0f / avg_frame_time);
     }
 }
 
