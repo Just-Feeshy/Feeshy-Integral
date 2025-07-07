@@ -1,5 +1,5 @@
 #define NK_SDL_GL3_IMPLEMENTATION 1
-#define GLAD_GL_IMPLEMENTATION
+#define GLAD_GL_IMPLEMENTATION // Doesn't matter if we use GLAD or not, we need to define this to avoid redefinition errors
 
 #include <program.h>
 #include <screen.h>
