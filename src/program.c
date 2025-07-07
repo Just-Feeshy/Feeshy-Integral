@@ -1,5 +1,8 @@
 #define NK_SDL_GL3_IMPLEMENTATION 1
+
+#ifdef HAS_GLAD
 #define GLAD_GL_IMPLEMENTATION
+#endif
 
 #include <program.h>
 #include <screen.h>
@@ -12,7 +15,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <time.h>
-#include <fps.h>
 
 #ifdef EMSCRIPTEN
 #include <emscripten.h>
@@ -24,7 +26,6 @@
 
 const double frame_period = 1000.0f / 60.0f;
 
-static struct fps_counter fps_data;
 static struct nk_context* ctx;
 static struct nk_colorf bg;
 
@@ -83,7 +84,6 @@ static void program_update_opengl() {
     world_end(pipeline);
 
     program_context_flip();
-    fps_update(&fps_data);
 }
 
 static void program_draw_update() {
@@ -188,32 +188,20 @@ static void program_update() {
         nk_layout_row_static(ctx, 20, 200, 1);
         {
             char fps_buffer[64];
-            snprintf(fps_buffer, sizeof(fps_buffer), "Current FPS: %.1f", fps_data.current_fps);
+            snprintf(fps_buffer, sizeof(fps_buffer), "Current FPS: %.1f", fps_get_current(&fps_data));
             nk_label(ctx, fps_buffer, NK_TEXT_LEFT);
         }
 
         {
             char fps_buffer[64];
-            snprintf(fps_buffer, sizeof(fps_buffer), "Average FPS: %.1f", fps_data.avg_fps);
-            nk_label(ctx, fps_buffer, NK_TEXT_LEFT);
-        }
-
-        {
-            char fps_buffer[64];
-            snprintf(fps_buffer, sizeof(fps_buffer), "Min FPS: %.1f", fps_data.min_fps);
-            nk_label(ctx, fps_buffer, NK_TEXT_LEFT);
-        }
-
-        {
-            char fps_buffer[64];
-            snprintf(fps_buffer, sizeof(fps_buffer), "Max FPS: %.1f", fps_data.max_fps);
+            snprintf(fps_buffer, sizeof(fps_buffer), "Average FPS: %.1f", fps_get_average(&fps_data));
             nk_label(ctx, fps_buffer, NK_TEXT_LEFT);
         }
 
         // Add a reset button for FPS stats
         if(nk_button_label(ctx, "Reset FPS Stats")) {
-            fps_data.min_fps = 999.0f;
-            fps_data.max_fps = 0.0f;
+            fps_reset(&fps_data);
+            ms_time_elapsed = 0;
         }
 
         #ifdef HAS_GEOMETRY_PASS
@@ -261,8 +249,6 @@ void program_init(const char* name, int w, int h) {
         return;
     }
     #endif
-
-    fps_init(&fps_data);
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, GL_APP_PROFILE_MASK);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, GL_APP_MAJOR_VERSION);
@@ -361,7 +347,9 @@ void program_destroy() {
     world_destroy();
     pipeline_destroy(pipeline);
     free(pipeline);
+    fps_destroy(&fps_data);
 
+    nk_sdl_shutdown();
     SDL_DestroyWindow(main_program.window);
     SDL_Quit();
 

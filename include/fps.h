@@ -1,20 +1,35 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
+#include <opengl.h>
 
-#define FRAME_CAP 120
+#define FPS_QUERY_COUNT 4
+#define FPS_HISTORY_SIZE 120
 
 struct fps_counter {
-    int frame_count;
-    uint32_t last_fps_time;
+    GLuint queries[FPS_QUERY_COUNT];
+    int current_query;
+    int valid_queries;
+
+    uint64_t gpu_times[FPS_HISTORY_SIZE];
+    int time_index;
+    int time_count;
+
     float current_fps;
     float avg_fps;
-    float min_fps;
-    float max_fps;
-    float frame_times[FRAME_CAP];  // Store last 60 frame times for smoothing
-    int frame_time_index;
-    uint32_t last_frame_time;
+
+    bool query_active;
+    bool initialized;
+
+    uint64_t frame_count;
+    uint64_t total_gpu_time;
 };
 
 void fps_init(struct fps_counter* fps);
-void fps_update(struct fps_counter* fps);
+void fps_update_begin(struct fps_counter* fps);
+void fps_update_end(struct fps_counter* fps);
+float fps_get_current(const struct fps_counter* fps);
+float fps_get_average(const struct fps_counter* fps);
+void fps_reset(struct fps_counter* fps);
+void fps_destroy(struct fps_counter* fps);

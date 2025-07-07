@@ -3,7 +3,6 @@
 #include <uniform_manager.h>
 #include <cglm/affine.h>
 #include <world.h>
-#include <timer_query.h>
 #include <utils.h>
 
 #define EPSILON 0.1f
