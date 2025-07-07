@@ -242,6 +242,7 @@ void program_init(const char* name, int w, int h) {
 
     #ifdef HAS_GLAD
     if (!gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress)) {
+        printf("OpenGL %d.%d loaded\n", GLVersion.major, GLVersion.minor);
         printf("Failed to load OpenGL 4.1\n");
         return;
     }

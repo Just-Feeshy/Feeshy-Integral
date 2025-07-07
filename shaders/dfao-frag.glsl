@@ -257,7 +257,7 @@ vec4 render(vec2 uv, vec4 tex) {
         if(t != -1.0) {
             vec3 p = ray_origin + t * ray_direction;
             vec3 n = sdf_normal(p);
-            color = tex.rgb * ambientOcclusion(p, n) * (weaking(p, n) * 0.5 + 0.5);
+            color = vec3(1.0, 0.0, 0.0) * ambientOcclusion(p, n) * (weaking(p, n) * 0.5 + 0.5);
         }
 
     }
