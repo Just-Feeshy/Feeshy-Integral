@@ -151,7 +151,7 @@ static void program_update() {
     nk_input_end(ctx);
 
 #if ENABLE_NUKLEAR == 1
-    if (nk_begin(ctx, "Settings Menu", nk_rect(50, 50, 230, 250),
+    if (nk_begin(ctx, "Settings Menu", nk_rect(50, 50, 230, 350),
         NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|
         NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
     {
