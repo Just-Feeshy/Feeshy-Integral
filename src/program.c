@@ -201,11 +201,11 @@ static void program_update() {
             ms_time_elapsed = 0;
         }
 
-        #ifdef HAS_GEOMETRY_PASS
-        if(nk_button_label(ctx, "Turn On Wireframe")) {
-            world_toggle_wireframe();
-        }
-        #endif
+        // #ifdef HAS_GEOMETRY_PASS
+        // if(nk_button_label(ctx, "Turn On Wireframe")) {
+        //     world_toggle_wireframe();
+        // }
+        // #endif
     }
     nk_end(ctx);
 #endif
@@ -242,8 +242,6 @@ void program_init(const char* name, int w, int h) {
 
     #ifdef HAS_GLAD
     if (!gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress)) {
-        const char* version_string = (const char*)glGetString(GL_VERSION);
-        printf("OpenGL version: %s\n", version_string);
         printf("Failed to load OpenGL 4.1\n");
         return;
     }
