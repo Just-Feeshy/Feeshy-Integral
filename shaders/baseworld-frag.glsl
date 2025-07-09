@@ -15,7 +15,6 @@ layout(std140) uniform CamBlock {
 } cam_block;
 
 uniform sampler2D u_texture;
-uniform mat4 u_model;
 
 void main() {
     vec4 texColor = texture(u_texture, v_texcoord);

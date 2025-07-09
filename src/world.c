@@ -19,10 +19,12 @@
  * and avoid commenting a lot of code and uncommenting it later
 */
 
+#ifdef USE_DFAO
+#include <gl_dfao.h>
+#endif
 
 #ifdef HAS_GEOMETRY_PASS
     #if USE_FBO_WORLD == 1
-    #include <gl_dfao.h>
     static geometry_pass g_pass;
     #endif
 #endif
@@ -108,7 +110,7 @@ void world_init(int w, int h) {
     printf("World Initialized\n");
 
 #ifdef HAS_GEOMETRY_PASS
-    #if USE_FBO_WORLD  == 1
+    #if USE_FBO_WORLD == 1 && defined(USE_DFAO)
     printf("Using Geometry Pass with FBO\n");
     RenderCallback dfao_callback = dfao_test_world_render;
 
@@ -121,6 +123,10 @@ void world_init(int w, int h) {
 
     dfao_test_world(&g_pass);
     #endif
+#endif
+
+#if defined(USE_DFAO) && !defined(HAS_GEOMETRY_PASS)
+    dfao_test_world();
 #endif
 
     static InputCallback world_input_callback = world_input_callback_impl;
@@ -143,8 +149,6 @@ void world_init(int w, int h) {
 // aka. uniforms used in the world
 void world_setup_uniforms() {
 #ifdef HAS_GEOMETRY_PASS
-    set_uniform_int("u_texture", 0);
-
     #if USE_FBO_WORLD == 1
     set_uniform_vec3("u_aabb_min", g_pass.aabb.min[0], g_pass.aabb.min[1], g_pass.aabb.min[2]);
     set_uniform_vec3("u_aabb_max", g_pass.aabb.max[0], g_pass.aabb.max[1], g_pass.aabb.max[2]);
@@ -188,13 +192,19 @@ void world_begin(graphics_pipeline* pipe) {
     bind_ubo_with_name(&ubo, "CamBlock", *block, pipelines, pipe_count);
     size_t texture_count = 0;
 
-    #if defined(HAS_GEOMETRY_PASS) && USE_FBO_WORLD == 1
+    #if defined(HAS_GEOMETRY_PASS)
+        #if USE_FBO_WORLD == 1
     geometry_pass_render(g_pass, texture_count);
     texture_count += g_pass.texture_count;
+        #endif
     #endif
 }
 
 void world_end(graphics_pipeline* pipe) {
+    #ifdef USE_DFAO
+    dfao_test_world_render();
+    #endif
+
     size_t pipe_count = 1;
 
     #ifdef HAS_GEOMETRY_PASS

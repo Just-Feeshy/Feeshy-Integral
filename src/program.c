@@ -77,8 +77,8 @@ static void program_update_opengl() {
     opengl_clear();
 
     screen_render();
-    nk_sdl_render(NK_ANTI_ALIASING_ON, MAX_VERTEX_MEMORY, MAX_ELEMENT_MEMORY);
     world_end(pipeline);
+    nk_sdl_render(NK_ANTI_ALIASING_ON, MAX_VERTEX_MEMORY, MAX_ELEMENT_MEMORY);
 
     program_context_flip();
 }

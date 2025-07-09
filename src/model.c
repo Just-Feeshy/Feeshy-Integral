@@ -1,4 +1,5 @@
 #define CGLTF_IMPLEMENTATION
+#include <cglm/cglm.h>
 #include <model.h>
 #include <opengl.h>
 #include <core.h>

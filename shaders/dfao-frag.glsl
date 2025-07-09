@@ -15,7 +15,6 @@ layout(std140) uniform CamBlock {
     float near;
 } cam_block;
 
-uniform sampler2D u_texture;
 uniform sampler3D u_volume_tex;
 uniform vec3 u_aabb_min;
 uniform vec3 u_aabb_max;
@@ -25,11 +24,11 @@ const vec3 c = vec3(0.0, 0.0, 3.0);
 const vec3 light_pos = vec3(3.0, 60.0, -60.0);
 const float EPSILON = 0.01;
 const float step_size = 0.0; // Step size for ray marching
-const float MIN_GROWTH = 0.076; // Minimum growth for ray marching
+const float MIN_GROWTH = 0.064; // Minimum growth for ray marching
 
 in vec2 v_position;
 
-#define MAX_STEPS 199
+#define MAX_STEPS 299
 #define NEW_RAYMARCH 1
 
 const float ao_max_iterations = 4; // Maximum iterations for Ambient Occlusion
@@ -210,7 +209,7 @@ float raymarching(vec3 pos, float t_i, float t_f, vec3 ray_origin, vec3 ray_dire
             t += get_accomodated_distance(dist_i);
             float dist_j = sampleDistance(ray_origin + t * ray_direction);
 
-            if(dist_i < cam_block.near * cam_block.near) {
+            if(dist_j < cam_block.near * cam_block.near) {
                 return t;
             }
 
@@ -236,7 +235,7 @@ float raymarching(vec3 pos, float t_i, float t_f, vec3 ray_origin, vec3 ray_dire
     return t;
 }
 
-vec4 render(vec2 uv, vec4 tex) {
+vec4 render(vec2 uv) {
 
     // World View Projection
     vec4 clip = vec4(uv, -1.0, 1.0);
@@ -253,11 +252,12 @@ vec4 render(vec2 uv, vec4 tex) {
     vec3 color = vec3(0.0);
 
     if (hit && t1 > t0) {
+        color = vec3(0.0, 1.0, 0.0);
         float t = raymarching(vec3(0.0), t0, t1, ray_origin, ray_direction);
         if(t != -1.0) {
             vec3 p = ray_origin + t * ray_direction;
             vec3 n = sdf_normal(p);
-            color = vec3(1.0, 0.0, 0.0) * ambientOcclusion(p, n) * (weaking(p, n) * 0.5 + 0.5);
+            color = vec3(1.0, 0.0, 0.0) * ambientOcclusion(p, n);
         }
 
     }
@@ -267,7 +267,7 @@ vec4 render(vec2 uv, vec4 tex) {
 
 void main() {
     vec2 uv = (gl_FragCoord.xy / u_resolution.xy) * 2.0 - 1.0;
-    vec4 tex = texture(u_texture, v_position / u_resolution.xy);
 
-    fragColor = render(uv, tex);
+    // fragColor = texture(u_volume_tex, vec3(0.0, 0.0, 0.0));
+    fragColor = render(uv);
 }
