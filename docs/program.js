@@ -31,7 +31,7 @@ if (ENVIRONMENT_IS_NODE) {
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /var/folders/7b/b8gx3gh96576lfth4vwtl7_c0000gn/T/tmpwvf4r7d2.js
+// include: /var/folders/7b/b8gx3gh96576lfth4vwtl7_c0000gn/T/tmpguny9em4.js
 
   Module['expectedDataFileDownloads'] ??= 0;
   Module['expectedDataFileDownloads']++;
@@ -208,25 +208,25 @@ Module['FS_createPath']("/", "shaders", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/shaders/.DS_Store", "start": 0, "end": 6148}, {"filename": "/shaders/baseworld-frag.glsl", "start": 6148, "end": 6581}, {"filename": "/shaders/baseworld-vert.glsl", "start": 6581, "end": 7205}, {"filename": "/shaders/dfao-frag.glsl", "start": 7205, "end": 14154}, {"filename": "/shaders/frag-san.glsl", "start": 14154, "end": 20567}, {"filename": "/shaders/metaballs.glsl", "start": 20567, "end": 23593}, {"filename": "/shaders/standard-frag.glsl", "start": 23593, "end": 23970}, {"filename": "/shaders/vert.glsl", "start": 23970, "end": 24267}], "remote_package_size": 24267});
+    loadPackage({"files": [{"filename": "/shaders/.DS_Store", "start": 0, "end": 6148}, {"filename": "/shaders/baseworld-frag.glsl", "start": 6148, "end": 6581}, {"filename": "/shaders/baseworld-vert.glsl", "start": 6581, "end": 7205}, {"filename": "/shaders/dfao-frag.glsl", "start": 7205, "end": 14154}, {"filename": "/shaders/frag-san.glsl", "start": 14154, "end": 20567}, {"filename": "/shaders/metaballs.glsl", "start": 20567, "end": 23592}, {"filename": "/shaders/standard-frag.glsl", "start": 23592, "end": 23969}, {"filename": "/shaders/vert.glsl", "start": 23969, "end": 24266}], "remote_package_size": 24266});
 
   })();
 
-// end include: /var/folders/7b/b8gx3gh96576lfth4vwtl7_c0000gn/T/tmpwvf4r7d2.js
-// include: /var/folders/7b/b8gx3gh96576lfth4vwtl7_c0000gn/T/tmpo1kl9kzk.js
+// end include: /var/folders/7b/b8gx3gh96576lfth4vwtl7_c0000gn/T/tmpguny9em4.js
+// include: /var/folders/7b/b8gx3gh96576lfth4vwtl7_c0000gn/T/tmpfe55qa7q.js
 
     // All the pre-js content up to here must remain later on, we need to run
     // it.
     if (Module['$ww'] || (typeof ENVIRONMENT_IS_PTHREAD != 'undefined' && ENVIRONMENT_IS_PTHREAD)) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
-  // end include: /var/folders/7b/b8gx3gh96576lfth4vwtl7_c0000gn/T/tmpo1kl9kzk.js
-// include: /var/folders/7b/b8gx3gh96576lfth4vwtl7_c0000gn/T/tmpzq6tm1tv.js
+  // end include: /var/folders/7b/b8gx3gh96576lfth4vwtl7_c0000gn/T/tmpfe55qa7q.js
+// include: /var/folders/7b/b8gx3gh96576lfth4vwtl7_c0000gn/T/tmpyrq511hh.js
 
     if (!Module['preRun']) throw 'Module.preRun should exist because file support used it; did a pre-js delete it?';
     necessaryPreJSTasks.forEach((task) => {
       if (Module['preRun'].indexOf(task) < 0) throw 'All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?';
     });
-  // end include: /var/folders/7b/b8gx3gh96576lfth4vwtl7_c0000gn/T/tmpzq6tm1tv.js
+  // end include: /var/folders/7b/b8gx3gh96576lfth4vwtl7_c0000gn/T/tmpyrq511hh.js
 
 
 // Sometimes an existing Module object exists with properties

@@ -35,9 +35,9 @@ float smin(float a, float b, float k) {
 }
 
 float scene(vec3 p, float r, float off_s, inout vec3 col) {
-    float t_2c = cos(u_time * 10.0);
-    float t_c = cos(u_time * 20.0);
-    float t_s = sin(u_time * 20.0);
+    float t_2c = cos(u_time * 5.0);
+    float t_c = cos(u_time * 10.0);
+    float t_s = sin(u_time * 10.0);
 
     float b_1 = ball(p - vec3(t_2c, t_s, t_c) * 10.0, r);
     float b_2 = ball(p - vec3(t_s, t_2c, t_c) * 10.0, r);
