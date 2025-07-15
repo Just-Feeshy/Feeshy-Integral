@@ -72,7 +72,7 @@ bool intersectBox(vec3 ro, vec3 rd, out float t0, out float t1) {
     }
 
     if (tzmin > tmin) {
-tmin = tzmin;
+        tmin = tzmin;
     }
 
     if (tzmax < tmax) {
@@ -111,6 +111,7 @@ float ambientOcclusion(vec3 p, vec3 n){
         dist = step * i;
         ao += max((dist - sampleDistance(p + n * dist)) / dist, 0.0);
     }
+
     return (1.0 - ao * ao_intensity);
 }
 
@@ -237,13 +238,10 @@ float raymarching(vec3 pos, float t_i, float t_f, vec3 ray_origin, vec3 ray_dire
 }
 
 vec4 render(vec2 uv) {
-
-    // World View Projection
     vec4 clip = vec4(uv, -1.0, 1.0);
     vec4 eye = inverse(cam_block.projection) * clip;
     eye /= eye.w;
 
-    // Ray Calculation
     vec3 ray_origin = cam_block.position;
     vec3 ray_direction = normalize((inverse(cam_block.view) * vec4(eye.xyz, 0.0)).xyz);
 

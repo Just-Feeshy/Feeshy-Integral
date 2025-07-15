@@ -66,6 +66,12 @@ cam_matrices create_cam_matrices() {
         .init_position = {1.0f, 1.0f, -18.0f}
     };
 
+#if FRAGMENT_SELECTOR == 1
+    cam.init_position[0] = 1.0f;
+    cam.init_position[1] = -2.0f;
+    cam.init_position[2] = -50.0f;
+#endif
+
     return cam;
 }
 

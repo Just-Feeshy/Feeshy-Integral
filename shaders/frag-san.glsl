@@ -250,13 +250,10 @@ float weaking(vec3 p, vec3 n) {
 }
 
 vec4 render(vec2 uv) {
-
-    // World View Projection
     vec4 clip = vec4(uv, -1.0, 1.0);
     vec4 eye = inverse(cam_block.projection) * clip;
     eye /= eye.w;
 
-    // Ray Calculation
     vec3 ray_origin = cam_block.position;
     vec3 ray_direction = normalize((inverse(cam_block.view) * vec4(eye.xyz, 0.0)).xyz);
 
@@ -275,7 +272,6 @@ vec4 render(vec2 uv) {
 }
 
 void main() {
-    vec3 p = vec3(0.0);
     vec2 uv = (gl_FragCoord.xy / u_resolution.xy) * 2.0 - 1.0;
 
     // Apply Raymarching and other techniques

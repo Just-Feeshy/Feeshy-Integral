@@ -24,6 +24,11 @@ struct fps_counter {
 
     uint64_t frame_count;
     uint64_t total_gpu_time;
+
+#ifdef EMSCRIPTEN
+    double last_frame_time;
+    double frame_start_time;
+#endif
 };
 
 void fps_init(struct fps_counter* fps);

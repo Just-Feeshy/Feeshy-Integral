@@ -180,6 +180,7 @@ static void program_update() {
         nk_spacing(ctx, 1);
 
         nk_layout_row_static(ctx, 20, 200, 1);
+#ifndef EMSCRIPTEN
         nk_label(ctx, "=== FPS Information ===", NK_TEXT_CENTERED);
 
         nk_layout_row_static(ctx, 20, 200, 1);
@@ -200,6 +201,7 @@ static void program_update() {
             fps_reset(&fps_data);
             ms_time_elapsed = 0;
         }
+#endif
 
         // #ifdef HAS_GEOMETRY_PASS
         // if(nk_button_label(ctx, "Turn On Wireframe")) {
