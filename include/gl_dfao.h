@@ -3,7 +3,7 @@
 #include <utils.h>
 #include <geometry_pass.h>
 
-#if defined(USE_DFAO) && !defined(HAS_GEOMETRY_PASS)
+#if defined(USE_DFAO) && defined(HAS_GEOMETRY_PASS)
 extern texture* mesh_volume_texture;
 #endif
 

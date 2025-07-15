@@ -56,6 +56,7 @@ void dfao_test_world(
     mesh_aabb = get_mesh_AABB(mesh);
     glm_vec3_add(mesh_aabb.min, (vec3){-EPSILON, -EPSILON, -EPSILON}, mesh_aabb.min);
     glm_vec3_add(mesh_aabb.max, (vec3){EPSILON, EPSILON, EPSILON}, mesh_aabb.max);
+
 #ifdef HAS_GEOMETRY_PASS
     shader frag_shader;
     shader vert_shader;
@@ -76,7 +77,7 @@ void dfao_test_world(
     pipeline_compile(2, g_pass->pipeline, (shader*[]){&vert_shader, &frag_shader});
     create_constant_location(g_pass->pipeline, "u_model");
     create_constant_location(g_pass->pipeline, "u_texture");
-#else
+#elif defined(USE_DFAO) && !defined(HAS_GEOMETRY_PASS)
     struct GPU_MODULE dfao_module = {0};
     parallelism_init(&dfao_module, "process_MDF", "opencl/mesh_distance_field.cl");
     mesh_volume_texture = texture_volume(&dfao_module, &mesh, &mesh_aabb);
