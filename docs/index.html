@@ -70,21 +70,6 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
-
-        /* OPTIONAL: Style for the abstract section */
-        #abstract {
-            margin-top: 30px;
-            font-size: 16px;
-            line-height: 1.4;
-            color: #ccc;
-            max-width: 800px;
-            text-align: left;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        #abstract h2 {
-            margin-bottom: 10px;
-        }
     </style>
 </head>
 <body>
@@ -104,21 +89,6 @@
                 tabindex="-1">
             </canvas>
         </div>
-    </div>
-
-    <!-- Abstract Section -->
-    <div id="abstract">
-        <h2>Abstract</h2>
-        <p>
-            Raymarching is a category of rendering methods for 3D computer graphics
-            that achieves the same purpose as its more popular counterpart, raytracing.
-            But unlike raytracing, raymarching is traversed iteratively, decreasing in
-            segment size for every step. However, this can become very expensive,
-            mainly when each ray corresponds to each pixel drawn on the screen.
-            The purpose of this project is to optimize this algorithm to know ahead
-            of time whether our ray will traverse to the very size limit or if the
-            ray will potentially hit a surface.
-        </p>
     </div>
 
     <script type='text/javascript'>
