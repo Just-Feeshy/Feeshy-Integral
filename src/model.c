@@ -72,8 +72,8 @@ cleanup_callback:
         SDL_RWclose(file);
     }
 
-    if(result != cgltf_result_success) {
-        free(file_buffer);
+    if(result != cgltf_result_success && file_buffer != NULL) {
+        SDL_free(file_buffer);
     }
 
     return result;
