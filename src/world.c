@@ -137,11 +137,11 @@ void world_init(int w, int h) {
     cam = create_cam_matrices();
     init_cam_matrices(&cam);
 
-    block = (sized_shader_block***)malloc(sizeof(sized_shader_block**) * 2);
-    *block = (sized_shader_block**)malloc(sizeof(sized_shader_block*));
+    block = (sized_shader_block***)SDL_malloc(sizeof(sized_shader_block**) * 2);
+    *block = (sized_shader_block**)SDL_malloc(sizeof(sized_shader_block*));
     **block = create_ssbo(&ubo, GL_UNIFORM_BUFFER, sizeof(cam_matrices));
 
-    *(block + 1) = (sized_shader_block**)malloc(sizeof(sized_shader_block*));
+    *(block + 1) = (sized_shader_block**)SDL_malloc(sizeof(sized_shader_block*));
     render_cam();
 }
 
