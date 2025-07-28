@@ -10,14 +10,12 @@
 
 #endif
 
-// WebGL2 timer query extension support
 static bool timer_queries_supported = false;
 static bool timer_queries_checked = false;
 
 static void fps_collect_results(struct fps_counter* fps);
 static void fps_calculate_average(struct fps_counter* fps);
 static bool fps_check_timer_query_support(void);
-static void fps_update_fallback(struct fps_counter* fps);
 
 #ifdef EMSCIPTEN
 
@@ -66,24 +64,41 @@ void fps_init(struct fps_counter* fps) {
     fps->frame_count = 0;
     fps->total_gpu_time = 0;
 
-    // Check timer query support
     if (fps_check_timer_query_support()) {
-        glGenQueries(FPS_QUERY_COUNT, fps->queries);
-        GLenum error = glGetError();
-        if (error != GL_NO_ERROR) {
-            printf("Failed to generate timer queries, falling back to CPU timing\n");
+        printf("OpenGL context: %p\n", SDL_GL_GetCurrentContext());
+        printf("GL_TIME_ELAPSED constant: 0x%x\n", GL_TIME_ELAPSED);
+
+        printf("glGenQueries function pointer: %p\n", (void*)glGenQueries);
+        printf("glBeginQuery function pointer: %p\n", (void*)glBeginQuery);
+        printf("glEndQuery function pointer: %p\n", (void*)glEndQuery);
+
+        if (!glGenQueries || !glBeginQuery || !glEndQuery) {
+            printf("Timer query function pointers are NULL - not supported\n");
             timer_queries_supported = false;
         } else {
-            printf("FPS Counter initialized with GPU timing\n");
+            while (glGetError() != GL_NO_ERROR);
+
+            glFinish();
+
+            for (int i = 0; i < FPS_QUERY_COUNT; i++) {
+                glGenQueries(1, &fps->queries[i]);
+                GLenum error = glGetError();
+                if (error != GL_NO_ERROR) {
+                    printf("glGenQueries failed on query %d with error 0x%x\n", i, error);
+                    timer_queries_supported = false;
+                    break;
+                } else {
+                    printf("Generated query %d: ID=%u\n", i, fps->queries[i]);
+                }
+            }
+
+            if (timer_queries_supported) {
+                printf("Successfully generated all %d timer queries\n", FPS_QUERY_COUNT);
+                printf("FPS Counter initialized with GPU timing\n");
+            }
         }
     }
 
-    if (!timer_queries_supported) {
-        printf("FPS Counter initialized with CPU timing fallback\n");
-#ifdef EMSCIPTEN
-        fps->last_frame_time = get_performance_now();
-#endif
-    }
 
     fps->initialized = true;
 }
@@ -96,7 +111,6 @@ void fps_update_begin(struct fps_counter* fps) {
         glBeginQuery(GL_TIME_ELAPSED, fps->queries[fps->current_query]);
         fps->query_active = true;
     } else {
-        // Fallback: record start time
 #ifdef EMSCIPTEN
         fps->frame_start_time = emscripten_performance_now();
 #endif
@@ -115,40 +129,11 @@ void fps_update_end(struct fps_counter* fps) {
             fps->valid_queries++;
         }
         fps_collect_results(fps);
-    } else {
-        // Fallback: calculate frame time using CPU timing
-        fps_update_fallback(fps);
     }
 
     fps->frame_count++;
 }
 
-static void fps_update_fallback(struct fps_counter* fps) {
-#ifdef EMSCIPTEN
-    double current_time = emscripten_performance_now();
-    double frame_time_ms = current_time - fps->frame_start_time;
-    double delta_time_ms = current_time - fps->last_frame_time;
-
-    fps->last_frame_time = current_time;
-    uint64_t frame_time_ns = (uint64_t)(frame_time_ms * 1000000.0);
-
-    if (frame_time_ns > 0) {
-        fps->gpu_times[fps->time_index] = frame_time_ns;
-        fps->time_index = (fps->time_index + 1) % FPS_HISTORY_SIZE;
-        if (fps->time_count < FPS_HISTORY_SIZE) {
-            fps->time_count++;
-        }
-
-        fps->total_gpu_time += frame_time_ns;
-
-        if (delta_time_ms > 0) {
-            fps->current_fps = 1000.0f / (float)delta_time_ms;
-        }
-
-        fps_calculate_average(fps);
-    }
-#endif
-}
 
 static void fps_collect_results(struct fps_counter* fps) {
     if (fps->valid_queries == 0) return;
