@@ -5,8 +5,8 @@
 #include <program.h>
 #include <uniform_manager.h>
 
-const int width = 1920;
-const int height = 1080;
+const int width = 800;
+const int height = 600;
 
 void init() {
     uniform_manager_init();
