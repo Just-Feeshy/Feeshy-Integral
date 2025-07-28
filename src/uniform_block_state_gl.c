@@ -66,7 +66,7 @@ static void free_bindings(uniform_block* block, graphics_pipeline** pipelines, s
 void init_ubo(uniform_block* block) {
     // Initialize cur_addr to a reasonable memory address (1GB)
     // MAX_GL_BINDINGS is just a count, not a memory address
-    cur_addr = 0x40000000; // 1GB - safe starting point for memory allocation
+    cur_addr = MAX_GL_BINDINGS; // 1GB - safe starting point for memory allocation
     block->bounded_blocks = init_hash_set();
     block->used_bindings = init_hash_set();
 }

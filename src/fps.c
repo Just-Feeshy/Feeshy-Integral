@@ -72,7 +72,7 @@ void fps_init(struct fps_counter* fps) {
         printf("glBeginQuery function pointer: %p\n", (void*)glBeginQuery);
         printf("glEndQuery function pointer: %p\n", (void*)glEndQuery);
 
-        if (!glGenQueries || !glBeginQuery || !glEndQuery) {
+        if (!&glGenQueries || !&glBeginQuery || !&glEndQuery) {
             printf("Timer query function pointers are NULL - not supported\n");
             timer_queries_supported = false;
         } else {

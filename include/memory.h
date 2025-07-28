@@ -56,11 +56,9 @@ void stack_rewind(stack_allocator* allocator) {
     allocator->offset = 0;
 }
 
-// Allocate memory with minimum address requirement
 void* MIN_ALLOC(void* minimum_address, size_t size) {
-    // Debug logging
     fprintf(stderr, "MIN_ALLOC called: minimum_address=%p, size=%zu\n", minimum_address, size);
-    
+
     if (size == 0) {
         fprintf(stderr, "MIN_ALLOC error: size cannot be 0\n");
         return NULL;
@@ -73,16 +71,12 @@ void* MIN_ALLOC(void* minimum_address, size_t size) {
     GetSystemInfo(&sys_info);
     page_size = sys_info.dwPageSize;
 
-    // Validate minimum_address alignment if provided
     if (minimum_address != NULL && ((uintptr_t)minimum_address % page_size) != 0) {
-        // Round up to next page boundary
         minimum_address = (void*)(((uintptr_t)minimum_address + page_size - 1) & ~(page_size - 1));
     }
 
-    // Align size to page boundary
     size = ALIGN_TO_PAGE(size, page_size);
 
-    // Check for potential overflow
     if (minimum_address != NULL) {
         uintptr_t min_addr = (uintptr_t)minimum_address;
         if (min_addr > UINTPTR_MAX - size) {
@@ -91,13 +85,11 @@ void* MIN_ALLOC(void* minimum_address, size_t size) {
         }
     }
 
-    // Attempt to allocate memory at or above minimum_address
     void* addr = VirtualAlloc(minimum_address, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     if (addr == NULL) {
         DWORD error = GetLastError();
         fprintf(stderr, "VirtualAlloc failed with error: %lu\n", error);
-        
-        // Provide more specific error information
+
         switch (error) {
             case ERROR_INVALID_PARAMETER:
                 fprintf(stderr, "Invalid parameter - check size (%zu) and address (%p)\n", size, minimum_address);
@@ -115,10 +107,8 @@ void* MIN_ALLOC(void* minimum_address, size_t size) {
         return NULL;
     }
 
-    // Ensure the returned address meets the minimum address condition
     if (minimum_address != NULL && (uintptr_t)addr < (uintptr_t)minimum_address) {
         VirtualFree(addr, 0, MEM_RELEASE);
-        // Try again with a higher address, but limit recursion
         static int retry_count = 0;
         if (retry_count < 10) {
             retry_count++;
@@ -140,10 +130,8 @@ void* MIN_ALLOC(void* minimum_address, size_t size) {
     page_size = 4096;
     #endif
 
-    // Align size to page boundary
     size = ALIGN_TO_PAGE(size, page_size);
 
-    // Attempt to map memory at or above minimum_address
     void* addr = minimum_address;
 
     #ifdef EMSCRIPTEN
@@ -161,7 +149,6 @@ void* MIN_ALLOC(void* minimum_address, size_t size) {
     }
     #endif
 
-    // Ensure the returned address meets the minimum address condition
     if (minimum_address != NULL && (uintptr_t)result < (uintptr_t)minimum_address) {
         munmap(result, size);
         static int retry_count = 0;
@@ -181,10 +168,9 @@ void* MIN_ALLOC(void* minimum_address, size_t size) {
     return addr;
 }
 
-// Free memory allocated by MIN_ALLOC
 void MIN_FREE(void* addr, size_t size) {
     if (addr == NULL) {
-        return; // Safe to call with NULL pointer
+        return;
     }
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -199,7 +185,6 @@ void MIN_FREE(void* addr, size_t size) {
 #endif
 }
 
-// Copy memory from one location to another
 void mem_copy(void* dest, void* src, size_t size) {
     if (dest == NULL || src == NULL || size == 0) {
         return;
