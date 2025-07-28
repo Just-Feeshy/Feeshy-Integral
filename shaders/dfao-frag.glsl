@@ -85,11 +85,18 @@ bool intersectBox(vec3 ro, vec3 rd, out float t0, out float t1) {
     t0 = tmin;
     t1 = tmax;
 
-    if(t0 < 0.0 && t1 >= 0.0) {
+    // Handle camera inside box case
+    if(t0 < 0.0 && t1 > 0.0) {
+        t0 = 0.0; // Start from camera position
+    }
+    
+    // Handle camera very close to box
+    if (t0 < 0.0) {
         t0 = 0.0;
     }
 
-    if (t1 < 0.0) {
+    // Must have valid intersection range
+    if (t1 <= t0 || t1 < 0.0) {
         return false;
     }
 
@@ -279,8 +286,16 @@ vec4 render(vec2 uv) {
         return vec4(1.0, 1.0, 0.0, 1.0); // Yellow for NaN/Inf intersection
     }
 
-    if (hit && t1 > t0 && t0 >= 0.0) {
-        color = vec3(0.0, 1.0, 0.0); // Green if we hit the bounding box
+    if (hit) {
+        // Check if camera is inside AABB
+        bool inside = all(greaterThanEqual(ray_origin, u_aabb_min)) && 
+                     all(lessThanEqual(ray_origin, u_aabb_max));
+        
+        if (inside) {
+            color = vec3(0.0, 0.5, 1.0); // Light blue for inside box
+        } else {
+            color = vec3(0.0, 1.0, 0.0); // Green for outside box intersection
+        }
         
         // For debugging, skip raymarching and just show the box hit
         // float t = raymarching(vec3(0.0), t0, t1, ray_origin, ray_direction);
