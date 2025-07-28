@@ -57,8 +57,6 @@ void stack_rewind(stack_allocator* allocator) {
 }
 
 void* MIN_ALLOC(void* minimum_address, size_t size) {
-    fprintf(stderr, "MIN_ALLOC called: minimum_address=%p, size=%zu\n", minimum_address, size);
-
     if (size == 0) {
         fprintf(stderr, "MIN_ALLOC error: size cannot be 0\n");
         return NULL;
@@ -88,8 +86,16 @@ void* MIN_ALLOC(void* minimum_address, size_t size) {
     void* addr = VirtualAlloc(minimum_address, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     if (addr == NULL) {
         DWORD error = GetLastError();
+        
+        // Try without specifying minimum address on Windows
+        if (minimum_address != NULL) {
+            addr = VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+            if (addr != NULL) {
+                return addr;
+            }
+        }
+        
         fprintf(stderr, "VirtualAlloc failed with error: %lu\n", error);
-
         switch (error) {
             case ERROR_INVALID_PARAMETER:
                 fprintf(stderr, "Invalid parameter - check size (%zu) and address (%p)\n", size, minimum_address);

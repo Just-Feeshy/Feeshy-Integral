@@ -110,35 +110,73 @@ static void best_device_opencl(cl_platform_id* platform_id, cl_device_id* device
 void parallelism_init(struct GPU_MODULE* modul, const char* kernel_name, const char* path) {
     cl_platform_id platform_id = NULL;
     cl_device_id device_id = NULL;
-    cl_context context;
-    cl_command_queue queue;
-    cl_kernel kernel;
+    cl_context context = NULL;
+    cl_command_queue queue = NULL;
+    cl_kernel kernel = NULL;
     cl_int err;
-    cl_program program;
+    cl_program program = NULL;
+
+    // Initialize module to zero
+    memset(modul, 0, sizeof(struct GPU_MODULE));
 
     best_device_opencl(&platform_id, &device_id);
+    if (!platform_id || !device_id) {
+        SDL_Log("[OpenCL] No suitable OpenCL device found\n");
+        return;
+    }
+
     context = clCreateContext(NULL, 1, &device_id, NULL, NULL, &err);
-    assert(err == CL_SUCCESS);
+    if (err != CL_SUCCESS) {
+        SDL_Log("[OpenCL] Failed to create context: %d\n", err);
+        return;
+    }
 
     queue = clCreateCommandQueue(context, device_id, 0, &err);
-    assert(err == CL_SUCCESS);
+    if (err != CL_SUCCESS) {
+        SDL_Log("[OpenCL] Failed to create command queue: %d\n", err);
+        clReleaseContext(context);
+        return;
+    }
 
     program = opencl_platform_make_source(context, path);
-    assert(program != NULL);
+    if (!program) {
+        SDL_Log("[OpenCL] Failed to create program from source\n");
+        clReleaseCommandQueue(queue);
+        clReleaseContext(context);
+        return;
+    }
 
     err = clBuildProgram(program, 1, &device_id, "-cl-std=CL1.2 -D__OPENCL__ -Iinclude", NULL, NULL);
     if(err == CL_BUILD_PROGRAM_FAILURE) {
         size_t log_size;
-        clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, DEFAULT_BUFFER_SIZE, NULL, &log_size);
-        char* log = mem_alloca(log_size);
-        clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
-        SDL_Log("[OpenCL] Build log:\n%s\n", log);
-    }else if(err != CL_SUCCESS) {
-        SDL_Log("[OpenCL] Failed to build program\n");
+        clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+        char* log = (char*)malloc(log_size + 1);
+        if (log) {
+            clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
+            log[log_size] = '\0';
+            SDL_Log("[OpenCL] Build log:\n%s\n", log);
+            free(log);
+        }
+        clReleaseProgram(program);
+        clReleaseCommandQueue(queue);
+        clReleaseContext(context);
+        return;
+    } else if(err != CL_SUCCESS) {
+        SDL_Log("[OpenCL] Failed to build program: %d\n", err);
+        clReleaseProgram(program);
+        clReleaseCommandQueue(queue);
+        clReleaseContext(context);
+        return;
     }
 
     kernel = clCreateKernel(program, kernel_name, &err);
-    assert(err == CL_SUCCESS);
+    if (err != CL_SUCCESS) {
+        SDL_Log("[OpenCL] Failed to create kernel '%s': %d\n", kernel_name, err);
+        clReleaseProgram(program);
+        clReleaseCommandQueue(queue);
+        clReleaseContext(context);
+        return;
+    }
 
     modul->context = context;
     modul->queue = queue;
@@ -223,8 +261,22 @@ void parallelism_clean(struct GPU_MODULE* modul, GPU_MEM* data, size_t data_size
 }
 
 void parallelism_destroy(struct GPU_MODULE* modul) {
-    clReleaseKernel(modul->kernel);
-    clReleaseCommandQueue(modul->queue);
-    clReleaseContext(modul->context);
-    clReleaseProgram(modul->program);
+    if (!modul) return;
+    
+    if (modul->kernel) {
+        clReleaseKernel(modul->kernel);
+        modul->kernel = NULL;
+    }
+    if (modul->queue) {
+        clReleaseCommandQueue(modul->queue);
+        modul->queue = NULL;
+    }
+    if (modul->context) {
+        clReleaseContext(modul->context);
+        modul->context = NULL;
+    }
+    if (modul->program) {
+        clReleaseProgram(modul->program);
+        modul->program = NULL;
+    }
 }

@@ -26,17 +26,8 @@
 // I want to throw up every time I look at this code.
 // ----------------------
 
-#if defined(_WIN32) || defined(_WIN64)
-
-#define MAX_GL_BINDINGS \
-    0x40000000
-
-#else
-
 #define MAX_GL_BINDINGS \
     (1L << ceil_log2(opengl_get_integerv(GL_MAX_UNIFORM_BUFFER_BINDINGS)))
-
-#endif
 
 // Uniform Block Object
 
