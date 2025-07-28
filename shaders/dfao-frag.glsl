@@ -147,7 +147,8 @@ float get_accomodated_distance(float dist) {
     // This is a simple function to accommodate the distance
     // based on the current step size and the distance.
     // It can be adjusted based on the requirements.
-    return min((dist / length(u_aabb_max - u_aabb_min)), EPSILON);
+    float normalized_dist = dist / length(u_aabb_max - u_aabb_min);
+    return max(normalized_dist, EPSILON); // Use max instead of min
 }
 
 float sdf_dist(vec3 pos, float t, inout int iter, vec3 ray_origin, vec3 ray_direction, float far) {
@@ -184,9 +185,9 @@ float raymarching(vec3 pos, float t_i, float t_f, vec3 ray_origin, vec3 ray_dire
     int first_cases = 0;
 
     #if (MAX_STEPS & 1) == 0
-    t = sampleDistance(ray_origin + t * ray_direction);
+    float initial_dist = sampleDistance(ray_origin + t * ray_direction);
 
-    if(t < cam_block.near * cam_block.near) {
+    if(initial_dist < EPSILON) {
         return t;
     }
     #endif
@@ -212,12 +213,12 @@ float raymarching(vec3 pos, float t_i, float t_f, vec3 ray_origin, vec3 ray_dire
                 return -1.0;
             }
 
-            t_j -= dist_j;
+            t_j -= max(dist_j, EPSILON); // Prevent zero step
         } else { // Though this is suppose to be 'j' in the paper, it is 'i' in the code
             t += get_accomodated_distance(dist_i);
             float dist_j = sampleDistance(ray_origin + t * ray_direction);
 
-            if(dist_j < cam_block.near * cam_block.near) {
+            if(dist_j < EPSILON) {
                 return t;
             }
 
@@ -257,36 +258,13 @@ vec4 render(vec2 uv) {
     vec3 color = vec3(0.0);
 
     if (hit && t1 > t0) {
-        // Debug: Show box intersection in green
-        color = vec3(0.0, 1.0, 0.0);
-        
-        // Debug: Sample texture at entry point to check for corruption
-        vec3 entry_point = ray_origin + t0 * ray_direction;
-        vec3 tex_coord = get_tex_coord(entry_point);
-        float sample_dist = texture(u_volume_tex, tex_coord).r;
-        
-        // Debug visualization modes
-        if (uv.x < -0.8) {
-            // Show raw texture sampling
-            color = vec3(sample_dist * 0.1); // Scale for visibility
-        } else if (uv.x < -0.6) {
-            // Show texture coordinates
-            color = tex_coord;
-        } else if (uv.x < -0.4) {
-            // Show AABB bounds test
-            color = vec3(
-                step(u_aabb_min.x, entry_point.x) * step(entry_point.x, u_aabb_max.x),
-                step(u_aabb_min.y, entry_point.y) * step(entry_point.y, u_aabb_max.y),
-                step(u_aabb_min.z, entry_point.z) * step(entry_point.z, u_aabb_max.z)
-            );
-        } else {
-            // Normal rendering
-            float t = raymarching(vec3(0.0), t0, t1, ray_origin, ray_direction);
-            if(t != -1.0) {
-                vec3 p = ray_origin + t * ray_direction;
-                vec3 n = sdf_normal(p);
-                color = vec3(1.0, 0.0, 0.0) * ambientOcclusion(p, n);
-            }
+        color = vec3(0.0, 1.0, 0.0); // Green if we hit the bounding box
+        float t = raymarching(vec3(0.0), t0, t1, ray_origin, ray_direction);
+        if(t != -1.0) {
+            vec3 p = ray_origin + t * ray_direction;
+            vec3 n = sdf_normal(p);
+            float ao = ambientOcclusion(p, n);
+            color = vec3(1.0, 0.0, 0.0) * ao;
         }
     }
 
