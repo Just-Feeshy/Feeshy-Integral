@@ -238,16 +238,9 @@ void program_init(const char* name, int w, int h) {
     }
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
-		printf("SDL_Init failed: %s\n", SDL_GetError());
-		return;
-	}
-
-    #ifdef HAS_GLAD
-    if (!gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress)) {
-        printf("Failed to load OpenGL 4.1\n");
-        return;
+	printf("SDL_Init failed: %s\n", SDL_GetError());
+	return;
     }
-    #endif
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, GL_APP_PROFILE_MASK);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, GL_APP_MAJOR_VERSION);
@@ -272,17 +265,6 @@ void program_init(const char* name, int w, int h) {
     SDL_SetRelativeMouseMode(SDL_FALSE);
 
     create_window(name, w, h);
-    opengl_init();
-    ctx = nk_sdl_init(main_program.window);
-
-    struct nk_font_atlas *atlas;
-    nk_sdl_font_stash_begin(&atlas);
-    nk_sdl_font_stash_end();
-
-    bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.24f, bg.a = 1.0f;
-
-    SDL_WarpMouseInWindow(main_program.window, w >> 1, h >> 1);
-    SDL_SetRelativeMouseMode(SDL_TRUE);
 
     #ifndef EMSCRIPTEN
     if(main_program.context && SDL_GL_MakeCurrent(main_program.window, main_program.context) == 0) {
@@ -294,8 +276,27 @@ void program_init(const char* name, int w, int h) {
     }
     #endif
 
+    #ifdef HAS_GLAD
+    if (!gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress)) {
+        printf("Failed to load OpenGL 4.1\n");
+        return;
+    }
+    #endif
+
     printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
     printf("GLSL Version: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+    opengl_init();
+    ctx = nk_sdl_init(main_program.window);
+
+    struct nk_font_atlas *atlas;
+    nk_sdl_font_stash_begin(&atlas);
+    nk_sdl_font_stash_end();
+
+    bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.24f, bg.a = 1.0f;
+
+    SDL_WarpMouseInWindow(main_program.window, w >> 1, h >> 1);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     main_program.active = true;
