@@ -39,11 +39,14 @@ const float ao_intensity = 0.25; // Ambient Occlusion intensity
 // https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection.html
 bool intersectBox(vec3 ro, vec3 rd, out float t0, out float t1) {
     vec3 bounds[2] = vec3[2](u_aabb_min, u_aabb_max);
-    vec3 inv_dir = 1.0 / rd;
-    ivec3 sign = ivec3(// Better than using the `step` function
-        (inv_dir.x < 0.0),
-        (inv_dir.y < 0.0),
-        (inv_dir.z < 0.0)
+    
+    // Prevent division by zero
+    vec3 inv_dir = 1.0 / (rd + vec3(1e-10));
+    
+    ivec3 sign = ivec3(
+        int(inv_dir.x < 0.0),
+        int(inv_dir.y < 0.0),
+        int(inv_dir.z < 0.0)
     );
 
     float tmin, tmax, tymin, tymax, tzmin, tzmax;
@@ -245,27 +248,48 @@ float raymarching(vec3 pos, float t_i, float t_f, vec3 ray_origin, vec3 ray_dire
 }
 
 vec4 render(vec2 uv) {
+    // Robust coordinate transformation
     vec4 clip = vec4(uv, -1.0, 1.0);
     vec4 eye = inverse(cam_block.projection) * clip;
+    
+    // Check for valid homogeneous coordinate
+    if (abs(eye.w) < 1e-10) {
+        return vec4(1.0, 0.0, 1.0, 1.0); // Magenta for invalid coordinates
+    }
+    
     eye /= eye.w;
 
     vec3 ray_origin = cam_block.position;
-    vec3 ray_direction = normalize((inverse(cam_block.view) * vec4(eye.xyz, 0.0)).xyz);
+    vec3 world_dir = (inverse(cam_block.view) * vec4(eye.xyz, 0.0)).xyz;
+    
+    // Check for degenerate ray direction
+    if (length(world_dir) < 1e-10) {
+        return vec4(0.0, 0.0, 1.0, 1.0); // Blue for invalid ray direction
+    }
+    
+    vec3 ray_direction = normalize(world_dir);
 
     float t0 = 0.0;
     float t1 = cam_block.far;
     bool hit = intersectBox(ray_origin, ray_direction, t0, t1);
-    vec3 color = vec3(0.0);
+    vec3 color = vec3(0.0, 0.0, 0.0); // Black background
+    
+    // Validate intersection results
+    if (isnan(t0) || isnan(t1) || isinf(t0) || isinf(t1)) {
+        return vec4(1.0, 1.0, 0.0, 1.0); // Yellow for NaN/Inf intersection
+    }
 
-    if (hit && t1 > t0) {
+    if (hit && t1 > t0 && t0 >= 0.0) {
         color = vec3(0.0, 1.0, 0.0); // Green if we hit the bounding box
-        float t = raymarching(vec3(0.0), t0, t1, ray_origin, ray_direction);
-        if(t != -1.0) {
-            vec3 p = ray_origin + t * ray_direction;
-            vec3 n = sdf_normal(p);
-            float ao = ambientOcclusion(p, n);
-            color = vec3(1.0, 0.0, 0.0) * ao;
-        }
+        
+        // For debugging, skip raymarching and just show the box hit
+        // float t = raymarching(vec3(0.0), t0, t1, ray_origin, ray_direction);
+        // if(t != -1.0) {
+        //     vec3 p = ray_origin + t * ray_direction;
+        //     vec3 n = sdf_normal(p);
+        //     float ao = ambientOcclusion(p, n);
+        //     color = vec3(1.0, 0.0, 0.0) * ao;
+        // }
     }
 
     return vec4(color, 1.0);
