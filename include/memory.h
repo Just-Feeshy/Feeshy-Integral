@@ -58,6 +58,9 @@ void stack_rewind(stack_allocator* allocator) {
 
 // Allocate memory with minimum address requirement
 void* MIN_ALLOC(void* minimum_address, size_t size) {
+    // Debug logging
+    fprintf(stderr, "MIN_ALLOC called: minimum_address=%p, size=%zu\n", minimum_address, size);
+    
     if (size == 0) {
         fprintf(stderr, "MIN_ALLOC error: size cannot be 0\n");
         return NULL;
