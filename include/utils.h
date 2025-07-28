@@ -27,7 +27,10 @@ static FORCE_INLINE int __builtin_ctz(unsigned x)
 
 #elif !defined(__MSC_VER) || defined(__clang__)
 #include <stdio.h>
+#include <stdlib.h>
+#if !defined(__MINGW32__) && !defined(__MINGW64__)
 #include <alloca.h>
+#endif
 
 #define FORCE_INLINE __attribute__((always_inline))
 #define mem_alloca(size) alloca(size)
