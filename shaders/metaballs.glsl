@@ -3,6 +3,7 @@
 precision mediump float;
 
 #define MAX_STEPS 199
+#define NEW_RAYMARCH 1
 
 out vec4 fragColor;
 

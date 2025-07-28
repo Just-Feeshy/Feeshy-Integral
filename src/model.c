@@ -201,14 +201,16 @@ static Model load_model_gltf(const char* path) {
 
     Model model = {0};
     uint64_t data_size = 0;
+    uint8_t* file_buffer = NULL;
+    SDL_RWops* file = NULL;
 
-    SDL_RWops* file = SDL_RWFromFile(path, "rb");
+    file = SDL_RWFromFile(path, "rb");
     if (file == NULL) {
         goto cleanup_model;
     }
 
     int64_t file_size = SDL_RWsize(file);
-    uint8_t* file_buffer = (uint8_t*)SDL_malloc(file_size);
+    file_buffer = (uint8_t*)SDL_malloc(file_size);
 
     if (file_buffer == NULL) {
         goto cleanup_model;
@@ -533,6 +535,7 @@ cleanup_model:
 
     if (file_buffer != NULL) {
         SDL_free(file_buffer);
+        file_buffer = NULL;
     }
 
     return model;
