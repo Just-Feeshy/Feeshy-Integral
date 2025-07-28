@@ -38,68 +38,26 @@ const float ao_intensity = 0.25; // Ambient Occlusion intensity
 // The original code can be found at:
 // https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection.html
 bool intersectBox(vec3 ro, vec3 rd, out float t0, out float t1) {
-    vec3 bounds[2] = vec3[2](u_aabb_min, u_aabb_max);
+    // More robust ray-box intersection using slab method
+    vec3 t_min = (u_aabb_min - ro) / rd;
+    vec3 t_max = (u_aabb_max - ro) / rd;
     
-    // Prevent division by zero
-    vec3 inv_dir = 1.0 / (rd + vec3(1e-10));
+    // Handle negative ray directions by swapping
+    vec3 t1_vec = min(t_min, t_max);
+    vec3 t2_vec = max(t_min, t_max);
     
-    ivec3 sign = ivec3(
-        int(inv_dir.x < 0.0),
-        int(inv_dir.y < 0.0),
-        int(inv_dir.z < 0.0)
-    );
-
-    float tmin, tmax, tymin, tymax, tzmin, tzmax;
-    tmin = (bounds[sign.x].x - ro.x) * inv_dir.x;
-    tmax = (bounds[1 - sign.x].x - ro.x) * inv_dir.x;
-    tymin = (bounds[sign.y].y - ro.y) * inv_dir.y;
-    tymax = (bounds[1 - sign.y].y - ro.y) * inv_dir.y;
-
-    if ((tmin > tymax) || (tymin > tmax)) {
+    // Find the largest entry point and smallest exit point
+    float t_near = max(max(t1_vec.x, t1_vec.y), t1_vec.z);
+    float t_far = min(min(t2_vec.x, t2_vec.y), t2_vec.z);
+    
+    // Check for valid intersection
+    if (t_near > t_far || t_far < 0.0) {
         return false;
     }
-
-    if (tymin > tmin) {
-        tmin = tymin;
-    }
-
-    if (tymax < tmax) {
-        tmax = tymax;
-    }
-
-    tzmin = (bounds[sign.z].z - ro.z) * inv_dir.z;
-    tzmax = (bounds[1 - sign.z].z - ro.z) * inv_dir.z;
-
-    if ((tmin > tzmax) || (tzmin > tmax)) {
-        return false;
-    }
-
-    if (tzmin > tmin) {
-        tmin = tzmin;
-    }
-
-    if (tzmax < tmax) {
-        tmax = tzmax;
-    }
-
-    t0 = tmin;
-    t1 = tmax;
-
-    // Handle camera inside box case
-    if(t0 < 0.0 && t1 > 0.0) {
-        t0 = 0.0; // Start from camera position
-    }
     
-    // Handle camera very close to box
-    if (t0 < 0.0) {
-        t0 = 0.0;
-    }
-
-    // Must have valid intersection range
-    if (t1 <= t0 || t1 < 0.0) {
-        return false;
-    }
-
+    t0 = max(t_near, 0.0); // Don't march behind the camera
+    t1 = t_far;
+    
     return true;
 }
 
@@ -110,12 +68,11 @@ vec3 get_tex_coord(vec3 pos) {
 float sampleDistance(vec3 pos) {
     vec3 tex_coord = get_tex_coord(pos);
     float dist = texture(u_volume_tex, tex_coord).r;
-    
-    // Debug: Check for invalid values
+
     if (isnan(dist) || isinf(dist)) {
         return 1000.0; // Large distance for invalid values
     }
-    
+
     return dist;
 }
 
