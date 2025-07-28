@@ -4,6 +4,16 @@
 
 #define DEFAULT_INCLUSIVE_BETWEEN_EX_MESSAGE "Value %d is not between %d and %d (inclusive).\n"
 
+/* ==================================================================================
+ * DISCLAIMER: This code is REALLY BAD! However, it runs and is not and only runs once!
+ * ==================================================================================*/
+
+
+// I'm not joking, I really don't know what I was thinking when I wrote this.
+// This code is a mess, but it works for the purpose of managing uniform blocks in OpenGL.
+// Luckily, it does not affect performance at all, especially when it comes to gathering
+// research on ray marching optimization techniques.
+
 // Returns the maximum number of bindings for a given target.
 static uint32_t max_gl_bindings(uint32_t target) {
     switch(target) {

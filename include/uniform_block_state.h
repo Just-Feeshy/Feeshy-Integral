@@ -11,7 +11,7 @@
 
 // 1GB - safe starting point for memory allocation
 #define MAX_GL_BINDINGS \
-    0x40000000 + (1L << ceil_log2(opengl_get_integerv(GL_MAX_UNIFORM_BUFFER_BINDINGS)))
+    0x40000000
 
 // Uniform Block Object
 
