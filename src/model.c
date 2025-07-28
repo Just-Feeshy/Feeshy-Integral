@@ -532,7 +532,7 @@ cleanup_model:
     }
 
     if (file_buffer != NULL) {
-        free(file_buffer);
+        SDL_free(file_buffer);
     }
 
     return model;
