@@ -14,6 +14,11 @@
 // Luckily, it does not affect performance at all, especially when it comes to gathering
 // research on ray marching optimization techniques.
 
+// ----------------------
+// In the future, if I ever stumble upon doing this again, I'm using Rust
+// since the Borrow Checker will prevent me from being really stupid.
+// ----------------------
+
 // Returns the maximum number of bindings for a given target.
 static uint32_t max_gl_bindings(uint32_t target) {
     switch(target) {
