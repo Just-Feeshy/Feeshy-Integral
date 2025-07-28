@@ -99,8 +99,14 @@ vec3 get_tex_coord(vec3 pos) {
 
 float sampleDistance(vec3 pos) {
     vec3 tex_coord = get_tex_coord(pos);
-    return texture(u_volume_tex, tex_coord).r;
-    // return max(texture(u_volume_tex, tex_coord).r, 0.0);
+    float dist = texture(u_volume_tex, tex_coord).r;
+    
+    // Debug: Check for invalid values
+    if (isnan(dist) || isinf(dist)) {
+        return 1000.0; // Large distance for invalid values
+    }
+    
+    return dist;
 }
 
 float ambientOcclusion(vec3 p, vec3 n){
@@ -201,7 +207,7 @@ float raymarching(vec3 pos, float t_i, float t_f, vec3 ray_origin, vec3 ray_dire
             vec3 p_j = ray_origin + t_j * ray_direction;
             float dist_j = sampleDistance(p_j);
 
-            if(abs(dist_i - dist_i) <= abs(t_j - t)
+            if(abs(dist_i - dist_j) <= abs(t_j - t)
             && (dist_i + dist_j) >= abs(t_j - t)) {
                 return -1.0;
             }
@@ -251,14 +257,37 @@ vec4 render(vec2 uv) {
     vec3 color = vec3(0.0);
 
     if (hit && t1 > t0) {
+        // Debug: Show box intersection in green
         color = vec3(0.0, 1.0, 0.0);
-        float t = raymarching(vec3(0.0), t0, t1, ray_origin, ray_direction);
-        if(t != -1.0) {
-            vec3 p = ray_origin + t * ray_direction;
-            vec3 n = sdf_normal(p);
-            color = vec3(1.0, 0.0, 0.0) * ambientOcclusion(p, n);
+        
+        // Debug: Sample texture at entry point to check for corruption
+        vec3 entry_point = ray_origin + t0 * ray_direction;
+        vec3 tex_coord = get_tex_coord(entry_point);
+        float sample_dist = texture(u_volume_tex, tex_coord).r;
+        
+        // Debug visualization modes
+        if (uv.x < -0.8) {
+            // Show raw texture sampling
+            color = vec3(sample_dist * 0.1); // Scale for visibility
+        } else if (uv.x < -0.6) {
+            // Show texture coordinates
+            color = tex_coord;
+        } else if (uv.x < -0.4) {
+            // Show AABB bounds test
+            color = vec3(
+                step(u_aabb_min.x, entry_point.x) * step(entry_point.x, u_aabb_max.x),
+                step(u_aabb_min.y, entry_point.y) * step(entry_point.y, u_aabb_max.y),
+                step(u_aabb_min.z, entry_point.z) * step(entry_point.z, u_aabb_max.z)
+            );
+        } else {
+            // Normal rendering
+            float t = raymarching(vec3(0.0), t0, t1, ray_origin, ray_direction);
+            if(t != -1.0) {
+                vec3 p = ray_origin + t * ray_direction;
+                vec3 n = sdf_normal(p);
+                color = vec3(1.0, 0.0, 0.0) * ambientOcclusion(p, n);
+            }
         }
-
     }
 
     return vec4(color, 1.0);
