@@ -32,8 +32,6 @@ static bool fps_check_timer_query_support(void) {
         return timer_queries_supported;
     }
 
-    timer_queries_checked = true;
-
 #ifdef EMSCIPTEN
     // Check for WebGL2 timer query extension
     const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
@@ -49,6 +47,7 @@ static bool fps_check_timer_query_support(void) {
     timer_queries_supported = true;
 #endif
 
+    printf("Timer query support checked: %s\n", timer_queries_supported ? "Yes" : "No");
     return timer_queries_supported;
 }
 
@@ -68,12 +67,26 @@ void fps_init(struct fps_counter* fps) {
 
     // Check timer query support
     if (fps_check_timer_query_support()) {
+        printf("Attempting to call glGenQueries...\n");
         glGenQueries(FPS_QUERY_COUNT, fps->queries);
         GLenum error = glGetError();
+
         if (error != GL_NO_ERROR) {
-            printf("Failed to generate timer queries, falling back to CPU timing\n");
+            printf("glGenQueries failed with OpenGL error: 0x%x\n", error);
+            switch(error) {
+                case GL_INVALID_VALUE:
+                    printf("Error: GL_INVALID_VALUE - n is negative\n");
+                    break;
+                case GL_INVALID_OPERATION:
+                    printf("Error: GL_INVALID_OPERATION - timer queries not supported or no context\n");
+                    break;
+                default:
+                    printf("Error: Unknown OpenGL error\n");
+                    break;
+            }
             timer_queries_supported = false;
         } else {
+            printf("Successfully generated %d timer queries\n", FPS_QUERY_COUNT);
             printf("FPS Counter initialized with GPU timing\n");
         }
     }
@@ -116,7 +129,6 @@ void fps_update_end(struct fps_counter* fps) {
         }
         fps_collect_results(fps);
     } else {
-        // Fallback: calculate frame time using CPU timing
         fps_update_fallback(fps);
     }
 
