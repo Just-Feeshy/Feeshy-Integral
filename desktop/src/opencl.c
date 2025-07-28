@@ -13,16 +13,18 @@
 static struct opencl unigrid_opencl = {0};
 
 static cl_program opencl_platform_make_source(cl_context context, const char* path) {
-    SDL_RWops* file = SDL_RWFromFile(path, "rb");
+    SDL_RWops* file = NULL;
     cl_program program = NULL;
+    uint8_t* file_buffer = NULL;
 
+    file = SDL_RWFromFile(path, "rb");
     if (file == NULL) {
         SDL_Log("Failed to open file: %s\n", path);
         return NULL;
     }
 
     int64_t file_size = SDL_RWsize(file);
-    uint8_t* file_buffer = (uint8_t*)SDL_malloc(file_size);
+    file_buffer = (uint8_t*)SDL_malloc(file_size);
 
     if (file_buffer == NULL) {
         SDL_Log("Failed to allocate memory for file: %s\n", path);
@@ -44,7 +46,8 @@ cleanup_platform:
     }
 
     if(file_buffer) {
-        free(file_buffer);
+        SDL_free(file_buffer);
+        file_buffer = NULL;
     }
 
     return program;
