@@ -124,13 +124,6 @@ void parallelism_init(struct GPU_MODULE* modul, const char* kernel_name, const c
         SDL_Log("[OpenCL] No suitable OpenCL device found\n");
         return;
     }
-    
-    // Debug: Print device info
-    char device_name[256];
-    char vendor_name[256];
-    clGetDeviceInfo(device_id, CL_DEVICE_NAME, sizeof(device_name), device_name, NULL);
-    clGetDeviceInfo(device_id, CL_DEVICE_VENDOR, sizeof(vendor_name), vendor_name, NULL);
-    SDL_Log("[OpenCL] Using device: %s from %s\n", device_name, vendor_name);
 
     context = clCreateContext(NULL, 1, &device_id, NULL, NULL, &err);
     if (err != CL_SUCCESS) {
@@ -197,25 +190,12 @@ void parallelism_alloc_MDF(struct GPU_MODULE* modul, AABB* aabb, Mesh* mesh, int
     size_t local_size[3] = {8, 4, 2};
 
     cl_int err;
-    
-    // Debug: Print mesh and AABB info
-    SDL_Log("[DFAO Debug] Mesh: vertices=%d, triangles=%d", mesh->vertex_count, mesh->triangle_count);  
-    SDL_Log("[DFAO Debug] AABB: min=(%.3f,%.3f,%.3f) max=(%.3f,%.3f,%.3f)", 
-            aabb->min[0], aabb->min[1], aabb->min[2],
-            aabb->max[0], aabb->max[1], aabb->max[2]);
-    SDL_Log("[DFAO Debug] Grid size: %dx%dx%d = %zu", UNIFORM_GRID_X, UNIFORM_GRID_Y, UNIFORM_GRID_Z, __size);
 
     cl_mem aabb_buffer = clCreateBuffer(modul->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(AABB), aabb, &err);
-    if (err != CL_SUCCESS) {
-        SDL_Log("[DFAO Debug] Failed to create AABB buffer: %d", err);
-        return;
-    }
+    assert(err == CL_SUCCESS);
 
     cl_mem vertex_buffer = clCreateBuffer(modul->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(float) * mesh->vertex_count * 3, mesh->vertices, &err);
-    if (err != CL_SUCCESS) {
-        SDL_Log("[DFAO Debug] Failed to create vertex buffer: %d", err);
-        return;
-    }
+    assert(err == CL_SUCCESS);
 
     cl_mem normal_buffer = clCreateBuffer(modul->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(float) * mesh->vertex_count * 3, mesh->normals, &err);
     assert(err == CL_SUCCESS);
@@ -256,46 +236,17 @@ void parallelism_alloc_MDF(struct GPU_MODULE* modul, AABB* aabb, Mesh* mesh, int
 
 void parallelism_invoke_MDF(struct GPU_MODULE* modul, GPU_MEM data, float** buffer, size_t data_size) {
     size_t global_size[3] = {UNIFORM_GRID_X, UNIFORM_GRID_Y, UNIFORM_GRID_Z};
-    
-    SDL_Log("[DFAO Debug] Executing kernel with global size: %zux%zux%zu", global_size[0], global_size[1], global_size[2]);
 
     (*buffer) = malloc(sizeof(float) * data_size);
-    if (!*buffer) {
-        SDL_Log("[DFAO Debug] Failed to allocate output buffer of size %zu", data_size);
-        return;
-    }
+    assert(*buffer != NULL);
 
     cl_int err = clEnqueueNDRangeKernel(modul->queue, modul->kernel, 3, NULL, global_size, NULL, 0, NULL, NULL);
-    if (err != CL_SUCCESS) {
-        SDL_Log("[DFAO Debug] Failed to enqueue kernel: %d", err);
-        free(*buffer);
-        *buffer = NULL;
-        return;
-    }
+    assert(err == CL_SUCCESS);
 
     err = clEnqueueReadBuffer(modul->queue, data, CL_TRUE, 0, sizeof(float) * data_size, *buffer, 0, NULL, NULL);
-    if (err != CL_SUCCESS) {
-        SDL_Log("[DFAO Debug] Failed to read buffer: %d", err);
-        free(*buffer);
-        *buffer = NULL;
-        return;
-    }
+    assert(err == CL_SUCCESS);
 
     clFinish(modul->queue);
-    
-    // Debug: Sample first few values to check for corruption
-    SDL_Log("[DFAO Debug] First 10 distance values: %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f", 
-            (*buffer)[0], (*buffer)[1], (*buffer)[2], (*buffer)[3], (*buffer)[4],
-            (*buffer)[5], (*buffer)[6], (*buffer)[7], (*buffer)[8], (*buffer)[9]);
-            
-    // Check for NaN/Inf values
-    int nan_count = 0, inf_count = 0, negative_count = 0;
-    for (size_t i = 0; i < (data_size > 1000 ? 1000 : data_size); i++) {
-        if (isnan((*buffer)[i])) nan_count++;
-        if (isinf((*buffer)[i])) inf_count++;
-        if ((*buffer)[i] < 0.0f) negative_count++;
-    }
-    SDL_Log("[DFAO Debug] Data validation (first 1000): NaN=%d, Inf=%d, Negative=%d", nan_count, inf_count, negative_count);
 }
 
 void parallelism_clean(struct GPU_MODULE* modul, GPU_MEM* data, size_t data_size) {

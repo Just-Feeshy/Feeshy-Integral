@@ -137,27 +137,7 @@ texture* texture_volume(struct GPU_MODULE* modul, Mesh* mesh, AABB* aabb) {
     parallelism_alloc_MDF(modul, aabb, mesh, (int32_t)tex->texture, data, UNIFORM_GRID_SIZE);
     parallelism_invoke_MDF(modul, data[0], &buffer, UNIFORM_GRID_SIZE);
 
-    if (buffer == NULL) {
-        SDL_Log("[DFAO Debug] Buffer is NULL after OpenCL execution!");
-        return tex;
-    }
-
-    SDL_Log("[DFAO Debug] Creating 3D texture: %dx%dx%d", tex->width, tex->height, tex->depth);
-    
-    // Check OpenGL state before texture upload
-    GLenum gl_error = glGetError();
-    if (gl_error != GL_NO_ERROR) {
-        SDL_Log("[DFAO Debug] OpenGL error before texture upload: 0x%x", gl_error);
-    }
-
     glTexImage3D(tex->type, 0, GL_R32F, tex->width, tex->height, tex->depth, 0, GL_RED, GL_FLOAT, buffer);
-    
-    gl_error = glGetError();
-    if (gl_error != GL_NO_ERROR) {
-        SDL_Log("[DFAO Debug] OpenGL error after texture upload: 0x%x", gl_error);
-    } else {
-        SDL_Log("[DFAO Debug] 3D texture uploaded successfully");
-    }
     glTexParameteri(tex->type, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(tex->type, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(tex->type, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

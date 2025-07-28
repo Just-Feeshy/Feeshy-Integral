@@ -38,26 +38,22 @@ const float ao_intensity = 0.25; // Ambient Occlusion intensity
 // The original code can be found at:
 // https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection.html
 bool intersectBox(vec3 ro, vec3 rd, out float t0, out float t1) {
-    // More robust ray-box intersection using slab method
     vec3 t_min = (u_aabb_min - ro) / rd;
     vec3 t_max = (u_aabb_max - ro) / rd;
-    
-    // Handle negative ray directions by swapping
+
     vec3 t1_vec = min(t_min, t_max);
     vec3 t2_vec = max(t_min, t_max);
-    
-    // Find the largest entry point and smallest exit point
+
     float t_near = max(max(t1_vec.x, t1_vec.y), t1_vec.z);
     float t_far = min(min(t2_vec.x, t2_vec.y), t2_vec.z);
-    
-    // Check for valid intersection
+
     if (t_near > t_far || t_far < 0.0) {
         return false;
     }
-    
+
     t0 = max(t_near, 0.0); // Don't march behind the camera
     t1 = t_far;
-    
+
     return true;
 }
 
@@ -67,13 +63,7 @@ vec3 get_tex_coord(vec3 pos) {
 
 float sampleDistance(vec3 pos) {
     vec3 tex_coord = get_tex_coord(pos);
-    float dist = texture(u_volume_tex, tex_coord).r;
-
-    if (isnan(dist) || isinf(dist)) {
-        return 1000.0; // Large distance for invalid values
-    }
-
-    return dist;
+    return texture(u_volume_tex, tex_coord).r;
 }
 
 float ambientOcclusion(vec3 p, vec3 n){
@@ -212,56 +202,26 @@ float raymarching(vec3 pos, float t_i, float t_f, vec3 ray_origin, vec3 ray_dire
 }
 
 vec4 render(vec2 uv) {
-    // Robust coordinate transformation
     vec4 clip = vec4(uv, -1.0, 1.0);
     vec4 eye = inverse(cam_block.projection) * clip;
-    
-    // Check for valid homogeneous coordinate
-    if (abs(eye.w) < 1e-10) {
-        return vec4(1.0, 0.0, 1.0, 1.0); // Magenta for invalid coordinates
-    }
-    
     eye /= eye.w;
 
     vec3 ray_origin = cam_block.position;
-    vec3 world_dir = (inverse(cam_block.view) * vec4(eye.xyz, 0.0)).xyz;
-    
-    // Check for degenerate ray direction
-    if (length(world_dir) < 1e-10) {
-        return vec4(0.0, 0.0, 1.0, 1.0); // Blue for invalid ray direction
-    }
-    
-    vec3 ray_direction = normalize(world_dir);
+    vec3 ray_direction = normalize((inverse(cam_block.view) * vec4(eye.xyz, 0.0)).xyz);
 
     float t0 = 0.0;
     float t1 = cam_block.far;
     bool hit = intersectBox(ray_origin, ray_direction, t0, t1);
-    vec3 color = vec3(0.0, 0.0, 0.0); // Black background
-    
-    // Validate intersection results
-    if (isnan(t0) || isnan(t1) || isinf(t0) || isinf(t1)) {
-        return vec4(1.0, 1.0, 0.0, 1.0); // Yellow for NaN/Inf intersection
-    }
+    vec3 color = vec3(0.0);
 
-    if (hit) {
-        // Check if camera is inside AABB
-        bool inside = all(greaterThanEqual(ray_origin, u_aabb_min)) && 
-                     all(lessThanEqual(ray_origin, u_aabb_max));
-        
-        if (inside) {
-            color = vec3(0.0, 0.5, 1.0); // Light blue for inside box
-        } else {
-            color = vec3(0.0, 1.0, 0.0); // Green for outside box intersection
+    if (hit && t1 > t0) {
+        color = vec3(0.0, 1.0, 0.0);
+        float t = raymarching(vec3(0.0), t0, t1, ray_origin, ray_direction);
+        if(t != -1.0) {
+            vec3 p = ray_origin + t * ray_direction;
+            vec3 n = sdf_normal(p);
+            color = vec3(1.0, 0.0, 0.0) * ambientOcclusion(p, n);
         }
-        
-        // For debugging, skip raymarching and just show the box hit
-        // float t = raymarching(vec3(0.0), t0, t1, ray_origin, ray_direction);
-        // if(t != -1.0) {
-        //     vec3 p = ray_origin + t * ray_direction;
-        //     vec3 n = sdf_normal(p);
-        //     float ao = ambientOcclusion(p, n);
-        //     color = vec3(1.0, 0.0, 0.0) * ao;
-        // }
     }
 
     return vec4(color, 1.0);
