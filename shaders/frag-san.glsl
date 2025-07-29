@@ -44,17 +44,14 @@ float sdfFractal(vec3 pos) {
         r = length(z);
         if (r > 4.0) break;
 
-        // Convert to polar coordinates
         float theta = acos(z.z / r);
         float phi = atan(z.y, z.x);
         dr = pow(r, Power - 1.0) * Power * dr + 1.0;
 
-        // Scale and rotate the point
         float zr = pow(r, Power);
         theta = theta * Power;
         phi = phi * Power;
 
-        // Convert back to cartesian coordinates
         z = zr * vec3(sin(theta) * cos(phi), sin(phi) * sin(theta), cos(theta));
         z += pos;
     }

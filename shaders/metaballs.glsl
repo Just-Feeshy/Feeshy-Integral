@@ -40,9 +40,9 @@ float scene(vec3 p, float r, float off_s, inout vec3 col) {
     float t_c = cos(u_time * 10.0);
     float t_s = sin(u_time * 10.0);
 
-    float b_1 = ball(p - vec3(t_2c, t_s, t_c) * 10.0, r);
-    float b_2 = ball(p - vec3(t_s, t_2c, t_c) * 10.0, r);
-    float b_3 = ball(p - vec3(t_c, t_s, t_2c) * 10.0, r);
+    float b_1 = ball(p - vec3(t_c, t_s, t_2c) * 10.0, r);
+    float b_2 = ball(p - vec3(t_s * t_c, t_2c, t_s * t_c) * 10.0, r);
+    float b_3 = ball(p - vec3(t_2c, t_s, t_c) * 10.0, r);
 
     col = vec3(
         off_s - b_1,
@@ -50,42 +50,17 @@ float scene(vec3 p, float r, float off_s, inout vec3 col) {
         off_s - b_3
     ) / off_s;
 
-    return smin(smin(b_1, b_2, 2.0), b_3, 2.0);
+    return smin(smin(b_1, b_2, 3.0), b_3, 3.0);
 }
 
-float raymarch(vec3 ray_origin, vec3 ray_direction, inout vec3 col) {
-    float offset_size = 10.0;
-    float t = 0.0;
-    int iter = 0;
-
+float SDL_distance(float t, inout int iter, vec3 ray_origin, vec3 ray_direction, float offset_size, inout vec3 col) {
     while(iter < MAX_STEPS) {
         vec3 new_col = vec3(0.0);
         vec3 p = ray_origin + t * ray_direction;
         float dist = scene(p, 2.0, offset_size, new_col);
-        float second_dist = ground(p);
-
-        if(dist < offset_size) {
-            col += exp(-dist * 0.95) * new_col;
-        }
 
         if(dist < cam_block.near) {
             col = new_col;
-            return t;
-        }
-
-        if(second_dist < cam_block.near) {
-            float scale = 0.05;
-            vec2 check = floor(p.xz * scale);
-            float checker = mod(check.x + check.y, 2.0);
-
-            vec3 darkTile = vec3(0.05);
-            vec3 lightTile = vec3(0.2);
-            vec3 g_color = mix(darkTile, lightTile, checker);
-            float fogDensity = 0.006;
-            float fog = 1.0 - exp(-t * fogDensity);
-            g_color *= 1.0 - fog;
-
-            col += g_color;
             return t;
         }
 
@@ -93,14 +68,82 @@ float raymarch(vec3 ray_origin, vec3 ray_direction, inout vec3 col) {
             break;
         }
 
-        if(dist < second_dist) {
-            t += dist; // Adjust step size based on distance
-        } else {
-            t += second_dist; // Adjust step size based on distance
-        }
-
+        t += dist;
         iter++;
     }
+}
+
+float raymarch(vec3 ray_origin, vec3 ray_direction, inout vec3 col) {
+    float offset_size = 10.0;
+    float t = 0.0;
+    int iter = 0;
+
+#if NEW_RAYMARCH == 1
+
+    float t_j = cam_block.far;
+    float min_dist = cam_block.far;
+    int i = int((MAX_STEPS & 1) == 0);
+
+#if (MAX_STEPS & 1) == 0
+    {
+        vec3 col_temp = vec3(0.0);
+        t = scene(ray_origin + t * ray_direction, 2.0, offset_size, col_temp);
+
+        if(t < cam_block.near) {
+            col = col_temp;
+            return t;
+        }
+    }
+#endif
+
+    while(i <= (MAX_STEPS >> 1)) {
+        vec3 new_col = vec3(0.0);
+        vec3 p_i = ray_origin + t * ray_direction;
+        float dist_i = scene(p_i, 2.0, offset_size, new_col);
+
+        if(dist_i < cam_block.near) {
+            col = new_col;
+            return t;
+        }
+
+        if(t > cam_block.far) {
+            return -1.0;
+        }
+
+        if(dist_i - min_dist > 0.1) {
+            vec3 p_j = ray_origin + t_j * ray_direction;
+            float dist_j = scene(p_j, 2.0, offset_size, new_col);
+
+            if(abs(dist_i - dist_j) <= abs(t_j - t)
+            && (dist_i + dist_j) >= abs(t_j - t)) {
+                return -1.0;
+            }
+
+            t_j -= dist_j;
+        }else {
+            t += dist_i;
+            dist_i = scene(ray_origin + t * ray_direction, 2.0, offset_size, new_col);
+
+            if(dist_i < cam_block.near) {
+                col = new_col;
+                return t;
+            }
+
+            if(t > cam_block.far) {
+                return -1.0;
+            }
+        }
+
+        min_dist = min(min_dist, dist_i);
+        t += dist_i;
+        iter++;
+    }
+
+#else
+
+    t = SDL_distance(t, iter, ray_origin, ray_direction, offset_size, col);
+
+#endif
 
     return -1.0;
 }
@@ -120,14 +163,10 @@ vec4 render(vec2 uv) {
     }
 
     vec3 p = ray_origin + t * ray_direction;
-    //color  //*= ambientOcclusion(p, n);
-
     return vec4(color, 1.0);
 }
 
 void main() {
     vec2 uv = (gl_FragCoord.xy / u_resolution.xy) * 2.0 - 1.0;
-
-    // Render the scene
     fragColor = render(uv);
 }
