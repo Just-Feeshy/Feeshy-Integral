@@ -29,9 +29,3 @@ image* create_simplex_noise(int width, int height);
 image load_image(const char* path);
 image load_image_raw(const uint8_t* data, uint32_t size);
 image extract_face(image img, uint32_t face_x, uint32_t face_y);
-
-#ifndef EMSCRIPTEN
-#include <parallelism.h>
-
-texture* texture_volume(struct GPU_MODULE* modul, Mesh* mesh, AABB* aabb);
-#endif

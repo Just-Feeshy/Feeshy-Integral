@@ -65,8 +65,6 @@ void screen_init(int w, int h) {
 
     #if FRAGMENT_SELECTOR == 1
     load_shader("shaders/metaballs.glsl", &frag_shader, SHADER_FRAGMENT, 0, frag_attrs);
-    #elif FRAGMENT_SELECTOR == 2
-    load_shader("shaders/dfao-frag.glsl", &frag_shader, SHADER_FRAGMENT, 0, frag_attrs);
     #else
     load_shader("shaders/frag-san.glsl", &frag_shader, SHADER_FRAGMENT, 0, frag_attrs);
     #endif
@@ -76,23 +74,7 @@ void screen_init(int w, int h) {
     pipeline_compile(2, pipeline, (shader*[]){&vert_shader, &frag_shader});
 
     create_constant_location(pipeline, "u_resolution");
-
-    #if defined(HAS_GEOMETRY_PASS) && USE_FBO_WORLD == 1
-    create_constant_location(pipeline, "u_volume_tex");
-    #endif
-
-#if defined(USE_DFAO) && !defined(HAS_GEOMETRY_PASS)
-    create_constant_location(pipeline, "u_volume_tex");
-    create_constant_location(pipeline, "u_aabb_min");
-    create_constant_location(pipeline, "u_aabb_max");
-#endif
-
-    #ifdef HAS_GEOMETRY_PASS
-    create_constant_location(pipeline, "u_aabb_min");
-    create_constant_location(pipeline, "u_aabb_max");
-    #else
     create_constant_location(pipeline, "u_time");
-    #endif
 
     fps_init(&fps_data);
 }
@@ -105,14 +87,7 @@ void screen_render() {
     // we are rendering the geometry pass itself
     // not the post processing
     fps_update_begin(&fps_data);
-
-    #if FRAGMENT_SELECTOR == 2
-    set_uniform_int("u_volume_tex", 0);
-    #endif
-
-    #ifndef HAS_GEOMETRY_PASS
     set_uniform_float("u_time", SDL_GetTicks() / 5000.0f);
-    #endif
 
     set_uniform_vec2("u_resolution", width, height);
     world_setup_uniforms();
