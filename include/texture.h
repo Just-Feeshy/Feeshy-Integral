@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include <aabb.h>
 #include <cglm/vec3.h>
-#include <mesh.h>
 
 typedef struct texture {
     int width;
