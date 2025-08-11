@@ -80,28 +80,15 @@ float raymarch(vec3 ray_origin, vec3 ray_direction, inout vec3 col) {
 
 #if NEW_RAYMARCH == 1
 
-    float t_j = cam_block.far;
-    float min_dist = cam_block.far;
-    int i = int((MAX_STEPS & 1) == 0);
-
-#if (MAX_STEPS & 1) == 0
-    {
-        vec3 col_temp = vec3(0.0);
-        t = scene(ray_origin + t * ray_direction, 2.0, offset_size, col_temp);
-
-        if(t < cam_block.near) {
-            col = col_temp;
-            return t;
-        }
-    }
-#endif
-
-    while(i <= (MAX_STEPS >> 1)) {
+    float prev_dist = cam_block.far;
+    float divergence_threshold = 2.0;
+    
+    for(int i = 0; i < MAX_STEPS; i++) {
         vec3 new_col = vec3(0.0);
-        vec3 p_i = ray_origin + t * ray_direction;
-        float dist_i = scene(p_i, 2.0, offset_size, new_col);
+        vec3 p = ray_origin + t * ray_direction;
+        float dist = scene(p, 2.0, offset_size, new_col);
 
-        if(dist_i < cam_block.near) {
+        if(dist < cam_block.near) {
             col = new_col;
             return t;
         }
@@ -110,33 +97,21 @@ float raymarch(vec3 ray_origin, vec3 ray_direction, inout vec3 col) {
             return -1.0;
         }
 
-        if(dist_i - min_dist > 0.1) {
-            vec3 p_j = ray_origin + t_j * ray_direction;
-            float dist_j = scene(p_j, 2.0, offset_size, new_col);
-
-            if(abs(dist_i - dist_j) <= abs(t_j - t)
-            && (dist_i + dist_j) >= abs(t_j - t)) {
-                return -1.0;
-            }
-
-            t_j -= dist_j;
-        }else {
-            t += dist_i;
-            dist_i = scene(ray_origin + t * ray_direction, 2.0, offset_size, new_col);
-
-            if(dist_i < cam_block.near) {
-                col = new_col;
-                return t;
-            }
-
-            if(t > cam_block.far) {
+        // Early divergence detection - if distance is increasing consistently, ray is diverging
+        if(i > 2 && dist > prev_dist + divergence_threshold) {
+            // Sample ahead to confirm divergence
+            vec3 ahead_p = ray_origin + (t + dist) * ray_direction;
+            vec3 temp_col = vec3(0.0);
+            float ahead_dist = scene(ahead_p, 2.0, offset_size, temp_col);
+            
+            // If both current and ahead distances are large and increasing, diverge
+            if(ahead_dist > dist && dist > 5.0) {
                 return -1.0;
             }
         }
 
-        min_dist = min(min_dist, dist_i);
-        t += dist_i;
-        iter++;
+        prev_dist = dist;
+        t += dist;
     }
 
 #else
