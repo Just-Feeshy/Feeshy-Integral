@@ -3,7 +3,8 @@
 precision mediump float;
 
 #define MAX_STEPS 199
-#define NEW_RAYMARCH 1
+#define NEW_RAYMARCH 0
+#define MIN_GROWTH 2.0
 
 out vec4 fragColor;
 
@@ -35,7 +36,7 @@ float smin(float a, float b, float k) {
     return b - k * g;
 }
 
-float scene(vec3 p, float r, float off_s, inout vec3 col) {
+float scene(vec3 p, float r, float off_s) {
     float t_2c = cos(u_time * 5.0);
     float t_c = cos(u_time * 10.0);
     float t_s = sin(u_time * 10.0);
@@ -44,52 +45,15 @@ float scene(vec3 p, float r, float off_s, inout vec3 col) {
     float b_2 = ball(p - vec3(t_s * t_c, t_2c, t_s * t_c) * 10.0, r);
     float b_3 = ball(p - vec3(t_2c, t_s, t_c) * 10.0, r);
 
-    col = vec3(
-        off_s - b_1,
-        off_s - b_2,
-        off_s - b_3
-    ) / off_s;
-
     return smin(smin(b_1, b_2, 3.0), b_3, 3.0);
 }
 
-float SDL_distance(float t, inout int iter, vec3 ray_origin, vec3 ray_direction, float offset_size, inout vec3 col) {
+float SDL_distance(float t, inout int iter, vec3 ray_origin, vec3 ray_direction, float offset_size) {
     while(iter < MAX_STEPS) {
-        vec3 new_col = vec3(0.0);
         vec3 p = ray_origin + t * ray_direction;
-        float dist = scene(p, 2.0, offset_size, new_col);
+        float dist = scene(p, 2.0, offset_size);
 
         if(dist < cam_block.near) {
-            col = new_col;
-            return t;
-        }
-
-        if(t > cam_block.far) {
-            break;
-        }
-
-        t += dist;
-        iter++;
-    }
-}
-
-float raymarch(vec3 ray_origin, vec3 ray_direction, inout vec3 col) {
-    float offset_size = 10.0;
-    float t = 0.0;
-    int iter = 0;
-
-#if NEW_RAYMARCH == 1
-
-    float prev_dist = cam_block.far;
-    float divergence_threshold = 2.0;
-    
-    for(int i = 0; i < MAX_STEPS; i++) {
-        vec3 new_col = vec3(0.0);
-        vec3 p = ray_origin + t * ray_direction;
-        float dist = scene(p, 2.0, offset_size, new_col);
-
-        if(dist < cam_block.near) {
-            col = new_col;
             return t;
         }
 
@@ -97,30 +61,82 @@ float raymarch(vec3 ray_origin, vec3 ray_direction, inout vec3 col) {
             return -1.0;
         }
 
-        // Early divergence detection - if distance is increasing consistently, ray is diverging
-        if(i > 2 && dist > prev_dist + divergence_threshold) {
-            // Sample ahead to confirm divergence
-            vec3 ahead_p = ray_origin + (t + dist) * ray_direction;
-            vec3 temp_col = vec3(0.0);
-            float ahead_dist = scene(ahead_p, 2.0, offset_size, temp_col);
-            
-            // If both current and ahead distances are large and increasing, diverge
-            if(ahead_dist > dist && dist > 5.0) {
+        t += dist;
+        iter++;
+    }
+}
+
+float raymarch(vec3 ray_origin, vec3 ray_direction) {
+    float offset_size = 10.0;
+    float t = 0.0;
+    int iter = 0;
+
+#if NEW_RAYMARCH == 1
+
+    float t_j = cam_block.far;
+    float min_dist = cam_block.far;
+    int i = int((MAX_STEPS & 1) == 0);
+
+#if (MAX_STEPS & 1) == 0
+    {
+        vec3 col_temp = vec3(0.0);
+        t = scene(ray_origin + t * ray_direction, 2.0, offset_size, col_temp);
+
+        if(t < cam_block.near) {
+            col = col_temp;
+            return t;
+        }
+    }
+#endif
+
+    while(i <= (MAX_STEPS >> 1)) {
+        vec3 new_col = vec3(0.0);
+        vec3 p_i = ray_origin + t * ray_direction;
+        float dist_i = scene(p_i, 2.0, offset_size);
+
+        if(dist_i < cam_block.near) {
+            return t;
+        }
+
+        if(t > cam_block.far) {
+            return -1.0;
+        }
+
+        if(dist_i - min_dist > MIN_GROWTH) {
+            vec3 p_j = ray_origin + t_j * ray_direction;
+            float dist_j = scene(p_j, 2.0, offset_size);
+
+            if(abs(dist_i - dist_j) <= abs(t_j - t)
+            && (dist_i + dist_j) >= abs(t_j - t)) {
+                return -1.0;
+            }
+
+            t_j -= dist_j;
+        }else {
+            t += dist_i;
+            dist_i = scene(ray_origin + t * ray_direction, 2.0, offset_size);
+
+            if(dist_i < cam_block.near) {
+                return t;
+            }
+
+            if(t > cam_block.far) {
                 return -1.0;
             }
         }
 
-        prev_dist = dist;
-        t += dist;
+        min_dist = min(min_dist, dist_i);
+        t += dist_i;
+        iter++;
     }
 
 #else
 
-    t = SDL_distance(t, iter, ray_origin, ray_direction, offset_size, col);
+    t = SDL_distance(t, iter, ray_origin, ray_direction, offset_size);
 
 #endif
 
-    return -1.0;
+    return t;
 }
 
 vec4 render(vec2 uv) {
@@ -128,16 +144,15 @@ vec4 render(vec2 uv) {
     vec4 eye = inverse(cam_block.projection) * clip;
     eye /= eye.w;
 
+    vec3 color = vec3(0.0);
     vec3 ray_origin = cam_block.position;
     vec3 ray_direction = normalize((inverse(cam_block.view) * vec4(eye.xyz, 0.0)).xyz);
-
-    vec3 color = vec3(0.0);
-    float t = raymarch(ray_origin, ray_direction, color);
+    float t = raymarch(ray_origin, ray_direction);
 
     if(t != -1.0) {
+        color = vec3(1.0, 0.0, 0.0);
     }
 
-    vec3 p = ray_origin + t * ray_direction;
     return vec4(color, 1.0);
 }
 
