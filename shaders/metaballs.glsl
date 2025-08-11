@@ -2,9 +2,9 @@
 
 precision mediump float;
 
-#define MAX_STEPS 199
-#define NEW_RAYMARCH 0
-#define MIN_GROWTH 2.0
+#define MAX_STEPS 99
+#define NEW_RAYMARCH 1
+#define MIN_GROWTH 0.1
 
 out vec4 fragColor;
 
