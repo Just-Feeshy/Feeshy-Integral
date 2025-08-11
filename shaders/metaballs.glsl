@@ -4,6 +4,7 @@ precision mediump float;
 
 #define MAX_STEPS 199
 #define NEW_RAYMARCH 1
+#define MIN_GROWTH 0.032
 
 out vec4 fragColor;
 
@@ -43,12 +44,6 @@ float scene(vec3 p, float r, float off_s, inout vec3 col) {
     float b_1 = ball(p - vec3(t_c, t_s, t_2c) * 10.0, r);
     float b_2 = ball(p - vec3(t_s * t_c, t_2c, t_s * t_c) * 10.0, r);
     float b_3 = ball(p - vec3(t_2c, t_s, t_c) * 10.0, r);
-
-    col = vec3(
-        off_s - b_1,
-        off_s - b_2,
-        off_s - b_3
-    ) / off_s;
 
     return smin(smin(b_1, b_2, 3.0), b_3, 3.0);
 }
@@ -110,7 +105,7 @@ float raymarch(vec3 ray_origin, vec3 ray_direction, inout vec3 col) {
             return -1.0;
         }
 
-        if(dist_i - min_dist > 0.1) {
+        if(dist_i - min_dist > MIN_GROWTH) {
             vec3 p_j = ray_origin + t_j * ray_direction;
             float dist_j = scene(p_j, 2.0, offset_size, new_col);
 
@@ -158,9 +153,6 @@ vec4 render(vec2 uv) {
 
     vec3 color = vec3(0.0);
     float t = raymarch(ray_origin, ray_direction, color);
-
-    if(t != -1.0) {
-    }
 
     vec3 p = ray_origin + t * ray_direction;
     return vec4(color, 1.0);
