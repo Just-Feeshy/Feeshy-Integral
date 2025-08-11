@@ -140,7 +140,7 @@ float raymarch(vec3 ray_origin, vec3 ray_direction, inout vec3 col) {
 
 #endif
 
-    return -1.0;
+    return t;
 }
 
 vec4 render(vec2 uv) {
@@ -154,7 +154,10 @@ vec4 render(vec2 uv) {
     vec3 color = vec3(0.0);
     float t = raymarch(ray_origin, ray_direction, color);
 
-    vec3 p = ray_origin + t * ray_direction;
+    if(t < 0.0) {
+        return vec4(0.0, 0.0, 0.0, 1.0);
+    }
+
     return vec4(color, 1.0);
 }
 
