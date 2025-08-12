@@ -98,16 +98,10 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
 #endif
 
     while(i <= (MAX_STEPS >> 1)) {
-        // Coalesced memory access: compute both positions sequentially
-        vec3 p_forward = ray_origin + t * ray_direction;
-        vec3 p_backward = ray_origin + t_j * ray_direction;
-        
-        // Sequential SDF evaluation (GPU-friendly for RTX)
-        float dist_forward = scene(p_forward, 2.0, offset_size);
-        float dist_backward = scene(p_backward, 2.0, offset_size);
+        vec3 p_i = ray_origin + t * ray_direction;
+        float dist_i = scene(p_i, 2.0, offset_size);
 
-        // Check forward ray for surface hit
-        if(dist_forward < cam_block.near) {
+        if(dist_i < cam_block.near) {
             return t;
         }
 
@@ -115,38 +109,31 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
             return -1.0;
         }
 
-        // Growth check using forward distance (same paper logic)
-        if(dist_forward - min_dist > MIN_GROWTH) {
-            // Triangle inequality test (exact same math from paper)
-            if(abs(dist_forward - dist_backward) <= abs(t_j - t)
-            && (dist_forward + dist_backward) >= abs(t_j - t)) {
-                return -1.0;  // Divergence detected
+        if(dist_i - min_dist > MIN_GROWTH) {
+            vec3 p_j = ray_origin + t_j * ray_direction;
+            float dist_j = scene(p_j, 2.0, offset_size);
+
+            if(abs(dist_i - dist_j) <= abs(t_j - t)
+            && (dist_i + dist_j) >= abs(t_j - t)) {
+                return -1.0;
             }
 
-            // Use backward marching
-            t_j -= dist_backward;
-        } else {
-            // Use forward marching
-            t += dist_forward;
-            
-            // Re-evaluate at new forward position
-            vec3 p_next = ray_origin + t * ray_direction;
-            float dist_next = scene(p_next, 2.0, offset_size);
+            t_j -= dist_j;
+        }else {
+            t += dist_i;
+            dist_i = scene(ray_origin + t * ray_direction, 2.0, offset_size);
 
-            if(dist_next < cam_block.near) {
+            if(dist_i < cam_block.near) {
                 return t;
             }
 
             if(t > cam_block.far) {
                 return -1.0;
             }
-            
-            // Update for next iteration
-            dist_forward = dist_next;
         }
 
-        min_dist = min(min_dist, dist_forward);
-        t += dist_forward;
+        min_dist = min(min_dist, dist_i);
+        t += dist_i;
         i++;
     }
 
