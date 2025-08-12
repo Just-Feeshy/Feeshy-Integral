@@ -79,11 +79,9 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
 
 #if (MAX_STEPS & 1) == 0
     {
-        vec3 col_temp = vec3(0.0);
-        t = scene(ray_origin + t * ray_direction, 2.0, offset_size, col_temp);
+        t = scene(ray_origin + t * ray_direction, 2.0, offset_size);
 
         if(t < cam_block.near) {
-            col = col_temp;
             return t;
         }
     }
