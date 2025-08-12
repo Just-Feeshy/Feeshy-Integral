@@ -8,7 +8,7 @@ precision highp float;
 
 #define MAX_STEPS 199
 #define NEW_RAYMARCH 1
-#define MIN_GROWTH 0.016
+#define MIN_GROWTH 0.64
 
 out vec4 fragColor;
 
