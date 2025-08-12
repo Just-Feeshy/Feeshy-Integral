@@ -4,8 +4,8 @@
 #include <stdbool.h>
 #include <opengl.h>
 
-#define FPS_QUERY_COUNT 4
-#define FPS_HISTORY_SIZE 480
+#define FPS_QUERY_COUNT 8
+#define FPS_HISTORY_SIZE 2048
 
 struct fps_counter {
     GLuint queries[FPS_QUERY_COUNT];
