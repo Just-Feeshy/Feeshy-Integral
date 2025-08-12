@@ -1,10 +1,14 @@
 #line 2
 
+#ifdef GL_ES
 precision mediump float;
+#else
+precision highp float;
+#endif
 
 #define MAX_STEPS 99
 #define NEW_RAYMARCH 1
-#define MIN_GROWTH 0.1
+#define MIN_GROWTH 0.032
 
 out vec4 fragColor;
 
@@ -88,7 +92,6 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
 #endif
 
     while(i <= (MAX_STEPS >> 1)) {
-        vec3 new_col = vec3(0.0);
         vec3 p_i = ray_origin + t * ray_direction;
         float dist_i = scene(p_i, 2.0, offset_size);
 
@@ -125,7 +128,7 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
 
         min_dist = min(min_dist, dist_i);
         t += dist_i;
-        iter++;
+        i++;
     }
 
 #else

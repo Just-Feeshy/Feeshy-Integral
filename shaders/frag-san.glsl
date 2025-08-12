@@ -198,7 +198,7 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
             vec3 p_j = ray_origin + t_j * ray_direction;
             float dist_j = SDF_FUNC(p_j);
 
-            if(abs(dist_i - dist_i) <= abs(t_j - t)
+            if(abs(dist_i - dist_j) <= abs(t_j - t)
             && (dist_i + dist_j) >= abs(t_j - t)) {
                 return -1.0;
             }
