@@ -5,7 +5,6 @@
 #include <program.h>
 #include <screen.h>
 #include <world.h>
-#include <timer_query.h>
 #include <config.h>
 
 #ifdef EMSCRIPTEN
@@ -14,6 +13,7 @@
 #include <SDL_rwops.h>
 #endif
 
+struct fps_counter fps_data;
 graphics_pipeline* pipeline;
 
 uint32_t ms_time_elapsed = 0;
@@ -64,9 +64,7 @@ void screen_init(int w, int h) {
     load_shader("shaders/vert.glsl", &vert_shader, SHADER_VERTEX, 1, vert_attrs);
 
     #if FRAGMENT_SELECTOR == 1
-    load_shader("shaders/frag-sec.glsl", &frag_shader, SHADER_FRAGMENT, 0, frag_attrs);
-    #elif FRAGMENT_SELECTOR == 2
-    load_shader("shaders/dfao-frag.glsl", &frag_shader, SHADER_FRAGMENT, 0, frag_attrs);
+    load_shader("shaders/metaballs.glsl", &frag_shader, SHADER_FRAGMENT, 0, frag_attrs);
     #else
     load_shader("shaders/frag-san.glsl", &frag_shader, SHADER_FRAGMENT, 0, frag_attrs);
     #endif
@@ -76,24 +74,9 @@ void screen_init(int w, int h) {
     pipeline_compile(2, pipeline, (shader*[]){&vert_shader, &frag_shader});
 
     create_constant_location(pipeline, "u_resolution");
-
-    #if defined(HAS_GEOMETRY_PASS) && USE_FBO_WORLD == 1
-    create_constant_location(pipeline, "u_volume_tex");
-    #endif
-
-    #if defined(HAS_GEOMETRY_PASS) && USE_FBO_CUBEMAP == 1
-    create_constant_location(pipeline, "u_cube_tex");
-    #endif
-
-    #ifdef HAS_GEOMETRY_PASS
-    create_constant_location(pipeline, "u_texture");
-    create_constant_location(pipeline, "u_aabb_min");
-    create_constant_location(pipeline, "u_aabb_max");
-    #else
     create_constant_location(pipeline, "u_time");
-    #endif
 
-    gpu_timer_query_init();
+    fps_init(&fps_data);
 }
 
 void screen_render() {
@@ -103,42 +86,15 @@ void screen_render() {
     // Reason why geometry pass is not included is because
     // we are rendering the geometry pass itself
     // not the post processing
-
-    gpu_timer_query_begin();
-
-    #if defined(HAS_GEOMETRY_PASS) && USE_FBO_WORLD == 1
-    set_uniform_int("u_volume_tex", 1);
-    #endif
-
-    #if defined(HAS_GEOMETRY_PASS) && USE_FBO_CUBEMAP == 1
-    set_uniform_int("u_cube_tex", 2);
-#endif
-
-    #ifndef HAS_GEOMETRY_PASS
+    fps_update_begin(&fps_data);
     set_uniform_float("u_time", SDL_GetTicks() / 5000.0f);
-    #endif
 
     set_uniform_vec2("u_resolution", width, height);
     world_setup_uniforms();
 
     draw_vertex_buffer(VAO, 6);
+    glBindVertexArray(0);
 
     // End the benchmark timer for fragment shader
-    gpu_timer_query_end();
-
-    #ifndef HAS_GEOMETRY_PASS
-    ms_time_elapsed = gpu_timer_query_result();
-
-    if(data_update_iteration < MAX_ITERATIONS) {
-        accumulated_time += ms_time_elapsed;
-        data_update_iteration++;
-    }
-
-        #ifndef EMSCRIPTEN
-        if(data_update_iteration == MAX_ITERATIONS) {
-            printf("Average time: %llu\n", accumulated_time);
-            data_update_iteration++;
-        }
-        #endif
-    #endif
+    fps_update_end(&fps_data);
 }

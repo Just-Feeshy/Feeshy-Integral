@@ -3,7 +3,7 @@
 #include <utils.h>
 #include <assert.h>
 
-void opengl_init(SDL_Window* window) {
+void opengl_init() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 }

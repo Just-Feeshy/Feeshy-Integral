@@ -19,7 +19,7 @@ image load_image(const char* path) {
     }
 
     int64_t file_size = SDL_RWsize(file);
-    uint8_t* file_buffer = (uint8_t*)SDL_malloc(file_size);
+    uint8_t* file_buffer = (uint8_t*)malloc(file_size);
 
     if (file_buffer == NULL) {
         fprintf(stderr, "Failed to allocate memory for file: %s\n", path);

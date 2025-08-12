@@ -5,8 +5,11 @@
 
 #if defined(_MSC_VER) && !defined(__clang__)
 #include <intrin.h>
+#include <malloc.h>
 
-#define mem_alloca(size) _alloca(size)
+// Use smaller stack allocations on Windows to prevent overflow
+#define mem_alloca(size) ((size) > 8192 ? malloc(size) : _alloca(size))
+#define mem_free_alloca(ptr, size) do { if ((size) > 8192) free(ptr); } while(0)
 #define FORCE_INLINE __forceinline
 
 static FORCE_INLINE int __builtin_ctz(unsigned x)
@@ -24,9 +27,14 @@ static FORCE_INLINE int __builtin_ctz(unsigned x)
 
 #elif !defined(__MSC_VER) || defined(__clang__)
 #include <stdio.h>
+#include <stdlib.h>
+#if !defined(__MINGW32__) && !defined(__MINGW64__)
+#include <alloca.h>
+#endif
 
 #define FORCE_INLINE __attribute__((always_inline))
 #define mem_alloca(size) alloca(size)
+#define mem_free_alloca(ptr, size) do { } while(0)
 #endif
 
 #include <config.h>
@@ -34,10 +42,21 @@ static FORCE_INLINE int __builtin_ctz(unsigned x)
 
 // There can be multiple cases where geometry pass is used
 
-#if FRAGMENT_SELECTOR == 2
-#define HAS_GEOMETRY_PASS
-#endif
-
 #ifndef EMSCRIPTEN
 #define USE_OPENCL
+
+#if FRAGMENT_SELECTOR == 2
+#define USE_DFAO
+// #define HAS_GEOMETRY_PASS
+#endif
+
+#else
+
+#if FRAGMENT_SELECTOR == 2
+#undef FRAGMENT_SELECTOR
+#define FRAGMENT_SELECTOR 0
+#warning "Fragment Selector 2 is not supported in Emscripten due to OpenCL not being available. Falling back to Fragment Selector 0."
+
+#endif
+
 #endif

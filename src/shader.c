@@ -52,7 +52,7 @@ void load_shader(const char* filename, shader* shader_obj, shader_type type, uin
     }
 
     int64_t total_size = file_size + (int64_t)strlen(buffer) + 1;
-    char* new_buf = (char*)realloc(buffer, total_size);
+    char* new_buf = (char*)SDL_realloc(buffer, total_size);
     if (!new_buf) {
         fprintf(stderr, "Failed to allocate memory for file: %s\n", filename);
         goto file_error;

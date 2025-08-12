@@ -19,19 +19,6 @@
  * and avoid commenting a lot of code and uncommenting it later
 */
 
-
-#ifdef HAS_GEOMETRY_PASS
-    #if USE_FBO_CUBEMAP == 1
-    #include <cubemap.h>
-    static geometry_pass cube_pass;
-    #endif
-
-    #if USE_FBO_WORLD == 1
-    #include <gl_dfao.h>
-    static geometry_pass g_pass;
-    #endif
-#endif
-
 #ifndef EMSCRIPTEN
 #define SPEED 0.1
 #else
@@ -112,34 +99,6 @@ static void world_direction_callback_impl(int x, int y, int dx, int dy) {
 void world_init(int w, int h) {
     printf("World Initialized\n");
 
-#ifdef HAS_GEOMETRY_PASS
-    #if USE_FBO_WORLD  == 1
-    RenderCallback dfao_callback = dfao_test_world_render;
-
-    g_pass = geometry_pass_init(
-        dfao_test_world_render,
-        w * program_get_pixel_density(),
-        h * program_get_pixel_density(),
-        1
-    );
-
-    dfao_test_world(&g_pass);
-    #endif
-
-    #if USE_FBO_CUBEMAP == 1
-    RenderCallback cube_callback = cubemap_render;
-
-    cube_pass = geometry_pass_init(
-        cube_callback,
-        w * program_get_pixel_density(),
-        h * program_get_pixel_density(),
-        1
-    );
-
-    cubemap_init(&cube_pass);
-    #endif
-#endif
-
     static InputCallback world_input_callback = world_input_callback_impl;
     static InputDirectionCallback world_direction_callback = world_direction_callback_impl;
     inputs_init_callback(&world_input_callback, &world_direction_callback);
@@ -148,30 +107,18 @@ void world_init(int w, int h) {
     cam = create_cam_matrices();
     init_cam_matrices(&cam);
 
-    block = (sized_shader_block***)malloc(sizeof(sized_shader_block**) * 2);
-    *block = (sized_shader_block**)malloc(sizeof(sized_shader_block*));
+    block = (sized_shader_block***)SDL_malloc(sizeof(sized_shader_block**) * 2);
+    *block = (sized_shader_block**)SDL_malloc(sizeof(sized_shader_block*));
     **block = create_ssbo(&ubo, GL_UNIFORM_BUFFER, sizeof(cam_matrices));
 
-    *(block + 1) = (sized_shader_block**)malloc(sizeof(sized_shader_block*));
+    *(block + 1) = (sized_shader_block**)SDL_malloc(sizeof(sized_shader_block*));
     render_cam();
 }
 
 // This sets up the basic uniforms for the world
 // aka. uniforms used in the world
 void world_setup_uniforms() {
-#ifdef HAS_GEOMETRY_PASS
-    set_uniform_int("u_texture", 0);
-
-    #if USE_FBO_WORLD == 1
-    set_uniform_vec3("u_aabb_min", g_pass.aabb.min[0], g_pass.aabb.min[1], g_pass.aabb.min[2]);
-    set_uniform_vec3("u_aabb_max", g_pass.aabb.max[0], g_pass.aabb.max[1], g_pass.aabb.max[2]);
-    #endif
-
-    #if USE_FBO_CUBEMAP == 1
-    set_uniform_vec3("u_aabb_min", cube_pass.aabb.min[0], cube_pass.aabb.min[1], cube_pass.aabb.min[2]);
-    set_uniform_vec3("u_aabb_max", cube_pass.aabb.max[0], cube_pass.aabb.max[1], cube_pass.aabb.max[2]);
-    #endif
-#endif
+    // Empty
 }
 
 void world_aspect_ratio(float width, float height) {
@@ -192,60 +139,16 @@ void world_aspect_ratio(float width, float height) {
 
 void world_begin(graphics_pipeline* pipe) {
     size_t pipe_count = 1;
-
-    #ifdef HAS_GEOMETRY_PASS
-    graphics_pipeline* pipelines[] = {
-        pipe,
-
-        #if USE_FBO_WORLD == 1
-        g_pass.pipeline,
-        #endif
-
-        #if USE_FBO_CUBEMAP == 1
-        cube_pass.pipeline
-        #endif
-    };
-
-    pipe_count = 1 + USE_FBO_WORLD + USE_FBO_CUBEMAP;
-    #else
     graphics_pipeline* pipelines[] = {pipe};
-    #endif
 
     bind_ubo_with_name(&ubo, "CamBlock", *block, pipelines, pipe_count);
     size_t texture_count = 0;
-
-    #if defined(HAS_GEOMETRY_PASS) && USE_FBO_WORLD == 1
-    geometry_pass_render(g_pass, texture_count);
-    texture_count += g_pass.texture_count;
-    #endif
-
-    #if defined(HAS_GEOMETRY_PASS) && USE_FBO_CUBEMAP == 1
-    geometry_pass_render(cube_pass, texture_count);
-    texture_count += cube_pass.texture_count;
-    #endif
 }
 
 void world_end(graphics_pipeline* pipe) {
     size_t pipe_count = 1;
 
-    #ifdef HAS_GEOMETRY_PASS
-    graphics_pipeline* pipelines[] = {
-        pipe,
-
-        #if USE_FBO_WORLD == 1
-        g_pass.pipeline,
-        #endif
-
-        #if USE_FBO_CUBEMAP == 1
-        cube_pass.pipeline
-        #endif
-    };
-
-    pipe_count = 1 + USE_FBO_WORLD + USE_FBO_CUBEMAP;
-    #else
     graphics_pipeline* pipelines[] = {pipe};
-    #endif
-
     unbind_ubo(&ubo, 0, **block, pipelines, pipe_count);
 }
 
@@ -266,22 +169,10 @@ void world_update_fov(float fov) {
 }
 
 void world_toggle_wireframe() {
-    #if defined(HAS_GEOMETRY_PASS) && USE_FBO_WORLD == 1
-    g_pass.activate_wireframe = !g_pass.activate_wireframe;
-    #endif
+    // Empty
 }
 
 void world_destroy() {
-#ifdef HAS_GEOMETRY_PASS
-    #if USE_FBO_CUBEMAP == 1
-    geometry_pass_destroy(cube_pass);
-    #endif
-
-    #if USE_FBO_WORLD == 1
-    geometry_pass_destroy(g_pass);
-    #endif
-#endif
-
     free(block[0]);
     free(block[1]);
     free(block);

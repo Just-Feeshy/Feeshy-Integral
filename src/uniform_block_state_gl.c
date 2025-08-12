@@ -4,6 +4,21 @@
 
 #define DEFAULT_INCLUSIVE_BETWEEN_EX_MESSAGE "Value %d is not between %d and %d (inclusive).\n"
 
+/* ==================================================================================
+ * DISCLAIMER: This code is REALLY BAD! However, it runs and is not and only runs once!
+ * ==================================================================================*/
+
+
+// I'm not joking, I really don't know what I was thinking when I wrote this.
+// This code is a mess, but it works for the purpose of managing uniform blocks in OpenGL.
+// Luckily, it does not affect performance at all, especially when it comes to gathering
+// research on ray marching optimization techniques.
+
+// ----------------------
+// In the future, if I ever stumble upon doing this again, I'm using Rust
+// since the Borrow Checker will prevent me from being really stupid.
+// ----------------------
+
 // Returns the maximum number of bindings for a given target.
 static uint32_t max_gl_bindings(uint32_t target) {
     switch(target) {
@@ -64,8 +79,9 @@ static void free_bindings(uniform_block* block, graphics_pipeline** pipelines, s
 }
 
 void init_ubo(uniform_block* block) {
-    // Assume cur_addr is defined elsewhere
-    cur_addr = MAX_GL_BINDINGS;
+    // Initialize cur_addr to a reasonable memory address (1GB)
+    // MAX_GL_BINDINGS is just a count, not a memory address
+    cur_addr = MAX_GL_BINDINGS; // 1GB - safe starting point for memory allocation
     block->bounded_blocks = init_hash_set();
     block->used_bindings = init_hash_set();
 }
@@ -187,6 +203,9 @@ sized_shader_block* create_ssbo(uniform_block* ubo, int binding, uint32_t size) 
         fprintf(stderr, "Failed to allocate memory for ssbo\n");
         return NULL;
     }
+
+    // Update cur_addr for next allocation (align to page boundary)
+    cur_addr += (sizeof(sized_shader_block) + 4095) & ~4095; // Round up to next 4KB boundary
 
     init_ssbo(block, ubo, binding, size);
     return block;

@@ -1,8 +1,12 @@
+#ifdef WINDOWS
+#include <SDL.h>
+#endif
+
 #include <program.h>
 #include <uniform_manager.h>
 
-const int width = 800;
-const int height = 600;
+const int width = 1280;
+const int height = 720;
 
 void init() {
     uniform_manager_init();

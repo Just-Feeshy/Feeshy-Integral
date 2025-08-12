@@ -21,7 +21,7 @@ geometry_pass geometry_pass_init(RenderCallback render_callback, int width, int 
 
     glGenTextures(1, &pass.textures[0].texture);
     glBindTexture(GL_TEXTURE_2D, pass.textures[0].texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pass.textures[0].texture, 0);
@@ -60,25 +60,29 @@ void geometry_pass_render(geometry_pass pass, uint32_t texture_offset) {
     glDepthMask(GL_TRUE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    // glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+#ifndef EMSCRIPTEN
     if(pass.activate_wireframe) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
+#endif
 
     pipeline_set(pass.pipeline);
     pass.render_callback(); // Here
 
+#ifndef EMSCRIPTEN
     if(pass.activate_wireframe) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
+#endif
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     for(uint32_t i=0; i<pass.texture_count; i++) {
         texture_bind(&pass.textures[i], i + texture_offset);
-        // printf("Texture %d bound to unit %d\n", i, i + texture_offset);
+        // printf("Texture %d bound to unit %d\n", pass.textures[i].texture, i + texture_offset);
     }
 }
 

@@ -1,5 +1,13 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 
+#ifdef EMSCRIPTEN
+#include <SDL2/SDL_thread.h>
+#include <SDL2/SDL_mutex.h>
+#else
+#include <SDL_thread.h>
+#include <SDL_mutex.h>
+#endif
+
 #include <screenshot.h>
 #include <stb_image_write.h>
 #include <program.h>

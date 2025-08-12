@@ -1,4 +1,5 @@
 #define NK_SDL_GL3_IMPLEMENTATION 1
+#define GLAD_GL_IMPLEMENTATION // Doesn't matter if we use GLAD or not, we need to define this to avoid redefinition errors
 
 #include <program.h>
 #include <screen.h>
@@ -11,7 +12,10 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <time.h>
-#include <curl/curl.h>
+
+#ifdef EMSCRIPTEN
+#include <emscripten.h>
+#endif
 
 #define TIME_RESOLUTION UINT64_C(1000000000)
 #define NAP_MULT 1
@@ -30,7 +34,6 @@ typedef struct program_package {
     struct inputs* in;
     struct SDL_Window* window;
     struct GL_Context* context;
-    CURL* curl;
     bool active;
     bool dirty_event;
 } program_package;
@@ -48,7 +51,6 @@ update_package main_update;
 
 static void create_window(const char* title, int w, int h) {
     main_program.window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
-
     main_program.context = SDL_GL_CreateContext(main_program.window);
 
     if (main_program.window == NULL) {
@@ -75,8 +77,8 @@ static void program_update_opengl() {
     opengl_clear();
 
     screen_render();
-    nk_sdl_render(NK_ANTI_ALIASING_ON, MAX_VERTEX_MEMORY, MAX_ELEMENT_MEMORY);
     world_end(pipeline);
+    nk_sdl_render(NK_ANTI_ALIASING_ON, MAX_VERTEX_MEMORY, MAX_ELEMENT_MEMORY);
 
     program_context_flip();
 }
@@ -145,7 +147,8 @@ static void program_update() {
     nk_sdl_handle_grab();
     nk_input_end(ctx);
 
-    if (nk_begin(ctx, "Settings Menu", nk_rect(50, 50, 230, 250),
+#if ENABLE_NUKLEAR == 1
+    if (nk_begin(ctx, "Settings Menu", nk_rect(50, 50, 230, 350),
         NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|
         NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
     {
@@ -167,19 +170,47 @@ static void program_update() {
 
         nk_layout_row_static(ctx, 20, 200, 1);
 
+        // {
+        //     char buffer[128];
+        //     snprintf(buffer, sizeof(buffer), "Elapsed Shader Time: %u", ms_time_elapsed / 1000000);
+        //     nk_label(ctx, buffer, NK_TEXT_LEFT);
+        // }
+
+        nk_layout_row_static(ctx, 5, 200, 1);  // Spacer
+        nk_spacing(ctx, 1);
+
+        nk_layout_row_static(ctx, 20, 200, 1);
+#ifndef EMSCRIPTEN
+        nk_label(ctx, "=== FPS Information ===", NK_TEXT_CENTERED);
+
+        nk_layout_row_static(ctx, 20, 200, 1);
         {
-            char buffer[128];
-            snprintf(buffer, sizeof(buffer), "Elapsed Shader Time: %u", ms_time_elapsed / 1000000);
-            nk_label(ctx, buffer, NK_TEXT_LEFT);
+            char fps_buffer[64];
+            snprintf(fps_buffer, sizeof(fps_buffer), "Current FPS: %.0f", fps_get_current(&fps_data));
+            nk_label(ctx, fps_buffer, NK_TEXT_LEFT);
         }
 
-        #ifdef HAS_GEOMETRY_PASS
-        if(nk_button_label(ctx, "Turn On Wireframe")) {
-            world_toggle_wireframe();
+        {
+            char fps_buffer[64];
+            snprintf(fps_buffer, sizeof(fps_buffer), "Average FPS: %.0f", fps_get_average(&fps_data));
+            nk_label(ctx, fps_buffer, NK_TEXT_LEFT);
         }
-        #endif
+
+        // Add a reset button for FPS stats
+        if(nk_button_label(ctx, "Reset FPS Stats")) {
+            fps_reset(&fps_data);
+            ms_time_elapsed = 0;
+        }
+#endif
+
+        // #ifdef HAS_GEOMETRY_PASS
+        // if(nk_button_label(ctx, "Turn On Wireframe")) {
+        //     world_toggle_wireframe();
+        // }
+        // #endif
     }
     nk_end(ctx);
+#endif
 
     int64_t current_time = program_get_time();
     main_update.nextUpdate = frame_period + main_update.lastUpdate;
@@ -207,9 +238,9 @@ void program_init(const char* name, int w, int h) {
     }
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
-		printf("SDL_Init failed: %s\n", SDL_GetError());
-		return;
-	}
+	printf("SDL_Init failed: %s\n", SDL_GetError());
+	return;
+    }
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, GL_APP_PROFILE_MASK);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, GL_APP_MAJOR_VERSION);
@@ -234,17 +265,6 @@ void program_init(const char* name, int w, int h) {
     SDL_SetRelativeMouseMode(SDL_FALSE);
 
     create_window(name, w, h);
-    opengl_init(main_program.window);
-    ctx = nk_sdl_init(main_program.window);
-
-    struct nk_font_atlas *atlas;
-    nk_sdl_font_stash_begin(&atlas);
-    nk_sdl_font_stash_end();
-
-    bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.24f, bg.a = 1.0f;
-
-    SDL_WarpMouseInWindow(main_program.window, w >> 1, h >> 1);
-    SDL_SetRelativeMouseMode(SDL_TRUE);
 
     #ifndef EMSCRIPTEN
     if(main_program.context && SDL_GL_MakeCurrent(main_program.window, main_program.context) == 0) {
@@ -256,8 +276,27 @@ void program_init(const char* name, int w, int h) {
     }
     #endif
 
+    #ifdef HAS_GLAD
+    if (!gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress)) {
+        printf("Failed to load OpenGL 4.1\n");
+        return;
+    }
+    #endif
+
     printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
     printf("GLSL Version: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+    opengl_init();
+    ctx = nk_sdl_init(main_program.window);
+
+    struct nk_font_atlas *atlas;
+    nk_sdl_font_stash_begin(&atlas);
+    nk_sdl_font_stash_end();
+
+    bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.24f, bg.a = 1.0f;
+
+    SDL_WarpMouseInWindow(main_program.window, w >> 1, h >> 1);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     main_program.active = true;
@@ -308,7 +347,9 @@ void program_destroy() {
     world_destroy();
     pipeline_destroy(pipeline);
     free(pipeline);
+    fps_destroy(&fps_data);
 
+    nk_sdl_shutdown();
     SDL_DestroyWindow(main_program.window);
     SDL_Quit();
 

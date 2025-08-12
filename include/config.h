@@ -1,16 +1,21 @@
 #pragma once
 
+
 // This file is suppose to be used for
 // compile time configurations
 
+#define FRAGMENT_SELECTOR 1
+
 #define GRID_SIZE 128
-#define FRAGMENT_SELECTOR 2
+
 #define DEFAULT_BUFFER_SIZE 128
+
 #define MAX_ITERATIONS 10000
 
+#define ENABLE_NUKLEAR 1
+
 // Control Type of FBO that gets preprocessed
-#define USE_FBO_WORLD 1
-#define USE_FBO_CUBEMAP 0
+#define USE_FBO_WORLD 0
 
 // Shader locations
 // These are the locations of the attributes in the shader
