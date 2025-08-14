@@ -10,7 +10,7 @@ precision highp float;
 #define NEW_RAYMARCH 1
 
 // GPU-specific MIN_GROWTH tuning (δ_min from paper)
-#define MIN_GROWTH 0.032
+#define MIN_GROWTH 98.304
 
 out vec4 fragColor;
 

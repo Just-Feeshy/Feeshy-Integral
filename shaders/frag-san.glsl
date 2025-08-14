@@ -22,8 +22,8 @@ const vec3 light_pos = vec3(30.0, 60.0, -60.0);
 const float ao_intensity = 0.15; // Ambient Occlusion intensity
 
 #define MAX_STEPS 199
-#define NEW_RAYMARCH 1
-#define MIN_GROWTH 0.032
+#define NEW_RAYMARCH 0
+#define MIN_GROWTH 0.128 
 #define SDF_FUNC sdfFractal
 
 #define Iterations 8
@@ -157,71 +157,86 @@ float raymarch(vec3 ray_origin, vec3 ray_direction) {
     return -1.0;
 
     #elif NEW_RAYMARCH == 1
+    // Two-Way Ray-marching based on Algorithm 4 from the paper
+    // "A Bidirectional Optimization for Sphere Traced Ray-marching"
 
-    float t_j = cam_block.far;
-    float min_dist = cam_block.far;
-    int i = int((MAX_STEPS & 1) == 0);
+    float t_forward = 0.0;
+    float t_backward = cam_block.far;
+    float delta_t_oplus = cam_block.far; // Tropical semiring minimum tracking
+    int n = int((MAX_STEPS & 1) == 0); // gamma(N) function
 
+    // Handle Γ(N) - initial step for even MAX_STEPS
     #if (MAX_STEPS & 1) == 0
-    t = SDF_FUNC(ray_origin + t * ray_direction);
+    vec3 p_init = ray_origin + t_forward * ray_direction;
+    float d_init = SDF_FUNC(p_init);
 
-    if(t < cam_block.near) {
-        return t;
+    if(d_init < cam_block.near) {
+        return t_forward;
     }
+    
+    t_forward += d_init;
+    delta_t_oplus = min(delta_t_oplus, d_init);
     #endif
-
-    // {
-    //     float t_mid = t_j * 0.5;
-    //     vec3 p_mid = ray_origin + t_mid * ray_direction;
-    //     float dist_mid = SDF_FUNC(p_mid);
-
-    //     if(dist_mid < cam_block.near) {
-    //         int iter = 0;
-    //         t = SDF_distance(t_mid, iter, ray_origin, ray_direction);
-    //         return t;
-    //     }
-    // }
-
-    while(i <= (MAX_STEPS >> 1)) {
-        vec3 p_i = ray_origin + t * ray_direction;
-        float dist_i = SDF_FUNC(p_i);
-
-        if(dist_i < cam_block.near) {
-            return t;
+    
+    // Main bidirectional loop
+    while(n <= (MAX_STEPS >> 1)) {
+        // Forward direction step (set I)
+        vec3 p_forward = ray_origin + t_forward * ray_direction;
+        float d_forward = SDF_FUNC(p_forward);
+        
+        if(d_forward < cam_block.near) {
+            return t_forward;
         }
-
-        if(t > cam_block.far) {
+        
+        if(t_forward > cam_block.far) {
             return -1.0;
         }
-
-        if(dist_i - min_dist > MIN_GROWTH) {
-            vec3 p_j = ray_origin + t_j * ray_direction;
-            float dist_j = SDF_FUNC(p_j);
-
-            if(abs(dist_i - dist_j) <= abs(t_j - t)
-            && (dist_i + dist_j) >= abs(t_j - t)) {
+        
+        // Update tropical minimum
+        delta_t_oplus = min(delta_t_oplus, d_forward);
+        
+        // Growth check - δ(d_i, Δt⊕) from Definition 4.5
+        float growth = d_forward - delta_t_oplus;
+        
+        if(growth > MIN_GROWTH) {
+            // Use backward marching (set J^←)
+            vec3 p_backward = ray_origin + t_backward * ray_direction;
+            float d_backward = SDF_FUNC(p_backward);
+            
+            // Intersection test: check if distance fields overlap
+            // This implements the condition from Algorithm 4, line 16
+            if((d_forward + d_backward) >= abs(t_backward - t_forward)) {
+                return -1.0; // Ray will diverge
+            }
+            
+            t_backward -= d_backward;
+            
+            if(t_backward < cam_block.near) {
                 return -1.0;
             }
-
-            t_j -= dist_j;
-        }else {
-            t += dist_i;
-            dist_i = SDF_FUNC(ray_origin + t * ray_direction);
-
-            if(dist_i < cam_block.near) {
-                return t;
+        } else {
+            // Continue forward marching (set J^→)
+            t_forward += d_forward;
+            
+            // Additional forward step as part of the paired iteration
+            vec3 p_forward2 = ray_origin + t_forward * ray_direction;
+            float d_forward2 = SDF_FUNC(p_forward2);
+            
+            if(d_forward2 < cam_block.near) {
+                return t_forward;
             }
-
-            if(t > cam_block.far) {
+            
+            if(t_forward > cam_block.far) {
                 return -1.0;
             }
+            
+            t_forward += d_forward2;
+            delta_t_oplus = min(delta_t_oplus, d_forward2);
         }
-
-        min_dist = min(min_dist, dist_i);
-        t += dist_i;
-        i++;
+        
+        n++;
     }
-
+    
     return -1.0;
 
     #else

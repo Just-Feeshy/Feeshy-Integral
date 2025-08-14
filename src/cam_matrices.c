@@ -63,7 +63,7 @@ cam_matrices create_cam_matrices() {
         .horizontal_angle = atan2(look_at[0], look_at[2]),
         .vertical_angle = asin(look_at[1]),
         .position = {0.0f, 0.0f, 0.0f},
-        .init_position = {1.0f, 1.0f, -18.0f}
+        .init_position = {1.0f, 1.0f, -12.0f}
     };
 
 #if FRAGMENT_SELECTOR == 1

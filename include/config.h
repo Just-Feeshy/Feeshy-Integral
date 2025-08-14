@@ -4,7 +4,7 @@
 // This file is suppose to be used for
 // compile time configurations
 
-#define FRAGMENT_SELECTOR 1
+#define FRAGMENT_SELECTOR 0
 
 #define GRID_SIZE 128
 
