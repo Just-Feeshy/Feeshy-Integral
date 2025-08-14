@@ -10,11 +10,7 @@ precision highp float;
 #define NEW_RAYMARCH 1
 
 // GPU-specific MIN_GROWTH tuning (δ_min from paper)
-#ifdef __APPLE__
-    #define MIN_GROWTH 0.032    // Apple Silicon optimized
-#else
-    #define MIN_GROWTH 0.1      // NVIDIA/Desktop GPU optimized (less aggressive)
-#endif
+#define MIN_GROWTH 0.032
 
 out vec4 fragColor;
 
