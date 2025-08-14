@@ -23,7 +23,7 @@ const float ao_intensity = 0.15; // Ambient Occlusion intensity
 
 #define MAX_STEPS 199
 #define NEW_RAYMARCH 0
-#define MIN_GROWTH 0.128 
+#define MIN_GROWTH 0.128
 #define SDF_FUNC sdfFractal
 
 #define Iterations 8

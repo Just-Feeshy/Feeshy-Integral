@@ -70,9 +70,9 @@ static void save_screenshot(void* raw_image) {
     snprintf(path, sizeof(path), "screenshots/screenshot_%d.png", SDL_GetTicks());
 
 #ifdef _WIN32
-    _mkdir("../screenshot");
+    _mkdir("screenshots");
 #else
-    mkdir("../screenshot", 0755);  // Read/write/search for owner, read/search for others
+    mkdir("screenshots", 0755);  // Read/write/search for owner, read/search for others
 #endif
 
     if(!stbi_write_png(path, img.width, img.height, 3, img.data, 0)) {
@@ -96,6 +96,9 @@ int screenshot_worker(void* unused) {
 
             // Do the actual work (this part runs unlocked)
             save_screenshot(&img);
+            
+            // Free the copied data after use
+            free(img.data);
         } else {
             SDL_UnlockMutex(screenshot_mutex);
         }
@@ -108,9 +111,19 @@ static void trigger_screenshot(image* img) {
     SDL_LockMutex(screenshot_mutex);
 
     if (!screenshot_pending) {
-        current_image = *img;
-        screenshot_pending = true;
-        SDL_CondSignal(screenshot_cond);
+        // Allocate memory for a copy of the pixel data
+        size_t data_size = (size_t)(img->width * img->height * img->channels);
+        uint8_t* data_copy = malloc(data_size);
+        
+        if (data_copy != NULL) {
+            memcpy(data_copy, img->data, data_size);
+            current_image = *img;
+            current_image.data = data_copy;  // Use the copied data
+            screenshot_pending = true;
+            SDL_CondSignal(screenshot_cond);
+        } else {
+            printf("Failed to allocate memory for screenshot data copy!\n");
+        }
     }
 
     SDL_UnlockMutex(screenshot_mutex);
@@ -145,5 +158,6 @@ void capture_screenshot() {
     glFlush();
     trigger_screenshot(&img);
 
+    // Don't free data here - trigger_screenshot now manages its own copy
     free(data);
 }
